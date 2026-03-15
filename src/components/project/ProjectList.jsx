@@ -32,10 +32,10 @@ export default function ProjectList({ projects }) {
 
                     return (
                         <tr className="hover:bg-gray-50 transition cursor-pointer" key={project.id}
-                            onClick={() => router.push(`/projects/${title.toLowerCase()}`)}>
+                            onClick={() => router.push(`/projects/${id}`)}>
 
                             <td className="px-5 py-4 font-medium">
-                                <Link href={`/projects/${title}`}>
+                                <Link href={`/projects/${id}`}>
                                     {title}
                                 </Link>
                             </td>

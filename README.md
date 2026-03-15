@@ -9,3 +9,7 @@ Created using MERN
 - Add Icons in sidebar using lucide icons
 - Designing Projects page (Project Headers, FIlter section)
 - Create progress page cantains headers, filter section, list of project contains both list and grid view
+
+- Create Kanban Board for task managing
+- Create Task card UI
+- Add routing to Project Cards to open detail of the Project
