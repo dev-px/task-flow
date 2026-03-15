@@ -4,11 +4,13 @@ import StatusCards from "@/components/project/StatusCards";
 import { FolderKanban, ListChecks, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 export default function DashboardPage() {
+    
     const sections = [
         { name: "Project", projects: [{ title: "Project 1", description: "This is Project 1", status: "In Progress" }, { title: "Project 2", description: "This is Project 2", status: "Completed" }, { title: "Project 3", description: "This is Project 3", status: "Completed" }, { title: "Project 4", description: "This is Project 4", status: "Completed" }, { title: "Project 5", description: "This is Project 5", status: "Completed" }, { title: "Project 6", description: "This is Project 6", status: "Completed" }, { title: "Project 7", description: "This is Project 7", status: "Completed" }] },
         { name: "Tasks", projects: [{ title: "Task 1", description: "This is Task 1", status: "In Progress" }, { title: "Task 2", description: "This is Task 2", status: "Completed" }] },
         { name: "Activity", projects: [{ title: "Activity 1", description: "This is Activity 1", status: "In Progress" }, { title: "Activity 2", description: "This is Activity 2", status: "Completed" }] },
     ]
+
     const status = [
         {
             title: "Active Projects", value: 10, icon: FolderKanban,

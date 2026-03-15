@@ -1,16 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { List, Grid3x3, Tally1 } from 'lucide-react';
+import { List, Grid3x3 } from 'lucide-react';
 
-export default function ProjectFilters() {
-    const [searchInput, setSearchInput] = useState("");
-    const [projectStatus, setProjectStatus] = useState("");
-    const [projectSortOption, setProjectSortOption] = useState("");
-    const [toggleView, setToggleView] = useState("List")
-
+export default function ProjectFilters({ filters, setFilters }) {
     const statusOptions = [
-        { value: "", label: "All Status" },
+        { value: "", label: "Status" },
         { value: "active", label: "Active" },
         { value: "completed", label: "Completed" },
         { value: "archived", label: "Archived" },
@@ -24,12 +19,27 @@ export default function ProjectFilters() {
         { value: "name-desc", label: "Name (Z-A)" },
     ];
 
+    // view option - list or grid
+    const viewOptions = [
+        { value: "Grid", icon: Grid3x3 },
+        { value: "List", icon: List }
+    ];
+
+    const updateFilters = (key, value) => {
+        setFilters((prev) => {
+            return { ...prev, [key]: value };
+        });
+    };
+
+    // reset all filters
     const onClearFilter = () => {
-        setSearchInput("");
-        setProjectStatus("");
-        setProjectSortOption("");
-        setToggleView("List");
-    }
+        setFilters({
+            search: "",
+            status: "",
+            sort: "",
+            view: "List"
+        })
+    };
 
     return (
         <div className="my-8 flex flex-wrap gap-8 items-center">
@@ -39,15 +49,15 @@ export default function ProjectFilters() {
                 type="text"
                 placeholder="Search project, description..."
                 className="border-b py-1 outline-0 focus:outline-none transition w-full md:w-auto"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
+                value={filters.search}
+                onChange={(e) => updateFilters("search", e.target.value)}
             />
 
             {/* status - dropdown */}
             <select className="border-b py-1.5 outline-0 focus:outline-none transition w-full md:w-auto"
-                value={projectStatus} onChange={(e) => setProjectStatus(e.target.value)}>
+                value={filters.status} onChange={(e) => updateFilters("status", e.target.value)}>
                 {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
+                    <option key={option.value} value={option.value} className="bg-gray-100">
                         {option.label}
                     </option>
                 ))}
@@ -55,24 +65,29 @@ export default function ProjectFilters() {
 
             {/* sort - dropdown */}
             <select className="border-b py-1.5 outline-0 focus:outline-none transition w-full md:w-auto"
-                value={projectSortOption} onChange={(e) => setProjectSortOption(e.target.value)}>
+                value={filters.sort} onChange={(e) => updateFilters("sort", e.target.value)}>
                 {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
+                    <option key={option.value} value={option.value} className="bg-gray-100">
                         {option.label}
                     </option>
                 ))}
             </select>
 
             {/* list/grid view */}
-            <div className="flex justify-center gap-2 p-0.75 items-center border rounded-sm transition">
-                <button className="cursor-pointer" onClick={() => setToggleView("List")} >
-                    <List size={25} className={`${toggleView === "List" ? "bg-gray-100" : ""} p-1 rounded-sm`} />
-                </button>
-                <button className="cursor-pointer" onClick={() => setToggleView("Grid")} >
-                    <Grid3x3 size={25} className={`${toggleView === "Grid" ? "bg-gray-100" : ""} p-1 rounded-sm`} />
-                </button>
-            </div>
+            <div className="flex justify-center gap-2 p-0.5 items-center border rounded-sm transition">
+                {viewOptions.map((option) => {
+                    const Icon = option.icon;
 
+                    return (
+                        <button key={option.value} className={`cursor-pointer p-0.5 rounded-sm transition
+        ${filters.view === option.value ? "bg-gray-100" : "hover:bg-gray-100/90"}`}
+                            onClick={() => updateFilters("view", option.value)}
+                        >
+                            <Icon size={23} />
+                        </button>
+                    );
+                })}
+            </div>
 
             {/* reset button */}
             <button type="reset" className="border px-4 rounded-sm py-0.75 outline-0 focus:outline-none transition cursor-pointer" onClick={onClearFilter}>
