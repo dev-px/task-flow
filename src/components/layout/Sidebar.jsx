@@ -31,7 +31,9 @@ export default function Sidebar() {
         <aside className="h-screen w-16 border-r flex flex-col items-center py-4">
 
             {/* Logo */}
-            <div className="font-bold text-lg mb-8">TF</div>
+            <Link href="/" className="decoration-0">
+                <div className="font-bold text-lg mb-8 tracking-wider">TF</div>
+            </Link>
 
             {/* Top Links */}
             <nav className="flex flex-col gap-3 flex-1">
