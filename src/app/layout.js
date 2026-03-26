@@ -1,7 +1,7 @@
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
-import DashboardPage from "./dashboard/page";
+import Providers from "./providers";
 
 export const metadata = {
   title: "Task Flow",
@@ -11,12 +11,14 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="h-screen antialiased flex overflow-hidden" data-new-gr-c-s-check-loaded="14.1276.0" data-gr-ext-installed="">
-        <Sidebar />
-        <div className="flex flex-col flex-1 min-w-0">
-          <Navbar />
-          <main className="flex-1 overflow-y-auto p-4">{children}</main>
-        </div>
+      <body className="h-screen antialiased flex overflow-hidden">
+        <Providers>
+          <Sidebar />
+          <div className="flex flex-col flex-1 min-w-0">
+            <Navbar />
+            <main className="flex-1 overflow-y-auto p-4">{children}</main>
+          </div>
+        </Providers>
       </body>
     </html >
   );

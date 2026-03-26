@@ -1,5 +1,7 @@
-import {AlertCircle, ArrowUpCircle, MinusCircle,
-    ArrowDownCircle, CircleDashed} from "lucide-react"
+import {
+    AlertCircle, ArrowUpCircle, MinusCircle,
+    ArrowDownCircle, CircleDashed
+} from "lucide-react"
 
 export const projects = [
     {
@@ -165,6 +167,8 @@ export const projectsKanban = [
                 tasks: [
                     {
                         id: "T-101",
+                        columnId: "todo",
+                        order: 1000,
                         title: "Research competitor websites",
                         priority: "medium",
                         assignee: "Alice Johnson",
@@ -177,6 +181,8 @@ export const projectsKanban = [
                     },
                     {
                         id: "T-107",
+                        columnId: "todo",
+                        order: 2000,
                         title: "Define content structure",
                         priority: "low",
                         assignee: "Olivia Brown",
@@ -185,6 +191,8 @@ export const projectsKanban = [
                     },
                     {
                         id: "T-108",
+                        columnId: "todo",
+                        order: 3000,
                         title: "Gather branding assets",
                         priority: "medium",
                         assignee: "Daniel Kim",
@@ -200,6 +208,8 @@ export const projectsKanban = [
                 tasks: [
                     {
                         id: "T-102",
+                        columnId: "inProgress",
+                        order: 4000,
                         title: "Create landing page wireframe",
                         priority: "high",
                         assignee: "Sophia Patel",
@@ -218,6 +228,8 @@ export const projectsKanban = [
                 tasks: [
                     {
                         id: "T-103",
+                        columnId: "review",
+                        order: 5000,
                         title: "Implement responsive navbar",
                         priority: "critical",
                         assignee: "Michael Chen",
@@ -236,6 +248,8 @@ export const projectsKanban = [
                 tasks: [
                     {
                         id: "T-104",
+                        columnId: "testing",
+                        order: 6000,
                         title: "Cross-browser testing",
                         priority: "medium",
                         assignee: "Michael Chen",
@@ -251,6 +265,8 @@ export const projectsKanban = [
                 tasks: [
                     {
                         id: "T-106",
+                        columnId: "done",
+                        order: 7000,
                         title: "Optimize hero images",
                         priority: "low",
                         assignee: "Daniel Kim",

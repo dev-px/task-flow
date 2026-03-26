@@ -1,12 +1,14 @@
 import {
-    TriangleAlert, MessageCircle, CalendarDays,
+    MessageCircle, CalendarDays,
     Paperclip, CheckSquare, ListX,
-    
 } from "lucide-react";
 import ProgressBar from "../project/ProgressBar";
 import { priorityConfig } from "@/utils/helper";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-export default function TaskCard({ task }) {
+
+export default function TaskCard({ task, index }) {
     const currDate = new Date();
     const updateDate = new Date(task?.dueDate);
     const timeDiff = updateDate - currDate;
@@ -14,8 +16,25 @@ export default function TaskCard({ task }) {
     const completeSTaskLength = task.subtasks.filter(st => st.completed).length;
     const priority = priorityConfig[task?.priority];
 
+    const { setNodeRef, listeners, attributes, transform, transition, isDragging } =
+        useSortable({
+            id: task.id,
+            data: {
+                columnId: task.columnId,
+                index
+            }
+        });
+
     return (
-        <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition cursor-pointer">
+        <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition cursor-pointer touch-none select-none"
+            ref={setNodeRef}
+            {...listeners}
+            {...attributes}
+            style={{
+                transform: CSS.Transform.toString(transform),
+                transition,
+                opacity: isDragging ? 0.5 : 1,
+            }}>
 
             {/* Issue ID + Priority */}
             <div className="mb-1 text-xs flex justify-between items-center">

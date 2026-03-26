@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { List, Grid3x3 } from 'lucide-react';
 
 export default function ProjectFilters({ filters, setFilters }) {
