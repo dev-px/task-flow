@@ -25,6 +25,15 @@ export default function ProjectPage() {
         { statusTitle: "Archived Projects", value: 4, icon: Archive },
     ];
 
+    const onClearFilter = () => {
+        setFilters({
+            search: "",
+            status: "",
+            sort: "",
+            view: "Grid"
+        })
+    };
+
     return (
         <div className="p-4">
             <ProjectHeader
@@ -33,7 +42,7 @@ export default function ProjectPage() {
                 pButton="Create Project"
                 type="create"
             />
-            <ProjectFilters filters={filters} setFilters={setFilters} />
+            <ProjectFilters page="projects" filters={filters} setFilters={setFilters} onClearFilter={onClearFilter} />
 
             {/* Quick stats */}
             <section className="my-8 ">

@@ -160,6 +160,7 @@ export const projectsKanban = [
     {
         id: 1,
         title: "Website Redesign",
+        description: "Redesign company marketing website",
         columns: {
             todo: {
                 id: "todo",

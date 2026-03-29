@@ -9,6 +9,10 @@ export default function ProgressBar({ progress }) {
         setTimeout(() => {
             setWidth(progress);
         }, 100);
+
+        return () => {
+            setWidth(0);
+        };
     }, [progress]);
 
     return (

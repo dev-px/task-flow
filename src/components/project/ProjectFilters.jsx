@@ -1,8 +1,10 @@
 "use client";
 
-import { List, Grid3x3 } from 'lucide-react';
+import { List, Grid3x3, Kanban } from 'lucide-react';
+import DropDown from './../ui/Dropdown';
+import LayoutSetting from '../ui/LayoutSetting';
 
-export default function ProjectFilters({ filters, setFilters }) {
+export default function ProjectFilters({ page, filters, setFilters, onClearFilter }) {
     const statusOptions = [
         { value: "", label: "Status" },
         { value: "active", label: "Active" },
@@ -24,21 +26,33 @@ export default function ProjectFilters({ filters, setFilters }) {
         { value: "List", icon: List }
     ];
 
+    // view option --> for filter
+    const filterViewOption = [
+        { value: "Kanban", icon: Kanban },
+        { value: "List", icon: List }
+    ]
+
+    // priority for project detail
+    const priorityOptions = [
+        { value: "", label: "Priority" },
+        { value: "low", label: "Low" },
+        { value: "medium", label: "Medium" },
+        { value: "high", label: "High" },
+        { value: "critical", label: "Critical" },
+    ]
+
     const updateFilters = (key, value) => {
         setFilters((prev) => {
             return { ...prev, [key]: value };
         });
     };
 
-    // reset all filters
-    const onClearFilter = () => {
-        setFilters({
-            search: "",
-            status: "",
-            sort: "",
-            view: "List"
-        })
-    };
+    const assigneeOption = [
+        { id: 0, value: "", label: "Assignee" },
+        { id: 1, value: "john", label: "John Doe" },
+        { id: 2, value: "jane", label: "Jane Smith" },
+        { id: 3, value: "bob", label: "Bob Johnson" },
+    ]
 
     return (
         <div className="my-8 flex flex-wrap gap-8 items-center">
@@ -46,50 +60,35 @@ export default function ProjectFilters({ filters, setFilters }) {
             {/* input */}
             <input
                 type="text"
-                placeholder="Search project, description..."
+                placeholder={page === "projects" ? "Search project, description..." : "Search task, assignee..."}
                 className="border-b py-1 outline-0 focus:outline-none transition w-full md:w-auto"
                 value={filters.search}
                 onChange={(e) => updateFilters("search", e.target.value)}
             />
 
             {/* status - dropdown */}
-            <select className="border-b py-1.5 outline-0 focus:outline-none transition w-full md:w-auto"
-                value={filters.status} onChange={(e) => updateFilters("status", e.target.value)}>
-                {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value} className="bg-gray-100">
-                        {option.label}
-                    </option>
-                ))}
-            </select>
+            <DropDown options={statusOptions} onChange={(e) => updateFilters("status", e.target.value)} value={filters.status} />
+
+
+            {/* priority - dropdown */}
+            {page === "projectDetails" && (
+                <DropDown options={priorityOptions} onChange={(e) => updateFilters("priority", e.target.value)} value={filters.priority} />
+            )}
 
             {/* sort - dropdown */}
-            <select className="border-b py-1.5 outline-0 focus:outline-none transition w-full md:w-auto"
-                value={filters.sort} onChange={(e) => updateFilters("sort", e.target.value)}>
-                {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value} className="bg-gray-100">
-                        {option.label}
-                    </option>
-                ))}
-            </select>
+            <DropDown options={sortOptions} onChange={(e) => updateFilters("sort", e.target.value)} value={filters.sort} />
+
+            {/* assignee - dropdown */}
+            {page === "projectDetails" && (
+                <DropDown options={assigneeOption} onChange={(e) => updateFilters("assignee", e.target.value)} value={filters.assignee} />
+            )}
 
             {/* list/grid view */}
-            <div className="flex justify-center gap-2 p-0.5 items-center border rounded-sm transition">
-                {viewOptions.map((option) => {
-                    const Icon = option.icon;
-
-                    return (
-                        <button key={option.value} className={`cursor-pointer p-0.5 rounded-sm transition
-        ${filters.view === option.value ? "bg-gray-100" : "hover:bg-gray-100/90"}`}
-                            onClick={() => updateFilters("view", option.value)}
-                        >
-                            <Icon size={23} />
-                        </button>
-                    );
-                })}
-            </div>
+            <LayoutSetting viewOptions={page === "projects" ? viewOptions : filterViewOption} updateFilters={updateFilters} filters={filters} />
 
             {/* reset button */}
-            <button type="reset" className="border px-4 rounded-sm py-0.75 outline-0 focus:outline-none transition cursor-pointer" onClick={onClearFilter}>
+            <button type="reset" className="border px-4 rounded-sm py-0.75 outline-0 focus:outline-none transition cursor-pointer"
+                onClick={() => onClearFilter()}>
                 Reset
             </button>
         </div>

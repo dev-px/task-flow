@@ -13,3 +13,6 @@ Created using MERN
 
 - Create Kanban Board for task managing
 - Create UI of Kanban board (Sections UI, Task UI)
+- Add Drag and Drop functionality in kanbaord
+- Create Filter section in kanban board 
+- Create Add task and column button and UI
