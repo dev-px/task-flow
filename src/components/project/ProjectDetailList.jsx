@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export default function ProjectList({ projects }) {
+export default function ProjectDetailList({ projects }) {
     const router = useRouter();
 
     return (

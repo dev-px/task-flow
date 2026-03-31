@@ -5,6 +5,7 @@ import DropDown from './../ui/Dropdown';
 import LayoutSetting from '../ui/LayoutSetting';
 
 export default function ProjectFilters({ page, filters, setFilters, onClearFilter }) {
+    console.log("filters", filters)
     const statusOptions = [
         { value: "", label: "Status" },
         { value: "active", label: "Active" },
@@ -67,20 +68,20 @@ export default function ProjectFilters({ page, filters, setFilters, onClearFilte
             />
 
             {/* status - dropdown */}
-            <DropDown options={statusOptions} onChange={(e) => updateFilters("status", e.target.value)} value={filters.status} />
+            <DropDown options={statusOptions} type="status" change={updateFilters} value={filters.status} />
 
 
             {/* priority - dropdown */}
             {page === "projectDetails" && (
-                <DropDown options={priorityOptions} onChange={(e) => updateFilters("priority", e.target.value)} value={filters.priority} />
+                <DropDown options={priorityOptions} type="priority" change={updateFilters} value={filters.priority} />
             )}
 
             {/* sort - dropdown */}
-            <DropDown options={sortOptions} onChange={(e) => updateFilters("sort", e.target.value)} value={filters.sort} />
+            <DropDown options={sortOptions} type="sort" change={updateFilters} value={filters.sort} />
 
             {/* assignee - dropdown */}
             {page === "projectDetails" && (
-                <DropDown options={assigneeOption} onChange={(e) => updateFilters("assignee", e.target.value)} value={filters.assignee} />
+                <DropDown options={assigneeOption} type="assignee" change={updateFilters} value={filters.assignee} />
             )}
 
             {/* list/grid view */}

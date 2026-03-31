@@ -2,7 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, FolderKanban, CheckSquare, Activity, Settings, User, LogOut } from "lucide-react"
+import { LayoutDashboard, FolderKanban, CheckSquare, Activity, Settings, User, LogOut } from "lucide-react";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export default function Sidebar() {
     const pathname = usePathname()
@@ -28,6 +33,7 @@ export default function Sidebar() {
         }`
 
     return (
+
         <aside className="h-screen w-16 border-r flex flex-col items-center py-4">
 
             {/* Logo */}
@@ -40,9 +46,14 @@ export default function Sidebar() {
                 {topLinks.map((link) => {
                     const Icon = link.icon
                     return (
-                        <Link key={link.href} href={link.href} className={linkStyle(link.href)}>
-                            <Icon size={20} />
-                        </Link>
+                        <Tooltip key={link.href}>
+                            <TooltipTrigger asChild className="w-full">
+                                <Link href={link.href} className={linkStyle(link.href)}>
+                                    <Icon size={20} />
+                                </Link>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">{link.name}</TooltipContent>
+                        </Tooltip>
                     )
                 })}
             </nav>
@@ -52,13 +63,19 @@ export default function Sidebar() {
                 {bottomLinks.map((link) => {
                     const Icon = link.icon
                     return (
-                        <Link key={link.href} href={link.href} className={linkStyle(link.href)}>
-                            <Icon size={20} />
-                        </Link>
+                        <Tooltip key={link.href}>
+                            <TooltipTrigger asChild className="w-full">
+                                <Link href={link.href} className={linkStyle(link.href)}>
+                                    <Icon size={20} />
+                                </Link>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">{link.name}</TooltipContent>
+                        </Tooltip>
                     )
                 })}
             </nav>
 
         </aside>
+
     )
 }

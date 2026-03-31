@@ -11,9 +11,11 @@ import TaskCard from "@/components/task/TaskCard";
 import ProjectHeader from "@/components/project/ProjectHeader";
 import ProjectFilters from "@/components/project/ProjectFilters";
 import { PlusCircleIcon } from "lucide-react";
+import AddEditProject from "@/components/project/AddEditProject";
 
 export default function KanBanPage() {
     const { projectId } = useParams();
+    const [showModal, setShowModal] = useState(false);
     const dispatch = useDispatch();
     const [activeTask, setActiveTask] = useState(null);
     const columnData = useSelector((state) => state.board.columns);
@@ -111,8 +113,9 @@ export default function KanBanPage() {
             <ProjectHeader
                 pTitle={data?.title}
                 pDescription={data?.description}
-                pButton="Edit Project"
                 type="edit"
+                showModal={showModal}
+                setShowModal={setShowModal}
             />
 
             {/* task filter section */}
@@ -150,6 +153,9 @@ export default function KanBanPage() {
                     </div>
                 )}
             </section>
+
+            {/* Edit Project Modal */}
+            <AddEditProject showModal={showModal} setShowModal={setShowModal} type="edit" />
         </div>
     );
 }

@@ -15,4 +15,7 @@ Created using MERN
 - Create UI of Kanban board (Sections UI, Task UI)
 - Add Drag and Drop functionality in kanbaord
 - Create Filter section in kanban board 
-- Create Add task and column button and UI
+- Create Add task, Manage Members, settings, Add task button UI in project details page header
+- Implemented reusable UI components including Dropdown, Calendar, Checkbox, Dialog, Input, Label, Popover, Select, Textarea, and Tooltip via shadcn UI
+- Added Add and Edit project Dialog box with UI
+- Added labels in Sidebar
