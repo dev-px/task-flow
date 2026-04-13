@@ -17,5 +17,9 @@ Created using MERN
 - Create Filter section in kanban board 
 - Create Add task, Manage Members, settings, Add task button UI in project details page header
 - Implemented reusable UI
-- Created Settings Page in project details
-- Created Dialog for manage members, Add task and Add column in project details page
+- Created Settings Page in project details (settings/page.jsx)
+- Created Dialog for manage members, Add task and Add column in project details page (ManageMember.jsx, NewTaskDialog.jsx, NewColumnDialog.jsx)
+- Created Task page details dialog and page where one can perform CRUD on subtask (TaskDetailDialog.jsx, [taskdetails/[taskdetailsid]/page.jsx])
+- Add Edit and Delete functionality of column inside TaskSection (TaskSection.jsx, )
+- Move Form state value (constant.js)
+- Created Reusable UI (TabsCompo.jsx, TaskFooter.jsx, SubTaskStatus.jsx, DeleteDialog.jsx)

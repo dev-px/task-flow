@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,47 +20,35 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { initialProjectState } from "@/utils/constant";
 
-export default function AddEditProject({ showModal, setShowModal, type }) {
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    status: "active",
-    priority: "medium",
-    startDate: "",
-    dueDate: "",
-    visibility: "private",
-  });
-
+export default function AddEditProject({
+  showModal,
+  setShowModal,
+  type,
+  projectId,
+  form,
+  setForm,
+}) {
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
+  const closeModal = () => {
+    setShowModal(false);
+    setForm(initialProjectState);
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     const payload = {
       ...form,
-      ownerId: "current-user-id",
+      ...(type === "edit" && { id: projectId }),
+      ...(type === "create" && { columns: {} }),
     };
-
-    console.log(payload);
-
     closeModal();
   };
-
-  function closeModal() {
-    setShowModal(!showModal);
-    setForm({
-      name: "",
-      description: "",
-      status: "active",
-      priority: "medium",
-      startDate: "",
-      dueDate: "",
-      visibility: "private",
-    });
-  }
 
   return (
     <Dialog open={showModal} onOpenChange={closeModal}>
@@ -107,7 +95,7 @@ export default function AddEditProject({ showModal, setShowModal, type }) {
                       onValueChange={(val) => handleChange("status", val)}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue />
+                        <SelectValue placeholder="Select Status" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="active">Active</SelectItem>
@@ -122,7 +110,7 @@ export default function AddEditProject({ showModal, setShowModal, type }) {
                       onValueChange={(val) => handleChange("priority", val)}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue />
+                        <SelectValue placeholder="Select Priority" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="low">Low</SelectItem>
@@ -141,7 +129,7 @@ export default function AddEditProject({ showModal, setShowModal, type }) {
                   className="w-full!"
                 >
                   <SelectTrigger className={"w-full"}>
-                    <SelectValue />
+                    <SelectValue placeholder="Select Visibility" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="private">Private</SelectItem>
@@ -173,39 +161,6 @@ export default function AddEditProject({ showModal, setShowModal, type }) {
                 </div>
               </div>
             )}
-
-            {/* Teams + members */}
-            {/* <div className="space-y-2">
-                            <Label>Teams</Label>
-                            <div className="space-y-2">
-                                {teams.map((team) => (
-                                    <div key={team.id} className="flex items-center space-x-2">
-                                        <Checkbox
-                                            checked={form.teams.includes(team.id)}
-                                            onCheckedChange={() => toggleSelection("teams", team.id)}
-                                        />
-                                        <span className="text-sm">{team.name}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Members</Label>
-                            <div className="space-y-2 max-h-32 overflow-y-auto">
-                                {users.map((user) => (
-                                    <div key={user.id} className="flex items-center space-x-2">
-                                        <Checkbox
-                                            checked={form.members.includes(user.id)}
-                                            onCheckedChange={() =>
-                                                toggleSelection("members", user.id)
-                                            }
-                                        />
-                                        <span className="text-sm">{user.name}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div> */}
 
             {/* visibility */}
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,20 +20,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { setBoard } from "@/redux/slices/boardSlice";
 
-export default function NewTaskDialog({ open, setOpen, columnId }) {
+export default function NewTaskDialog({ open, setOpen, columnId, columnData }) {
+  const dispatch = useDispatch();
   const [task, setTask] = useState({
     title: "",
     description: "",
-    priority: "medium",
+    priority: "low",
     assignee: "",
     dueDate: "",
-    // subtasks: [],
+    subTask: [],
   });
-
-  // const [subtaskInput, setSubtaskInput] = useState("");
 
   const users = ["Alice Johnson", "Olivia Brown", "Daniel Kim"];
 
@@ -41,70 +40,61 @@ export default function NewTaskDialog({ open, setOpen, columnId }) {
     setTask((prev) => ({ ...prev, [field]: value }));
   };
 
-  // const addSubtask = () => {
-  //   if (!subtaskInput.trim()) return;
-
-  //   setTask((prev) => ({
-  //     ...prev,
-  //     subtasks: [
-  //       ...prev.subtasks,
-  //       {
-  //         id: "",
-  //         title: subtaskInput,
-  //         completed: false,
-  //       },
-  //     ],
-  //   }));
-
-  // setSubtaskInput("");
-  // };
-
-  // const removeSubtask = (id) => {
-  //   setTask((prev) => ({
-  //     ...prev,
-  //     subtasks: prev.subtasks.filter((s) => s.id !== id),
-  //   }));
-  // };
-
-  // const toggleSubtask = (id) => {
-  //   setTask((prev) => ({
-  //     ...prev,
-  //     subtasks: prev.subtasks.map((s) =>
-  //       s.id === id ? { ...s, completed: !s.completed } : s,
-  //     ),
-  //   }));
-  // };
-
   const onCloseNewTaskModal = () => {
     setOpen(false);
     setTask({
       title: "",
       description: "",
-      priority: "medium",
+      priority: "low",
       assignee: "",
       dueDate: "",
       subtasks: [],
     });
-    setSubtaskInput("");
   };
 
-  const handleSubmit = (e) => {
+  const handleTaskSubmit = async (e) => {
     e.preventDefault();
+
+    if (!columnData) return;
 
     const payload = {
       ...task,
       id: `T-${Date.now()}`,
-      columnId: columnId ? columnId : "todo",
-      order: Date.now(),
+      columnId: columnId || "todo",
+      order: 10000000,
     };
 
-    console.log(payload);
+    try {
+      // 👉 call backend first (recommended)
+      // const res = await api.createTask(payload);
+
+      const updatedColumns = Object.fromEntries(
+        Object.entries(columnData).map(([key, col]) => {
+          if (key === payload.columnId) {
+            return [
+              key,
+              {
+                ...col,
+                tasks: [...col.tasks, payload],
+              },
+            ];
+          }
+          return [key, col];
+        }),
+      );
+
+      dispatch(setBoard(updatedColumns));
+    } catch (err) {
+      console.error("Task creation failed", err);
+    } finally {
+      onCloseNewTaskModal();
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen} onClose={onCloseNewTaskModal}>
       <DialogContent className="sm:max-w-lg">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleTaskSubmit}>
           <DialogHeader>
             <DialogTitle className="text-lg fontbold mb-2">
               Create New Task

@@ -6,10 +6,9 @@ export default function ProjectHeader({
   pTitle,
   pDescription,
   type,
-  setShowModal,
-  setShowTaskModal,
   setShowManageMembersModal,
   projectId,
+  handleProjectManipulation,
 }) {
   const Icon = type === "create" ? Plus : Pencil;
   const router = useRouter();
@@ -25,7 +24,7 @@ export default function ProjectHeader({
         <Button
           size="lg"
           className="flex-1 rounded-sm hover:bg-gray-800 cursor-pointer"
-          onClick={() => setShowModal(true)}
+          onClick={() => handleProjectManipulation(true)}
         >
           <Icon size={18} />
           {type === "create" ? (
@@ -37,15 +36,6 @@ export default function ProjectHeader({
 
         {type === "edit" && (
           <>
-            <Button
-              size="lg"
-              variant="outline"
-              className="flex-1 rounded-sm cursor-pointer"
-              onClick={() => setShowTaskModal(true)}
-            >
-              <PlusSquare size={18} />
-              <span className="hidden md:block">Add Task</span>
-            </Button>
             <Button
               size="lg"
               variant="outline"

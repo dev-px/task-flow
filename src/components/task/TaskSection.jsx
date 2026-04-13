@@ -1,21 +1,83 @@
+"use client";
+
 import TaskCard from "@/components/task/TaskCard";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { PlusCircleIcon } from "lucide-react";
+import { Pencil, Plus, PlusCircleIcon, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import DeleteDialog from "../layout/DeleteDialog";
+import { setBoard } from "@/redux/slices/boardSlice";
 
-export default function TaskSection({ col, setShowTaskModal, setColumnId }) {
+export default function TaskSection({
+  col,
+  setShowAddTaskModal,
+  setOpenTaskDialog,
+  setClickedTaskId,
+  handleColumnUpdates,
+  setEditingColumnId,
+}) {
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [targetColumn, setTargetColumn] = useState("");
+  const columnData = useSelector((state) => state.board.columns);
+  const dispatch = useDispatch();
+
+  const currColumnId = col?.id;
+
+  // for droppable
   const { setNodeRef, over } = useDroppable({
-    id: col.id,
+    id: currColumnId,
     data: {
-      columnId: col.id,
+      columnId: currColumnId,
     },
   });
-  const onOpenNewTaskModal = () => {
-    setShowTaskModal(true);
-    setColumnId(col?.id);
+
+  const handleEditColumn = () => {
+    setEditingColumnId(currColumnId);
+    handleColumnUpdates("Edit");
+  };
+
+  // delete column in kanban
+  const handleDeleteColumn = () => {
+    try {
+      // extract deleted column task
+      const deleteColumnnTask = Object.values(columnData).find(
+        (c) => c?.id === currColumnId,
+      )?.tasks;
+
+      // filter the deleted column and map the deleted column task to target column
+      const updatedColumns = Object.fromEntries(
+        Object.entries(columnData)
+          .filter(([key, col]) => key !== currColumnId)
+          .map(([key, col]) => {
+            if (key === targetColumn) {
+              return [
+                key,
+                {
+                  ...col,
+                  tasks: [...col.tasks, ...deleteColumnnTask],
+                },
+              ];
+            }
+            return [key, col];
+          }),
+      );
+      dispatch(setBoard(updatedColumns));
+    } catch (error) {
+      console.error("Error while deleting column", error);
+    } finally {
+      setDeleteDialog(false);
+      setTargetColumn("");
+    }
   };
 
   return (
@@ -24,8 +86,59 @@ export default function TaskSection({ col, setShowTaskModal, setColumnId }) {
     >
       {/* Column Header */}
       <div className="p-4 border-b flex justify-between items-center">
-        <h2 className="text-sm font-semibold">{col?.id}</h2>
-        <span className="text-xs text-gray-500">{col.tasks.length}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <h2 className="text-sm font-semibold truncate">{currColumnId}</h2>
+          <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+            {col.tasks.length}
+          </span>
+        </div>
+
+        <div className="flex gap-1">
+          {/* Add Task */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 cursor-pointer rounded-full p-2 hover:bg-gray-200"
+                onClick={() => setShowAddTaskModal(true)}
+              >
+                <Plus size={14} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Add Task</TooltipContent>
+          </Tooltip>
+
+          {/* Edit Column */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 cursor-pointer rounded-full p-2 hover:bg-gray-200"
+                onClick={() => handleEditColumn()}
+              >
+                <Pencil size={14} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Edit Column</TooltipContent>
+          </Tooltip>
+
+          {/* Delete Column */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 cursor-pointer rounded-full p-2 hover:bg-gray-200"
+                onClick={() => setDeleteDialog(true)}
+              >
+                <Trash2 size={14} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Delete Column</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
 
       {/* Cards Container */}
@@ -39,17 +152,34 @@ export default function TaskSection({ col, setShowTaskModal, setColumnId }) {
           strategy={verticalListSortingStrategy}
         >
           {col.tasks.map((item, index) => (
-            <TaskCard key={item?.id} task={item} index={index} />
+            <TaskCard
+              key={item?.id}
+              task={item}
+              index={index}
+              setOpenTaskDialog={setOpenTaskDialog}
+              setClickedTaskId={setClickedTaskId}
+            />
           ))}
         </SortableContext>
         <div
           className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition cursor-pointer touch-none select-none flex flex-col gap-2 justify-center items-center h-24"
-          onClick={onOpenNewTaskModal}
+          onClick={() => setShowAddTaskModal(true)}
         >
           <PlusCircleIcon className="w-6 h-6 text-gray-400" />
           <div className="text-base text-gray-500">Add New Task</div>
         </div>
       </div>
+
+      {/* Delete Dialog */}
+      <DeleteDialog
+        open={deleteDialog}
+        setOpen={setDeleteDialog}
+        type="column"
+        deletingColumnId={currColumnId}
+        targetColumn={targetColumn}
+        setTargetColumn={setTargetColumn}
+        handleDelete={handleDeleteColumn}
+      />
     </div>
   );
 }

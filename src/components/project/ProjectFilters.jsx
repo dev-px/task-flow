@@ -11,7 +11,6 @@ export default function ProjectFilters({
   setFilters,
   onClearFilter
 }) {
-  console.log("filters", filters);
   const statusOptions = [
     { value: "", label: "Status" },
     { value: "active", label: "Active" },

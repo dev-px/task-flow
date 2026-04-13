@@ -6,21 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useParams, useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
-import {
-  Plus,
-  FileText,
-  Trash2,
-  ExternalLink,
-  Paperclip,
-  AlertTriangle,
-} from "lucide-react";
+import { useParams } from "next/navigation";
+import TabsCompo from "@/components/layout/TabsCompo";
+import TaskFooter from "@/components/layout/TaskFooter";
+import { Plus, FileText, Trash2, ExternalLink, Paperclip } from "lucide-react";
 
 const tabs = ["general", "members", "timeline", "links", "documents", "danger"];
 
 export default function ProjectSettingsPage() {
-  const router = useRouter();
   const { projectId } = useParams();
   const [settingsForm, setSettingsForm] = useState({
     name: "",
@@ -105,39 +98,18 @@ export default function ProjectSettingsPage() {
     }
   };
 
-  useEffect(() => {
-    console.log(settingsForm);
-  }, [settingsForm]);
-
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-3">
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
-        className="w-full flex flex-col gap-6"
+        className="w-full flex flex-col gap-0"
       >
         {/* tabs header */}
-        <div className="overflow-x-auto hide-scrollbar">
-          <TabsList className="flex justify-between items-center w-full bg-transparent p-0 mb-6">
-            {tabs.map((tab) => (
-              <TabsTrigger
-                key={tab}
-                value={tab}
-                className={cn(
-                  "px-4 py-2 text-base font-medium transition",
-                  activeTab === tab
-                    ? "border-black text-black"
-                    : "border-transparent text-muted-foreground hover:text-black",
-                )}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
+        <TabsCompo tabs={tabs} activeTab={activeTab} />
 
         {/* project general info */}
-        <TabsContent value="general">
+        <TabsContent value="general" className="my-6">
           <Card
             title="General Settings"
             description="Basic details about your project."
@@ -183,7 +155,7 @@ export default function ProjectSettingsPage() {
         </TabsContent>
 
         {/* project members */}
-        <TabsContent value="members">
+        <TabsContent value="members" className="my-6">
           <Card
             title="Members"
             description="Invite collaborators to your project."
@@ -221,7 +193,7 @@ export default function ProjectSettingsPage() {
         </TabsContent>
 
         {/* project timeline */}
-        <TabsContent value="timeline">
+        <TabsContent value="timeline" className="my-6">
           <Card title="Timeline" description="Set project start and due dates.">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -246,7 +218,7 @@ export default function ProjectSettingsPage() {
         </TabsContent>
 
         {/* project links */}
-        <TabsContent value="links">
+        <TabsContent value="links" className="my-6">
           <Card
             title="Links & Integrations"
             description="Connect GitHub, Figma, or documentation."
@@ -315,7 +287,7 @@ export default function ProjectSettingsPage() {
         </TabsContent>
 
         {/* additional documents */}
-        <TabsContent value="documents">
+        <TabsContent value="documents" className="my-6">
           <Card
             title="Assets & Docs"
             description="Upload PDFs, SRS, or Design specs."
@@ -420,7 +392,7 @@ export default function ProjectSettingsPage() {
         </TabsContent>
 
         {/* DANGER */}
-        <TabsContent value="danger">
+        <TabsContent value="danger" className="my-6">
           <Card
             title="Danger Zone"
             description="Proceed with caution. These actions are irreversible."
@@ -431,28 +403,13 @@ export default function ProjectSettingsPage() {
       </Tabs>
 
       {/* footer */}
-      <div className="flex flex-col md:flex-row justify-between gap-4 mt-8">
-        <Button
-          variant="outline"
-          onClick={prevTab}
-          disabled={currentIndex === 0}
-        >
-          Previous
-        </Button>
-
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant="secondary"
-            onClick={() => router.push(`/projects/${projectId}`)}
-          >
-            Cancel
-          </Button>
-          <Button>Save</Button>
-          <Button onClick={nextTab} disabled={currentIndex === tabs.length - 1}>
-            Next
-          </Button>
-        </div>
-      </div>
+      <TaskFooter
+        currentIndex={currentIndex}
+        prevTab={prevTab}
+        nextTab={nextTab}
+        len={tabs.length}
+        projectId={projectId}
+      />
     </div>
   );
 }
@@ -479,17 +436,6 @@ function MemberRow({ name, role, onRemove }) {
         <p className="text-sm text-muted-foreground">{role}</p>
       </div>
       <Button variant="outline" size="sm" onClick={onRemove}>
-        Remove
-      </Button>
-    </div>
-  );
-}
-
-function TeamRow({ name }) {
-  return (
-    <div className="flex justify-between items-center border p-3 rounded-lg">
-      <p className="font-medium">{name}</p>
-      <Button variant="outline" size="sm">
         Remove
       </Button>
     </div>

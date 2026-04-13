@@ -22,17 +22,25 @@ import AddEditProject from "@/components/project/ProjectPageDialogs/AddEditProje
 import NewColumnDialog from "@/components/project/ProjectPageDialogs/NewColumnDialog";
 import NewTaskDialog from "@/components/task/TaskDialogs/NewTaskDialog";
 import ManageMembersModal from "@/components/project/ProjectPageDialogs/ManageMember";
+import TaskDetailsDialog from "@/components/task/TaskDialogs/TaskDetailsDailog";
+import { initialProjectState } from "@/utils/constant";
 
 export default function KanBanPage() {
   const { projectId } = useParams();
   const [showModal, setShowModal] = useState(false);
   const [showColumnModal, setShowColumnModal] = useState(false);
-  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showTaskModal, setShowAddTaskModal] = useState(false);
   const [showManageMembersModal, setShowManageMembersModal] = useState(false);
-  const [columnId, setColumnId] = useState(null);
-  const dispatch = useDispatch();
+  const [activeColumnId, setActiveColumnId] = useState(null); // for adding tasks
+  const [editingColumnId, setEditingColumnId] = useState(null); // for column modal
   const [activeTask, setActiveTask] = useState(null);
+  const dispatch = useDispatch();
   const columnData = useSelector((state) => state.board.columns);
+  const [openTaskDialog, setOpenTaskDialog] = useState(false);
+  const [clickedTaskId, setClickedTaskId] = useState(null);
+  const [manageColumnType, setManageColumnType] = useState("");
+  // edit project modal
+  const [form, setForm] = useState(initialProjectState);
   const [filters, setFilters] = useState({
     search: "",
     status: "",
@@ -55,6 +63,7 @@ export default function KanBanPage() {
     });
   };
 
+  // dummy API
   const data = projectsKanban.find(
     (project) => project.id === parseInt(projectId),
   );
@@ -65,6 +74,20 @@ export default function KanBanPage() {
     }
   }, [data, columnData]);
 
+  // on Edit Peoject Modal
+  const handleEditProject = () => {
+    setForm({
+      name: data?.title || "",
+      description: data?.description || "",
+      status: data?.status || "status",
+      priority: data?.priority || "priority",
+      startDate: data?.startDate || "",
+      dueDate: data?.dueDate || "",
+      visibility: data?.visibility || "visibility",
+    });
+    setShowModal(true);
+  };
+
   // for small screens --> drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -73,6 +96,18 @@ export default function KanBanPage() {
       },
     }),
   );
+
+  // Show Dialog for Add and Edit Column in kanban
+  const handleColumnUpdates = (type) => {
+    if (!type) return;
+
+    if (type === "Add") {
+      setEditingColumnId(null);
+    }
+
+    setManageColumnType(type);
+    setShowColumnModal(true);
+  };
 
   // it helps to show task's drag overlay UI that enhance UX
   const handleDragStart = (event) => {
@@ -122,17 +157,15 @@ export default function KanBanPage() {
   };
 
   return (
-    <div className="p-2">
+    <div className="p-3">
       {/* Project Details title + Edit Project */}
       <ProjectHeader
         pTitle={data?.title}
         pDescription={data?.description}
         type="edit"
-        showModal={showModal}
-        setShowModal={setShowModal}
-        setShowTaskModal={setShowTaskModal}
         setShowManageMembersModal={setShowManageMembersModal}
         projectId={projectId}
+        handleProjectManipulation={handleEditProject}
       />
 
       {/* task filter section */}
@@ -155,18 +188,22 @@ export default function KanBanPage() {
             >
               <div className="flex gap-6 overflow-x-auto h-[calc(100vh-90px)]">
                 {Object.values(columnData).map((col) => (
-                  <TaskSection
-                    key={col.id}
-                    col={col}
-                    setShowTaskModal={setShowTaskModal}
-                    setColumnId={setColumnId}
-                  />
+                  <div onClick={() => setActiveColumnId(col?.id)} key={col.id}>
+                    <TaskSection
+                      col={col}
+                      setShowAddTaskModal={setShowAddTaskModal}
+                      setOpenTaskDialog={setOpenTaskDialog}
+                      setClickedTaskId={setClickedTaskId}
+                      handleColumnUpdates={handleColumnUpdates}
+                      setEditingColumnId={setEditingColumnId}
+                    />
+                  </div>
                 ))}
 
                 {/* Add new Column button */}
                 <div
                   className="min-w-70 max-w-70 bg-gray-50 border-2 border-gray-100 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100"
-                  onClick={() => setShowColumnModal(true)}
+                  onClick={() => handleColumnUpdates("Add")}
                 >
                   <PlusCircleIcon className="w-10 h-10 text-gray-400" />
                   <span className="text-sm text-gray-500 mt-2">
@@ -188,28 +225,45 @@ export default function KanBanPage() {
         )}
       </section>
 
-      {/* Edit Project Modal */}
+      {/* Edit Project Dialog */}
       <AddEditProject
         showModal={showModal}
         setShowModal={setShowModal}
         type="edit"
+        projectId={projectId}
+        form={form}
+        setForm={setForm}
       />
-      {/* New Column Dialog */}
-      <NewColumnDialog
-        open={showColumnModal}
-        setOpen={setShowColumnModal}
-        existingColumns={Object.values(columnData)}
-      />
-      {/* New Task Dialog */}
-      <NewTaskDialog
-        open={showTaskModal}
-        setOpen={setShowTaskModal}
-        columnId={columnId}
-      />
+
       {/* Manage Members Dialog */}
       <ManageMembersModal
         open={showManageMembersModal}
         setOpen={setShowManageMembersModal}
+      />
+
+      {/* New Column Dialog */}
+      <NewColumnDialog
+        open={showColumnModal}
+        setOpen={setShowColumnModal}
+        columnData={columnData}
+        columnId={editingColumnId}
+        type={manageColumnType}
+      />
+
+      {/* New Task Dialog */}
+      <NewTaskDialog
+        open={showTaskModal}
+        setOpen={setShowAddTaskModal}
+        columnId={activeColumnId}
+        columnData={columnData}
+      />
+
+      {/* dialog for task details */}
+      <TaskDetailsDialog
+        openTaskDialog={openTaskDialog}
+        setOpenTaskDialog={setOpenTaskDialog}
+        task={findTaskById(clickedTaskId)}
+        projectId={projectId}
       />
     </div>
   );

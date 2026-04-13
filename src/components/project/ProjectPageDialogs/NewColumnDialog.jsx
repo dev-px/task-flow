@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../../ui/button";
-import { Label } from '@/components/ui/label';
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -11,39 +11,82 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Input } from '@/components/ui/input';
+import { Input } from "@/components/ui/input";
+import { useDispatch } from "react-redux";
+import { setBoard } from "@/redux/slices/boardSlice";
 
 export default function NewColumnDialog({
   open,
   setOpen,
-  existingColumns = [],
+  columnData,
+  columnId,
+  type,
 }) {
+  const dispatch = useDispatch();
   const [name, setName] = useState("");
   const [wipLimit, setWipLimit] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const newColumn = {
-      name,
-      order: existingColumns.length + 1,
-      wipLimit: wipLimit ? Number(wipLimit) : null,
-    };
-
-    console.log(newColumn);
-
+  const onCloseAddColumnDialog = () => {
     setOpen(false);
     setName("");
     setWipLimit("");
   };
 
+  const handleColumnSubmit = (e) => {
+    e.preventDefault();
+
+    if (!columnData) return;
+
+    const payload = {
+      id: name.trim().toLowerCase(),
+      title: name.trim(),
+      name,
+      tasks: [],
+      order: Object.keys(columnData).length + 1,
+      wipLimit: wipLimit ? Number(wipLimit) : null,
+    };
+
+    if (columnData[payload.id]) {
+      console.error("Column already exists");
+      return;
+    }
+
+    try {
+      const updatedColumns = {
+        ...columnData,
+        [payload.id]: payload,
+      };
+
+      dispatch(setBoard(updatedColumns));
+    } catch (error) {
+      console.error("Task creation failed", error);
+    } finally {
+      onCloseAddColumnDialog();
+    }
+  };
+
+  useEffect(() => {
+    if (columnData && columnId) {
+      const col = Object.values(columnData).find((c) => c.id === columnId);
+
+      if (col) {
+        setName(col.title);
+        setWipLimit(col.wipLimit || "");
+      }
+    } else {
+      // Add mode → reset form
+      setName("");
+      setWipLimit("");
+    }
+  }, [columnData, columnId]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-md">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleColumnSubmit}>
           <DialogHeader>
             <DialogTitle className="text-lg font-bold mb-2">
-              Create Column
+              {type} Column
             </DialogTitle>
           </DialogHeader>
 
@@ -81,7 +124,7 @@ export default function NewColumnDialog({
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit">Create Column</Button>
+            <Button type="submit">{type} Column</Button>
           </DialogFooter>
         </form>
       </DialogContent>

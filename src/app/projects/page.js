@@ -9,6 +9,7 @@ import { FolderKanban, PlayCircle, CheckCircle2, Archive } from "lucide-react";
 import { projects } from "@/utils/helper";
 import AddEditProject from "@/components/project/ProjectPageDialogs/AddEditProject";
 import ProjectDetailList from "@/components/project/ProjectDetailList";
+import { initialProjectState } from "@/utils/constant";
 
 export default function ProjectPage() {
   const [showModal, setShowModal] = useState(false);
@@ -18,6 +19,8 @@ export default function ProjectPage() {
     sort: "",
     view: "Grid",
   });
+  // for add project modal
+  const [form, setForm] = useState(initialProjectState);
 
   const projectNumber = [
     { statusTitle: "Total Projects", value: 24, icon: FolderKanban },
@@ -36,14 +39,14 @@ export default function ProjectPage() {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-3">
       {/* project page header section */}
       <ProjectHeader
         pTitle="Projects"
         pDescription="Manage and organize your team's projects."
         type="create"
-        showModal={showModal}
         setShowModal={setShowModal}
+        handleProjectManipulation={() => setShowModal(true)}
       />
 
       {/* project page filter section */}
@@ -86,6 +89,8 @@ export default function ProjectPage() {
         showModal={showModal}
         setShowModal={setShowModal}
         type="create"
+        form={form}
+        setForm={setForm}
       />
     </div>
   );
