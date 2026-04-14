@@ -7,6 +7,7 @@ export default function TaskFooter({
   nextTab,
   len,
   projectId,
+  onSave,
 }) {
   const router = useRouter();
   return (
@@ -22,7 +23,7 @@ export default function TaskFooter({
         >
           Cancel
         </Button>
-        <Button>Save</Button>
+        <Button onClick={() => onSave()}>Save</Button>
       </div>
 
       <div className="flex gap-2 flex-wrap">

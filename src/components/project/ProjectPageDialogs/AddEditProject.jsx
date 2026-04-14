@@ -39,14 +39,23 @@ export default function AddEditProject({
     setForm(initialProjectState);
   };
 
+  const newProjectExtraFields = {
+    columns: {},
+    logo: "",
+    members: [],
+    links: [],
+    documents: [],
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
     const payload = {
       ...form,
       ...(type === "edit" && { id: projectId }),
-      ...(type === "create" && { columns: {} }),
+      ...(type === "create" && { ...newProjectExtraFields }),
     };
+    console.log(`${type} project details when submitting`, payload);
     closeModal();
   };
 

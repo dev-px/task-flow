@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,23 +10,14 @@ import { useParams } from "next/navigation";
 import TabsCompo from "@/components/layout/TabsCompo";
 import TaskFooter from "@/components/layout/TaskFooter";
 import { Plus, FileText, Trash2, ExternalLink, Paperclip } from "lucide-react";
+import { initialProjectSettingForm } from "@/utils/constant";
+import { projectsKanban } from "@/utils/helper";
 
 const tabs = ["general", "members", "timeline", "links", "documents", "danger"];
 
 export default function ProjectSettingsPage() {
   const { projectId } = useParams();
-  const [settingsForm, setSettingsForm] = useState({
-    name: "",
-    description: "",
-    logo: "",
-    status: "",
-    visibility: "",
-    members: [],
-    startDate: "",
-    endDate: "",
-    links: [],
-    documents: [],
-  });
+  const [settingsForm, setSettingsForm] = useState(initialProjectSettingForm);
   const [member, setMember] = useState("");
   const [urls, setUrls] = useState({ label: "", link: "" });
   const [fileState, setFileState] = useState({
@@ -37,6 +28,7 @@ export default function ProjectSettingsPage() {
     label: "",
   });
   const [activeTab, setActiveTab] = useState("general");
+  const [initialData, setInitialData] = useState(null);
 
   const currentIndex = tabs.indexOf(activeTab);
 
@@ -69,24 +61,73 @@ export default function ProjectSettingsPage() {
     isFileSizeValid &&
     isFileTypeValid;
 
-  const updateForm = (key, value) => {
-    if (Array.isArray(settingsForm[key])) {
-      setSettingsForm((prev) => ({
-        ...prev,
-        [key]: [...prev[key], value],
-      }));
-      setMember("");
-      setUrls({ label: "", link: "" });
-      setFileState({
-        file: null,
-        name: "",
-        size: 0,
-        type: "",
-        label: "",
-      });
-    } else {
-      setSettingsForm((prev) => ({ ...prev, [key]: value }));
+  useEffect(() => {
+    if (!projectId) return;
+
+    const data = projectsKanban.find(
+      (project) => project.id === parseInt(projectId),
+    );
+
+    if (data) {
+      const formattedData = {
+        name: data.title || "",
+        description: data.description || "",
+        logo: data.logo || "",
+        status: data.status || "",
+        visibility: data.visibility || "",
+        members: data.members || [],
+        startDate: data.startDate || "",
+        dueDate: data.dueDate || "",
+        links: data.links || [],
+        documents: data.documents || [],
+      };
+
+      setSettingsForm(formattedData);
+      setInitialData(formattedData);
     }
+  }, [projectId]);
+
+  const getChangedFields = (initial, current) => {
+    const changes = {};
+
+    Object.keys(current).forEach((key) => {
+      const initialValue = initial?.[key];
+      const currentValue = current?.[key];
+
+      // deep compare for arrays/objects
+      if (JSON.stringify(initialValue) !== JSON.stringify(currentValue)) {
+        changes[key] = currentValue;
+      }
+    });
+
+    return changes;
+  };
+
+  const updateForm = (key, value) => {
+    setSettingsForm((prev) => {
+      if (Array.isArray(prev[key])) {
+        return {
+          ...prev,
+          [key]: [...prev[key], value],
+        };
+      }
+
+      return {
+        ...prev,
+        [key]: value,
+      };
+    });
+
+    // reset temp states
+    setMember("");
+    setUrls({ label: "", link: "" });
+    setFileState({
+      file: null,
+      name: "",
+      size: 0,
+      type: "",
+      label: "",
+    });
   };
 
   const removeItemFromSettings = (key, id) => {
@@ -95,6 +136,27 @@ export default function ProjectSettingsPage() {
         ...prev,
         [key]: prev[key].filter((_, index) => index !== id),
       }));
+    }
+  };
+
+  // handle saving form
+  const handleSave = async () => {
+    if (!initialData) return;
+
+    const changedData = getChangedFields(initialData, settingsForm);
+
+    if (Object.keys(changedData).length === 0) {
+      console.log("No changes made");
+      return;
+    }
+
+    try {
+      console.log("Sending only changed fields:", changedData);
+
+      // update initialData after save
+      setInitialData(settingsForm);
+    } catch (error) {
+      console.error("Save failed", error);
     }
   };
 
@@ -409,6 +471,7 @@ export default function ProjectSettingsPage() {
         nextTab={nextTab}
         len={tabs.length}
         projectId={projectId}
+        onSave={handleSave}
       />
     </div>
   );

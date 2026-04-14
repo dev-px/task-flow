@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { projectsKanban } from "@/utils/helper";
+import { dummyData } from "@/utils/helper";
 import TaskSection from "@/components/task/TaskSection";
 import { useDispatch, useSelector } from "react-redux";
 import { moveTask, setBoard } from "@/redux/slices/boardSlice";
@@ -64,15 +64,47 @@ export default function KanBanPage() {
   };
 
   // dummy API
-  const data = projectsKanban.find(
-    (project) => project.id === parseInt(projectId),
-  );
+  const data = dummyData.find((project) => project.id === parseInt(projectId));
 
   useEffect(() => {
-    if (data?.columns && Object.keys(columnData).length === 0) {
-      dispatch(setBoard(data.columns));
+    function generateColumns(cols, allTasks) {
+      const columnData = {};
+      const finalData = {};
+
+      cols.forEach((col) => {
+        columnData[col?.id] = {
+          ...col,
+          tasks: [],
+        };
+      });
+
+      allTasks.forEach((t) => {
+        if (columnData[t.columnId]) {
+          columnData[t.columnId].tasks.push(t);
+        }
+      });
+
+      // sort tasks in each column based on columnOrder --> which is responsible for vertical ordering inside board column
+      Object.values(columnData).forEach((col) => {
+        col.tasks.sort((a, b) => a.columnOrder - b.columnOrder);
+      });
+
+      // sort columns based on column order --> which is responsible for horizontal ordering in board
+      const sortedColumns = Object.values(columnData).sort(
+        (a, b) => a.order - b.order,
+      );
+
+      sortedColumns.forEach((col) => (finalData[col?.id] = { ...col }));
+      return finalData;
     }
-  }, [data, columnData]);
+
+    if (data?.tasks?.length > 0) {
+      const columns = generateColumns(data?.columns, data?.tasks);
+      console.log(columns);
+      dispatch(setBoard(columns));
+      console.log(columnData);
+    }
+  }, [data]);
 
   // on Edit Peoject Modal
   const handleEditProject = () => {
@@ -121,6 +153,7 @@ export default function KanBanPage() {
     // over --> from where we placed the moved task
     const { active, over } = event;
     if (!over) return;
+    // console.log(active, over);
 
     const taskId = active.id;
 
@@ -135,7 +168,14 @@ export default function KanBanPage() {
     const destTasks = columnData[destCol]?.tasks || [];
 
     const oldIndex = sourceTasks.findIndex((t) => t.id === taskId);
-    const newIndex = destTasks.findIndex((t) => t.id === over.id);
+    let newIndex;
+
+    if (columnData[over.id]) {
+      // dropped on column
+      newIndex = destTasks.length;
+    } else {
+      newIndex = destTasks.findIndex((t) => t.id === over.id);
+    }
     if (oldIndex === -1) return;
 
     dispatch(
