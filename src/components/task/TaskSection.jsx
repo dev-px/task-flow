@@ -16,7 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import DeleteDialog from "../layout/DeleteDialog";
-import { setBoard } from "@/redux/slices/boardSlice";
+import { deleteColumn } from "@/redux/slices/boardSlice";
 
 export default function TaskSection({
   col,
@@ -28,21 +28,23 @@ export default function TaskSection({
 }) {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [targetColumn, setTargetColumn] = useState("");
-  const columnData = useSelector((state) => state.board.columns);
+  const { columns, columnTaskIds, tasks } = useSelector((state) => state.board);
   const dispatch = useDispatch();
 
-  const currColumnId = col?.id;
+  const taskIds = columnTaskIds[col] || [];
+
+  const colData = Object.keys(columns).length;
 
   // for droppable
   const { setNodeRef, over } = useDroppable({
-    id: currColumnId,
+    id: col,
     data: {
-      columnId: currColumnId,
+      columnId: col,
     },
   });
 
   const handleEditColumn = () => {
-    setEditingColumnId(currColumnId);
+    setEditingColumnId(col);
     handleColumnUpdates("Edit");
   };
 
@@ -50,28 +52,11 @@ export default function TaskSection({
   const handleDeleteColumn = () => {
     try {
       // extract deleted column task
-      const deleteColumnnTask = Object.values(columnData).find(
-        (c) => c?.id === currColumnId,
-      )?.tasks;
-
-      // filter the deleted column and map the deleted column task to target column
-      const updatedColumns = Object.fromEntries(
-        Object.entries(columnData)
-          .filter(([key, col]) => key !== currColumnId)
-          .map(([key, col]) => {
-            if (key === targetColumn) {
-              return [
-                key,
-                {
-                  ...col,
-                  tasks: [...col.tasks, ...deleteColumnnTask],
-                },
-              ];
-            }
-            return [key, col];
-          }),
-      );
-      dispatch(setBoard(updatedColumns));
+      const reduxPayload = {
+        columnId: col,
+        targetColumnId: targetColumn,
+      };
+      dispatch(deleteColumn(reduxPayload));
     } catch (error) {
       console.error("Error while deleting column", error);
     } finally {
@@ -82,14 +67,14 @@ export default function TaskSection({
 
   return (
     <div
-      className={`min-w-70 max-w-70 bg-gray-50 border-2 ${col.id === over?.data?.current?.columnId ? "border-black" : "border-gray-100"} rounded-lg flex flex-col `}
+      className={`min-w-70 max-w-70 bg-gray-50 border-2 ${col === over?.data?.current?.columnId ? "border-black" : "border-gray-100"} rounded-lg flex flex-col `}
     >
       {/* Column Header */}
       <div className="p-4 border-b flex justify-between items-center">
         <div className="flex items-center gap-2 min-w-0">
-          <h2 className="text-sm font-semibold truncate">{currColumnId}</h2>
+          <h2 className="text-sm font-semibold truncate">{col}</h2>
           <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-            {col.tasks.length}
+            {taskIds.length}
           </span>
         </div>
 
@@ -126,17 +111,28 @@ export default function TaskSection({
 
           {/* Delete Column */}
           <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 cursor-pointer rounded-full p-2 hover:bg-gray-200"
-                onClick={() => setDeleteDialog(true)}
-              >
-                <Trash2 size={14} />
-              </Button>
+            <TooltipTrigger
+              asChild
+              className={colData <= 1 && "cursor-not-allowed p-0 m-0"}
+            >
+              <span className="p-0 m-0">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 cursor-pointer rounded-full p-2 hover:bg-gray-200"
+                  disabled={colData <= 1}
+                  onClick={() => setDeleteDialog(true)}
+                >
+                  <Trash2 size={14} />
+                </Button>
+              </span>
             </TooltipTrigger>
-            <TooltipContent>Delete Column</TooltipContent>
+
+            <TooltipContent>
+              {colData <= 1
+                ? "At least one column is required"
+                : "Delete column"}
+            </TooltipContent>
           </Tooltip>
         </div>
       </div>
@@ -147,14 +143,11 @@ export default function TaskSection({
         className="flex-1 overflow-y-auto hide-scrollbar p-3 space-y-3 min-h-25"
       >
         {/* Example Cards */}
-        <SortableContext
-          items={col.tasks.map((t) => t.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {col.tasks.map((item, index) => (
+        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+          {taskIds.map((taskId, index) => (
             <TaskCard
-              key={item?.id}
-              task={item}
+              key={taskId}
+              task={tasks[taskId]}
               index={index}
               setOpenTaskDialog={setOpenTaskDialog}
               setClickedTaskId={setClickedTaskId}
@@ -175,7 +168,7 @@ export default function TaskSection({
         open={deleteDialog}
         setOpen={setDeleteDialog}
         type="column"
-        deletingColumnId={currColumnId}
+        deletingColumnId={col}
         targetColumn={targetColumn}
         setTargetColumn={setTargetColumn}
         handleDelete={handleDeleteColumn}

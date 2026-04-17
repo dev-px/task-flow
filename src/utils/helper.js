@@ -159,153 +159,6 @@ export const projects = [
   },
 ];
 
-export const projectsKanban = [
-  {
-    id: 1,
-    title: "Website Redesign",
-    description: "Redesign company marketing website",
-    columns: {
-      todo: {
-        id: "todo",
-        title: "Todo",
-        order: 1,
-        tasks: [
-          {
-            id: "T-101",
-            columnId: "todo",
-            order: 1000,
-            title: "Research competitor websites",
-            priority: "medium",
-            assignee: "Alice Johnson",
-            dueDate: "2026-03-18",
-            subtasks: [
-              {
-                id: "ST-1",
-                title: "Analyze 5 competitor sites",
-                completed: true,
-              },
-              { id: "ST-2", title: "Collect UI inspiration", completed: true },
-              {
-                id: "ST-3",
-                title: "Prepare research summary",
-                completed: false,
-              },
-            ],
-          },
-          {
-            id: "T-107",
-            columnId: "todo",
-            order: 2000,
-            title: "Define content structure",
-            priority: "low",
-            assignee: "Olivia Brown",
-            dueDate: "2026-03-19",
-            subtasks: [],
-          },
-          {
-            id: "T-108",
-            columnId: "todo",
-            order: 3000,
-            title: "Gather branding assets",
-            priority: "medium",
-            assignee: "Daniel Kim",
-            dueDate: "2026-03-18",
-            subtasks: [],
-          },
-        ],
-      },
-
-      inProgress: {
-        id: "inProgress",
-        title: "In Progress",
-        order: 2,
-        tasks: [
-          {
-            id: "T-102",
-            columnId: "inProgress",
-            order: 4000,
-            title: "Create landing page wireframe",
-            priority: "high",
-            assignee: "Sophia Patel",
-            dueDate: "2026-03-20",
-            subtasks: [
-              { id: "ST-4", title: "Header layout design", completed: true },
-              { id: "ST-5", title: "Hero section structure", completed: false },
-            ],
-          },
-        ],
-      },
-
-      review: {
-        id: "review",
-        title: "Review",
-        order: 3,
-        tasks: [
-          {
-            id: "T-103",
-            columnId: "review",
-            order: 5000,
-            title: "Implement responsive navbar",
-            priority: "critical",
-            assignee: "Michael Chen",
-            dueDate: "2026-03-17",
-            subtasks: [
-              { id: "ST-7", title: "Mobile dropdown menu", completed: true },
-              {
-                id: "ST-8",
-                title: "Accessibility improvements",
-                completed: true,
-              },
-            ],
-          },
-        ],
-      },
-
-      testing: {
-        id: "testing",
-        title: "Testing",
-        order: 4,
-        tasks: [
-          {
-            id: "T-104",
-            columnId: "testing",
-            order: 6000,
-            title: "Cross-browser testing",
-            priority: "medium",
-            assignee: "Michael Chen",
-            dueDate: "2026-03-18",
-            subtasks: [],
-          },
-        ],
-      },
-
-      done: {
-        id: "done",
-        title: "Done",
-        order: 5,
-        tasks: [
-          {
-            id: "T-106",
-            columnId: "done",
-            order: 7000,
-            title: "Optimize hero images",
-            priority: "low",
-            assignee: "Daniel Kim",
-            dueDate: "2026-03-10",
-            subtasks: [
-              { id: "ST-9", title: "Compress images", completed: true },
-              { id: "ST-10", title: "Lazy loading", completed: true },
-            ],
-          },
-        ],
-      },
-    },
-    status: "active",
-    visibility: "public",
-    priority: "medium",
-  },
-];
-
 export const dummyData = [
   {
     id: 1,
@@ -326,23 +179,84 @@ export const dummyData = [
       { id: "U-5", name: "Olivia Brown", role: "member" },
     ],
 
-    // workflow: {
-    //   states: ["todo", "in-progress", "review", "testing", "done"],
-    //   transitions: {
-    //     todo: ["in-progress"],
-    //     "in-progress": ["review"],
-    //     review: ["testing"],
-    //     testing: ["done"],
-    //   },
-    // },
+    // 🔹 Columns (normalized)
+    columns: {
+      todo: { id: "todo", title: "Todo", wipLimit: null },
+      "in-progress": { id: "in-progress", title: "In Progress", wipLimit: 4 },
+      review: { id: "review", title: "Review", wipLimit: 3 },
+      testing: { id: "testing", title: "Testing", wipLimit: 1 },
+      done: { id: "done", title: "Done", wipLimit: 2 },
+    },
 
-    columns: [
-      { id: "todo", title: "Todo", order: 1 },
-      { id: "in-progress", title: "In Progress", order: 2 },
-      { id: "review", title: "Review", order: 3 },
-      { id: "testing", title: "Testing", order: 4 },
-      { id: "done", title: "Done", order: 5 },
-    ],
+    // 🔹 Column order (horizontal)
+    columnOrder: ["todo", "in-progress", "review", "testing", "done"],
+
+    // 🔹 Column → taskIds (UI ordering)
+    columnTaskIds: {
+      todo: ["T-101", "T-105"],
+      "in-progress": ["T-102"],
+      review: ["T-103"],
+      testing: ["T-104"],
+      done: [],
+    },
+
+    // 🔹 Tasks (single source of truth)
+    tasks: {
+      "T-101": {
+        id: "T-101",
+        title: "Research competitor websites",
+        type: "task",
+        columnId: "todo",
+        columnOrder: 1000,
+        priority: "medium",
+        assigneeId: "U-1",
+        dueDate: "2026-03-18",
+      },
+
+      "T-105": {
+        id: "T-105",
+        title: "Fix login bug",
+        type: "bug",
+        columnId: "todo",
+        columnOrder: 2000,
+        priority: "high",
+        assigneeId: "U-4",
+        dueDate: "2026-03-19",
+      },
+
+      "T-102": {
+        id: "T-102",
+        title: "Create landing page wireframe",
+        type: "story",
+        columnId: "in-progress",
+        columnOrder: 4000,
+        priority: "high",
+        assigneeId: "U-2",
+        dueDate: "2026-03-20",
+      },
+
+      "T-103": {
+        id: "T-103",
+        title: "Implement responsive navbar",
+        type: "task",
+        columnId: "review",
+        columnOrder: 5000,
+        priority: "critical",
+        assigneeId: "U-3",
+        dueDate: "2026-03-17",
+      },
+
+      "T-104": {
+        id: "T-104",
+        title: "Cross-browser testing",
+        type: "bug",
+        columnId: "testing",
+        columnOrder: 6000,
+        priority: "medium",
+        assigneeId: "U-3",
+        dueDate: "2026-03-18",
+      },
+    },
 
     sprints: [
       {
@@ -369,203 +283,11 @@ export const dummyData = [
         color: "#16a34a",
       },
     ],
-
-    tasks: [
-      {
-        id: "T-101",
-        title: "Research competitor websites",
-        description: "Analyze UI/UX patterns",
-
-        type: "task",
-        status: "todo",
-        columnId: "todo",
-
-        projectId: 1,
-        sprintId: null, // 🔥 BACKLOG
-        epicId: "EPIC-2",
-
-        order: 1000,
-        columnOrder: 1000,
-
-        priority: "medium",
-        labels: ["research"],
-
-        assigneeId: "U-1",
-        reporterId: "U-2",
-
-        dueDate: "2026-03-18",
-        storyPoints: 3,
-
-        subtasks: [
-          { id: "ST-1", title: "Analyze 5 sites", completed: true },
-          { id: "ST-2", title: "Collect inspiration", completed: false },
-        ],
-
-        attachments: [],
-        comments: [
-          {
-            id: "C-1",
-            userId: "U-2",
-            message: "Focus on modern SaaS layouts",
-            createdAt: "2026-03-12",
-          },
-        ],
-
-        activity: [
-          {
-            id: "A-1",
-            type: "created",
-            userId: "U-2",
-            timestamp: "2026-03-10",
-          },
-        ],
-
-        createdAt: "2026-03-10",
-        updatedAt: "2026-03-12",
-      },
-
-      {
-        id: "T-102",
-        title: "Create landing page wireframe",
-
-        type: "story",
-        status: "in-progress",
-        columnId: "in-progress",
-
-        projectId: 1,
-        sprintId: "SPR-1",
-        epicId: "EPIC-2",
-
-        order: 2000,
-        columnOrder: 4000,
-
-        priority: "high",
-        labels: ["design"],
-
-        assigneeId: "U-2",
-        reporterId: "U-1",
-
-        dueDate: "2026-03-20",
-        storyPoints: 5,
-
-        subtasks: [],
-        attachments: [],
-
-        comments: [],
-        activity: [],
-
-        createdAt: "2026-03-11",
-        updatedAt: "2026-03-13",
-      },
-
-      {
-        id: "T-103",
-        title: "Implement responsive navbar",
-
-        type: "task",
-        status: "review",
-        columnId: "review",
-
-        projectId: 1,
-        sprintId: "SPR-1",
-        epicId: "EPIC-2",
-
-        order: 3000,
-        columnOrder: 5000,
-
-        priority: "critical",
-        labels: ["frontend"],
-
-        assigneeId: "U-3",
-        reporterId: "U-1",
-
-        dueDate: "2026-03-17",
-        storyPoints: 8,
-
-        subtasks: [],
-        attachments: [],
-
-        comments: [],
-        activity: [],
-
-        createdAt: "2026-03-09",
-        updatedAt: "2026-03-14",
-      },
-
-      {
-        id: "T-104",
-        title: "Cross-browser testing",
-
-        type: "bug",
-        status: "testing",
-        columnId: "testing",
-
-        projectId: 1,
-        sprintId: "SPR-1",
-        epicId: null,
-
-        order: 4000,
-        columnOrder: 6000,
-
-        priority: "medium",
-        labels: ["qa"],
-
-        assigneeId: "U-3",
-        reporterId: "U-2",
-
-        dueDate: "2026-03-18",
-        storyPoints: 3,
-
-        subtasks: [],
-        attachments: [],
-
-        comments: [],
-        activity: [],
-
-        createdAt: "2026-03-12",
-        updatedAt: "2026-03-15",
-      },
-
-      {
-        id: "T-105",
-        title: "Fix login bug",
-
-        type: "bug",
-        status: "todo",
-        columnId: "todo",
-
-        projectId: 1,
-        sprintId: null, // 🔥 BACKLOG
-        epicId: "EPIC-1",
-
-        order: 5000,
-        columnOrder: 2000,
-
-        priority: "high",
-        labels: ["auth"],
-
-        assigneeId: "U-4",
-        reporterId: "U-1",
-
-        dueDate: "2026-03-19",
-        storyPoints: 5,
-
-        subtasks: [],
-        attachments: [],
-
-        comments: [],
-        activity: [],
-
-        createdAt: "2026-03-13",
-        updatedAt: "2026-03-13",
-      },
-    ],
   },
   {
     id: 2,
     title: "New Project",
     description: "",
-
     status: "active",
     visibility: "private",
     priority: "medium",
@@ -573,27 +295,26 @@ export const dummyData = [
     logo: "",
     links: [],
     documents: [],
-
     users: [],
 
-    // workflow: {
-    //   states: ["todo"],
-    //   transitions: {
-    //     todo: [],
-    //   },
-    // },
+    columns: {
+      todo: { id: "todo", title: "Todo" },
+      "in-progress": { id: "in-progress", title: "In Progress" },
+      done: { id: "done", title: "Done" },
+    },
 
-    columns: [
-      { id: "todo", title: "Todo", order: 1000 },
-      { id: "in-progress", title: "In Progress", order: 2000 },
-      { id: "done", title: "Done", order: 3000 },
-    ],
+    columnOrder: ["todo", "in-progress", "done"],
+
+    columnTaskIds: {
+      todo: [],
+      "in-progress": [],
+      done: [],
+    },
+
+    tasks: {},
 
     sprints: [],
-
     epics: [],
-
-    tasks: [],
   },
 ];
 

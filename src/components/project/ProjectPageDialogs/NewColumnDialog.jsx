@@ -12,19 +12,14 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useDispatch } from "react-redux";
-import { setBoard } from "@/redux/slices/boardSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { addColumn } from "@/redux/slices/boardSlice";
 
-export default function NewColumnDialog({
-  open,
-  setOpen,
-  columnData,
-  columnId,
-  type,
-}) {
+export default function NewColumnDialog({ open, setOpen, columnId, type }) {
   const dispatch = useDispatch();
   const [name, setName] = useState("");
-  const [wipLimit, setWipLimit] = useState("");
+  const [wipLimit, setWipLimit] = useState(null);
+  const { columns } = useSelector((state) => state.board);
 
   const onCloseAddColumnDialog = () => {
     setOpen(false);
@@ -34,30 +29,24 @@ export default function NewColumnDialog({
 
   const handleColumnSubmit = (e) => {
     e.preventDefault();
-
-    if (!columnData) return;
-
-    const payload = {
-      id: name.trim().toLowerCase(),
-      title: name.trim(),
-      name,
-      tasks: [],
-      order: Object.keys(columnData).length + 1,
-      wipLimit: wipLimit ? Number(wipLimit) : null,
-    };
-
-    if (columnData[payload.id]) {
+    const colName = name.trim();
+    if (!columns) return;
+    if (columns[colName.toLowerCase()]) {
       console.error("Column already exists");
       return;
     }
-
     try {
-      const updatedColumns = {
-        ...columnData,
-        [payload.id]: payload,
+      const reduxPayload = {
+        id: colName.toLowerCase(),
+        title: colName,
+        wipLimit: wipLimit || null,
       };
 
-      dispatch(setBoard(updatedColumns));
+      const payload = { ...reduxPayload };
+
+      dispatch(addColumn(reduxPayload));
+
+      console.log(payload);
     } catch (error) {
       console.error("Task creation failed", error);
     } finally {
@@ -66,8 +55,8 @@ export default function NewColumnDialog({
   };
 
   useEffect(() => {
-    if (columnData && columnId) {
-      const col = Object.values(columnData).find((c) => c.id === columnId);
+    if (columns && columnId) {
+      const col = Object.values(columns).find((c) => c.id === columnId);
 
       if (col) {
         setName(col.title);
@@ -78,7 +67,7 @@ export default function NewColumnDialog({
       setName("");
       setWipLimit("");
     }
-  }, [columnData, columnId]);
+  }, [columns, columnId]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -97,7 +86,7 @@ export default function NewColumnDialog({
               <Input
                 placeholder="e.g. In Progress"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value.trim())}
                 required
               />
             </div>

@@ -11,7 +11,7 @@ import TabsCompo from "@/components/layout/TabsCompo";
 import TaskFooter from "@/components/layout/TaskFooter";
 import { Plus, FileText, Trash2, ExternalLink, Paperclip } from "lucide-react";
 import { initialProjectSettingForm } from "@/utils/constant";
-import { projectsKanban } from "@/utils/helper";
+import { dummyData } from "@/utils/helper";
 
 const tabs = ["general", "members", "timeline", "links", "documents", "danger"];
 
@@ -64,7 +64,7 @@ export default function ProjectSettingsPage() {
   useEffect(() => {
     if (!projectId) return;
 
-    const data = projectsKanban.find(
+    const data = dummyData.find(
       (project) => project.id === parseInt(projectId),
     );
 

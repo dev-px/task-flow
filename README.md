@@ -14,7 +14,7 @@ Created using MERN
 - Create Kanban Board for task managing
 - Create UI of Kanban board (Sections UI, Task UI)
 - Add Drag and Drop functionality in kanbaord
-- Create Filter section in kanban board 
+- Create Filter section in kanban board
 - Create Add task, Manage Members, settings, Add task button UI in project details page header
 - Implemented reusable UI
 - Created Settings Page in project details (settings/page.jsx)
@@ -23,3 +23,8 @@ Created using MERN
 - Add Edit and Delete functionality of column inside TaskSection (TaskSection.jsx, )
 - Move Form state value (constant.js)
 - Created Reusable UI (TabsCompo.jsx, TaskFooter.jsx, SubTaskStatus.jsx, DeleteDialog.jsx)
+- Updated Dummy data
+- Update setBoard and moveTask logic and added deleteColumn and addColumn logic (boardSlice.jsx)
+- Added Wiplimit when deletion of columns and hide delete button when only one column is left.
+- Update UI for Delete Dialog (DeleteDialog.jsx)
+- Add New and Delete Column part of kanban Board -- completed
