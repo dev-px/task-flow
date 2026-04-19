@@ -100,7 +100,7 @@ export default function DeleteDialog({
                 <Label>Move tasks to</Label>
 
                 <Select value={targetColumn} onValueChange={setTargetColumn}>
-                  <SelectTrigger>
+                  <SelectTrigger className={`w-full`}>
                     <SelectValue placeholder="Select a destination column" />
                   </SelectTrigger>
 

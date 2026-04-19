@@ -28,3 +28,5 @@ Created using MERN
 - Added Wiplimit when deletion of columns and hide delete button when only one column is left.
 - Update UI for Delete Dialog (DeleteDialog.jsx)
 - Add New and Delete Column part of kanban Board -- completed
+- Created Backlog page (backlogs/page.js) 
+- Added Sprint settings like Sprint Dialog for creating, editing and deleting sprint (sprintDialog.jsx)

@@ -35,9 +35,14 @@ export default function KanBanPage() {
   const [editingColumnId, setEditingColumnId] = useState(null); // for column modal
   const [activeTask, setActiveTask] = useState(null);
   const dispatch = useDispatch();
-  const { columns, columnOrder, columnTaskIds, tasks } = useSelector(
-    (state) => state.board,
-  );
+  const {
+    columns,
+    columnOrder,
+    columnTaskIds,
+    tasks,
+    backlogTaskIds,
+    sprints,
+  } = useSelector((state) => state.board);
   const [openTaskDialog, setOpenTaskDialog] = useState(false);
   const [clickedTaskId, setClickedTaskId] = useState(null);
   const [manageColumnType, setManageColumnType] = useState("");
@@ -69,40 +74,7 @@ export default function KanBanPage() {
   const data = dummyData.find((project) => project.id === parseInt(projectId));
 
   useEffect(() => {
-    // function generateColumns(cols, allTasks) {
-    //   const columnData = {};
-    //   const finalData = {};
-
-    //   cols.forEach((col) => {
-    //     columnData[col?.id] = {
-    //       ...col,
-    //       tasks: [],
-    //     };
-    //   });
-
-    //   allTasks.forEach((t) => {
-    //     if (columnData[t.columnId]) {
-    //       columnData[t.columnId].tasks.push(t);
-    //     }
-    //   });
-
-    //   // sort tasks in each column based on columnOrder --> which is responsible for vertical ordering inside board column
-    //   Object.values(columnData).forEach((col) => {
-    //     col.tasks.sort((a, b) => a.columnOrder - b.columnOrder);
-    //   });
-
-    //   // sort columns based on column order --> which is responsible for horizontal ordering in board
-    //   const sortedColumns = Object.values(columnData).sort(
-    //     (a, b) => a.order - b.order,
-    //   );
-
-    //   sortedColumns.forEach((col) => (finalData[col?.id] = { ...col }));
-    //   return finalData;
-    // }
-
     if (data) {
-      // const columns = generateColumns(data?.columns, data?.tasks);
-      // console.log(columns);
       dispatch(setBoard(data));
     }
   }, [data]);
@@ -196,7 +168,9 @@ export default function KanBanPage() {
     console.log("columnOrder:", columnOrder);
     console.log("columnTaskIds:", columnTaskIds);
     console.log("tasks:", tasks);
-  }, [columns, columnOrder, columnTaskIds, tasks]);
+    console.log("backlogTaskIds:", backlogTaskIds);
+    console.log("sprints:", sprints);
+  }, [columns, columnOrder, columnTaskIds, tasks, backlogTaskIds, sprints]);
 
   return (
     <div className="p-3">
@@ -241,18 +215,6 @@ export default function KanBanPage() {
                     />
                   </div>
                 ))}
-                {/* {Object.values(columnData).map((col) => (
-                  <div onClick={() => setActiveColumnId(col?.id)} key={col.id}>
-                    <TaskSection
-                      col={col}
-                      setShowAddTaskModal={setShowAddTaskModal}
-                      setOpenTaskDialog={setOpenTaskDialog}
-                      setClickedTaskId={setClickedTaskId}
-                      handleColumnUpdates={handleColumnUpdates}
-                      setEditingColumnId={setEditingColumnId}
-                    />
-                  </div>
-                ))} */}
 
                 {/* Add new Column button */}
                 <div

@@ -156,9 +156,10 @@ export default function TaskDetailsDialog({
           onClick={() =>
             router.push(`/projects/${projectId}/taskdetails/${task?.id}`)
           }
-          className="w-full flex items-center justify-center gap-2 hover:mr-2 transition"
+          className="w-full flex items-center justify-center gap-2 hover:text-black"
         >
-          Open Full Task <ArrowRight />
+          Open Full Task
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
 
         <div

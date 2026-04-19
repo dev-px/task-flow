@@ -2,7 +2,7 @@ export default function StatusCards({ Icon, title, value }) {
   return (
     <div className="rounded-sm border p-4">
       <div className="flex justify-between gap-2 items-center">
-        <div className="flex items-center justify-center p-2 rounded-lg transition bg-gray-200">
+        <div className="flex items-center justify-center p-2 rounded-lg transition bg-gray-100">
           <Icon size={35} className="text-gray-700" />
         </div>
         <div>

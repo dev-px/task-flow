@@ -81,7 +81,7 @@ export function AddSubtaskDialog({
                 value={subtask.priority}
                 onValueChange={(v) => setSubtask({ ...subtask, priority: v })}
               >
-                <SelectTrigger>
+                <SelectTrigger className={`w-full`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

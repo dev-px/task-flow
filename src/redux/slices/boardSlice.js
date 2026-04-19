@@ -5,6 +5,9 @@ const initialState = {
   columnOrder: [],
   columnTaskIds: {},
   tasks: {},
+  backlogTaskIds: [],
+  sprints: {},
+  epics: {},
 };
 
 const boardSlice = createSlice({
@@ -18,6 +21,9 @@ const boardSlice = createSlice({
       state.columnOrder = project.columnOrder;
       state.columnTaskIds = project.columnTaskIds;
       state.tasks = project.tasks;
+      state.backlogTaskIds = project.backlogTaskIds;
+      state.sprints = project.sprints;
+      state.epics = project.epics;
     },
 
     moveTask(state, action) {
@@ -107,9 +113,40 @@ const boardSlice = createSlice({
       // update order
       state.columnOrder.push(id);
     },
+
+    addTask(state, action) {
+      const task = action.payload;
+
+      if (!task?.id) return;
+      // add task
+      state.tasks[task.id] = {
+        ...task,
+      };
+
+      // backlog task
+      if (!task.sprintId) {
+        // add to backlog ordering
+        if (!state.backlogTaskIds.includes(task.id)) {
+          state.backlogTaskIds.push(task.id);
+        }
+        return;
+      }
+
+      const colId = task.columnId || "todo";
+
+      // ensure column exists
+      if (!state.columnTaskIds[colId]) {
+        state.columnTaskIds[colId] = [];
+      }
+
+      // add task into sprint board ordering
+      if (!state.columnTaskIds[colId].includes(task.id)) {
+        state.columnTaskIds[colId].push(task.id);
+      }
+    },
   },
 });
 
-export const { setBoard, moveTask, deleteColumn, addColumn } =
+export const { setBoard, moveTask, deleteColumn, addColumn, addTask } =
   boardSlice.actions;
 export default boardSlice.reducer;

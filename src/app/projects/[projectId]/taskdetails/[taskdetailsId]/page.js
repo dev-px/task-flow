@@ -20,25 +20,18 @@ import { CheckCircle2, Circle, Trash2, MessageSquare } from "lucide-react";
 import TabsCompo from "@/components/layout/TabsCompo";
 import { AddSubtaskDialog } from "./../../../../../components/task/TaskDialogs/AddSubtaskDialog";
 import TaskFooter from "@/components/layout/TaskFooter";
+import { initialTaskDeatilsForm } from "@/utils/constant";
 
-const tabs = ["general", "subtasks"];
+const tabs = ["general", "details", "subtasks", "attachments", "activity"];
 
 export default function TaskDetailsPage() {
   const { taskdetailsId, projectId } = useParams();
-  const columnData = useSelector((state) => state.board.columns);
+  const { tasks } = useSelector((state) => state.board);
 
   const [activeTab, setActiveTab] = useState("general");
   const [newComment, setNewComment] = useState("");
 
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    status: "todo",
-    priority: "medium",
-    assignee: "",
-    comments: [],
-    subtasks: [],
-  });
+  const [form, setForm] = useState(initialTaskDeatilsForm);
 
   const [open, setOpen] = useState(false);
   const [subtask, setSubtask] = useState({
@@ -49,33 +42,42 @@ export default function TaskDetailsPage() {
   });
 
   useEffect(() => {
-    if (columnData) {
-      const found = Object.values(columnData)
-        .flatMap((col) => col.tasks)
-        .find((t) => t.id === taskdetailsId);
+    if (tasks) {
+      const task = tasks[taskdetailsId];
 
-      if (found) {
+      if (task) {
         setForm({
-          title: found.title || "",
-          description: found.description || "",
-          status: found.status || "todo",
-          priority: found.priority || "medium",
-          assignee: found.assignee || "",
-          comments: found.comments || [],
-          subtasks: (found.subtasks || []).map((s) => ({
+          title: task.title || "",
+          description: task.description || "",
+          type: task.type || "task",
+          status: task.status || "todo",
+          priority: task.priority || "medium",
+          assignee: task.assigneeId || "",
+          reporterId: task.reporterId || "",
+          epicId: task.epicId || "",
+          sprintId: task.sprintId || null,
+          columnId: task.columnId || "todo",
+          columnOrder: task.columnOrder || 0,
+          labels: task.labels || [],
+          dueDate: task.dueDate || "",
+          storyPoints: task.storyPoints || 0,
+          comments: task.comments || [],
+          attachments: task.attachments || [],
+          activity: task.activity || [],
+          createdAt: task.createdAt || "",
+          updatedAt: task.updatedAt || "",
+          subtasks: (task.subTasks || []).map((s) => ({
             id: s.id,
             title: s.title || "",
+            done: s.completed || false,
             description: s.description || "",
             dueDate: s.dueDate || "",
-            storyPoints: s.storyPoints || 0,
-            status: s.status || "todo",
             priority: s.priority || "medium",
-            done: s.done || false,
           })),
         });
       }
     }
-  }, [columnData, taskdetailsId]);
+  }, [tasks, taskdetailsId]);
 
   const updateField = (k, v) => setForm((p) => ({ ...p, [k]: v ?? "" }));
 
@@ -180,105 +182,124 @@ export default function TaskDetailsPage() {
           <TabsCompo tabs={tabs} activeTab={activeTab} />
 
           {/* general tab */}
-          <TabsContent value="general" className="space-y-6 my-6">
-            {/* status + priority + Assignee */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-5 border rounded-lg mb-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select
-                    value={form.status}
-                    onValueChange={(v) => updateField("status", v)}
-                  >
-                    <SelectTrigger className="bg-background w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todo">Todo</SelectItem>
-                      <SelectItem value="progress">In Progress</SelectItem>
-                      <SelectItem value="done">Done</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Priority</Label>
-                  <Select
-                    value={form.priority}
-                    onValueChange={(v) => updateField("priority", v)}
-                  >
-                    <SelectTrigger className="bg-background w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Assignee</Label>
-                <Select
-                  value={form.assignee}
-                  onValueChange={(v) => updateField("assignee", v)}
-                >
-                  <SelectTrigger className="bg-background w-full">
-                    <SelectValue placeholder="Select user" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Alice">Alice</SelectItem>
-                    <SelectItem value="John">John</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                className="min-h-16 text-base"
-                placeholder="Add a more detailed description..."
-                value={form.description}
-                onChange={(e) => updateField("description", e.target.value)}
-              />
-            </div>
-
-            {/* comment section */}
-            <div>
-              <Label className="flex items-center gap-2">
-                <MessageSquare size={16} /> Comments
-              </Label>
-
+          <TabsContent value="general" className="space-y-8 my-6">
+            <div className="flex items-center justify-between border-b pb-4">
               <div>
-                {form.comments.length === 0 ? (
-                  <div className="text-sm text-muted-foreground italic px-2 py-4 my-4 text-center bg-slate-50 rounded-lg border-2 border-dashed">
-                    No comments yet. Be the first to start the conversation!
-                  </div>
-                ) : (
-                  <div className="space-y-4 mb-4">
-                    {form.comments.map((c) => (
-                      <CommentShow c={c} key={c.id} />
-                    ))}
-                  </div>
-                )}
+                <h3 className="text-lg font-semibold">General Information</h3>
+                <p className="text-sm text-muted-foreground">
+                  Manage task progress, ownership, description, and
+                  collaboration.
+                </p>
+              </div>
+            </div>
 
-                {/* comment input */}
-                <div className="flex flex-col gap-2 bg-slate-50 p-3 rounded-lg border">
-                  <Textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Write a comment..."
-                    className="resize-none min-h-20 bg-background border-transparent focus-visible:ring-1 focus-visible:ring-primary shadow-sm"
-                  />
-                  <div className="flex justify-end">
-                    <Button onClick={addComment} disabled={!newComment.trim()}>
-                      Post Comment
-                    </Button>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-4 bg-slate-50/60 border rounded-xl p-6 shadow-sm space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select
+                      value={form.status}
+                      onValueChange={(v) => updateField("status", v)}
+                    >
+                      <SelectTrigger className="bg-background w-full h-11">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todo">Todo</SelectItem>
+                        <SelectItem value="progress">In Progress</SelectItem>
+                        <SelectItem value="done">Done</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label>Priority</Label>
+                    <Select
+                      value={form.priority}
+                      onValueChange={(v) => updateField("priority", v)}
+                    >
+                      <SelectTrigger className="bg-background w-full h-11">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Assignee</Label>
+                    <Select
+                      value={form.assignee}
+                      onValueChange={(v) => updateField("assignee", v)}
+                    >
+                      <SelectTrigger className="bg-background w-full h-11">
+                        <SelectValue placeholder="Select user" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Alice">Alice</SelectItem>
+                        <SelectItem value="John">John</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2 border-t">
+                  <Label className="text-base font-medium">Description</Label>
+                  <Textarea
+                    className="min-h-32 text-base rounded-xl"
+                    placeholder="Add a more detailed description..."
+                    value={form.description}
+                    onChange={(e) => updateField("description", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Comments Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b pb-3">
+                <Label className="flex items-center gap-2 text-base font-medium">
+                  <MessageSquare size={18} /> Comments
+                </Label>
+                <span className="text-sm text-muted-foreground">
+                  {form.comments.length} total
+                </span>
+              </div>
+
+              {form.comments.length === 0 ? (
+                <div className="text-sm text-muted-foreground px-4 py-8 text-center bg-slate-50 rounded-xl border-2 border-dashed">
+                  <p className="font-medium text-foreground">No comments yet</p>
+                  <p className="mt-1">
+                    Start collaboration by posting the first comment.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {form.comments.map((c) => (
+                    <CommentShow c={c} key={c.id} />
+                  ))}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-3 bg-slate-50 p-4 rounded-xl border shadow-sm">
+                <Textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Write a comment..."
+                  className="resize-none min-h-24 bg-background border-transparent focus-visible:ring-1 focus-visible:ring-primary"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    onClick={addComment}
+                    disabled={!newComment.trim()}
+                    className="px-6"
+                  >
+                    Post Comment
+                  </Button>
                 </div>
               </div>
             </div>
@@ -325,6 +346,186 @@ export default function TaskDetailsPage() {
                 />
               )}
             </div>
+          </TabsContent>
+
+          {/* details tab */}
+          <TabsContent value="details" className="space-y-8 my-6">
+            <div className="flex items-center justify-between border-b pb-4">
+              <div>
+                <h3 className="text-lg font-semibold">Task Details</h3>
+                <p className="text-sm text-muted-foreground">
+                  Manage planning, ownership, estimates, and task metadata.
+                </p>
+              </div>
+            </div>
+
+            {/* Main Details Card */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/60 border rounded-xl p-6 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Task Type</Label>
+                  <Input
+                    value={form.type}
+                    readOnly
+                    className="bg-background h-11"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Epic ID</Label>
+                  <Input
+                    value={form.epicId}
+                    onChange={(e) => updateField("epicId", e.target.value)}
+                    className="bg-background h-11"
+                    placeholder="Enter epic reference"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Reporter</Label>
+                  <Input
+                    value={form.reporterId}
+                    onChange={(e) => updateField("reporterId", e.target.value)}
+                    className="bg-background h-11"
+                    placeholder="Who created this task"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Due Date</Label>
+                  <Input
+                    type="date"
+                    value={form.dueDate}
+                    onChange={(e) => updateField("dueDate", e.target.value)}
+                    className="bg-background h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Story Points</Label>
+                  <Input
+                    type="number"
+                    value={form.storyPoints}
+                    onChange={(e) => updateField("storyPoints", e.target.value)}
+                    className="bg-background h-11"
+                    placeholder="Estimate effort"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Labels</Label>
+                  <Input
+                    value={form.labels.join(", ")}
+                    onChange={(e) =>
+                      updateField(
+                        "labels",
+                        e.target.value.split(",").map((i) => i.trim()),
+                      )
+                    }
+                    className="bg-background h-11"
+                    placeholder="ui, research, backend"
+                  />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* attachment tab */}
+          <TabsContent value="attachments" className="space-y-6 my-6">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="text-lg font-semibold">Attachments</h3>
+                <p className="text-sm text-muted-foreground">
+                  Manage files, notes, references, and supporting documents for
+                  this task.
+                </p>
+              </div>
+              <Button variant="outline">Add Attachment</Button>
+            </div>
+
+            {form.attachments.length === 0 ? (
+              <div className="py-10 flex flex-col items-center justify-center border-2 border-dashed rounded-xl bg-slate-50/60 text-center">
+                <div className="mb-4 p-4 rounded-full bg-background shadow-sm">
+                  <MessageSquare
+                    size={28}
+                    className="text-muted-foreground/50"
+                  />
+                </div>
+                <h4 className="text-base font-medium">No attachments yet</h4>
+                <p className="text-sm text-muted-foreground mt-2 max-w-md">
+                  Upload design files, requirement docs, screenshots, PDFs, or
+                  research references so your team has everything in one place.
+                </p>
+                <Button className="mt-4">Upload File</Button>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {form.attachments.map((file) => (
+                  <div
+                    key={file.id}
+                    className="border rounded-xl p-5 bg-card shadow-sm hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <p className="font-medium text-base">{file.name}</p>
+                        <p className="text-sm text-muted-foreground break-all">
+                          {file.url}
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Open
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* activity tab */}
+          <TabsContent value="activity" className="space-y-6 my-6">
+            <div className="border-b pb-3">
+              <h3 className="text-lg font-semibold">Activity Timeline</h3>
+              <p className="text-sm text-muted-foreground">
+                Track all important actions and updates related to this task.
+              </p>
+            </div>
+
+            {form.activity.length === 0 ? (
+              <div className="py-10 flex flex-col items-center justify-center border-2 border-dashed rounded-xl bg-slate-50/60 text-center">
+                <div className="mb-4 p-4 rounded-full bg-background shadow-sm">
+                  <CheckCircle2
+                    size={28}
+                    className="text-muted-foreground/50"
+                  />
+                </div>
+                <h4 className="text-base font-medium">No activity recorded</h4>
+                <p className="text-sm text-muted-foreground mt-2 max-w-md">
+                  Task updates, status changes, assignments, and important
+                  actions will appear here once activity starts happening.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {form.activity.map((item) => (
+                  <div
+                    key={item.id}
+                    className="border rounded-xl p-5 bg-card shadow-sm hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-medium">{item.action}</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Performed by {item.userId}
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {item.createdAt}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
