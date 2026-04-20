@@ -66,15 +66,31 @@ export const initialTaskDeatilsForm = {
   updatedAt: "",
 };
 
-export const initialMyTasksFilter = {
-  search:"",
-  projectId:"",
-  projectName:"",
-  taskStatus:"",
-  taskPriority:"",
-  view:"",
-  sprint:"",
-  taskDueDate:"",
-  sort:"",
+// filters
+export const initialProjectFilters = {
+  search: "",
+  status: "",
+  sort: "",
+  view: "Grid",
+};
+export const initialProjectDetailsFilters = {
+  search: "",
+  status: "",
+  priority: "",
+  sort: "",
+  assignee: "",
+  group: "",
+  view: "Kanban",
+};
 
-}
+// filter for all task page
+export const initialMyTasksFilter = {
+  search: "",
+  projectId: "",
+  status: "",
+  priority: "",
+  view: "Grid",
+  sprint: "",
+  dueDate: "",
+  sort: "",
+};

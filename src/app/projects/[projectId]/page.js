@@ -23,7 +23,7 @@ import NewColumnDialog from "@/components/project/ProjectPageDialogs/NewColumnDi
 import NewTaskDialog from "@/components/task/TaskDialogs/NewTaskDialog";
 import ManageMembersModal from "@/components/project/ProjectPageDialogs/ManageMember";
 import TaskDetailsDialog from "@/components/task/TaskDialogs/TaskDetailsDailog";
-import { initialProjectState } from "@/utils/constant";
+import { initialProjectDetailsFilters, initialProjectState } from "@/utils/constant";
 
 export default function KanBanPage() {
   const { projectId } = useParams();
@@ -48,26 +48,10 @@ export default function KanBanPage() {
   const [manageColumnType, setManageColumnType] = useState("");
   // edit project modal
   const [form, setForm] = useState(initialProjectState);
-  const [filters, setFilters] = useState({
-    search: "",
-    status: "",
-    priority: "",
-    sort: "",
-    assignee: "",
-    group: "",
-    view: "Kanban",
-  });
+  const [filters, setFilters] = useState(initialProjectDetailsFilters);
 
   const onClearFilter = () => {
-    setFilters({
-      search: "",
-      status: "",
-      priority: "",
-      sort: "",
-      assignee: "",
-      group: "",
-      view: "Kanban",
-    });
+    setFilters(initialProjectDetailsFilters);
   };
 
   // dummy API

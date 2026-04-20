@@ -1,18 +1,38 @@
-export default function LayoutSetting({ viewOptions, updateFilters, filters }) {
-    return (
-        <div className="flex justify-center gap-2 p-0.5 items-center border rounded-sm transition">
-            {viewOptions.map((option) => {
-                const Icon = option.icon;
+"use client";
 
-                return (
-                    <button key={option.value} className={`cursor-pointer p-0.5 rounded-sm transition
-        ${filters.view === option.value ? "bg-gray-100" : "hover:bg-gray-100/90"}`}
-                        onClick={() => updateFilters("view", option.value)}
-                    >
-                        <Icon size={23} />
-                    </button>
-                );
-            })}
-        </div>
-    )
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+export default function LayoutSetting({ viewOptions, updateFilters, filters }) {
+  return (
+    <div className="flex items-center gap-1 rounded-xl border bg-background shadow-sm">
+      {viewOptions.map((option) => {
+        const Icon = option.icon;
+        const isActive = filters.view === option.value;
+
+        return (
+          <Tooltip key={option.value}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => updateFilters("view", option.value)}
+                className={`flex h-8 w-9 items-center justify-center rounded-lg transition-all ${
+                  isActive ? "bg-muted shadow-sm" : "hover:bg-muted/70"
+                }`}
+              >
+                <Icon size={18} />
+              </button>
+            </TooltipTrigger>
+
+            <TooltipContent side="bottom" className="text-xs" side="top">
+              <p>{option.value} View</p>
+            </TooltipContent>
+          </Tooltip>
+        );
+      })}
+    </div>
+  );
 }

@@ -141,8 +141,8 @@ export default function BacklogPageUI() {
                     />
                   </div>
                   <Select
-                    // value={}
-                    // onValueChange={}
+                  // value={}
+                  // onValueChange={}
                   >
                     <SelectTrigger className="w-28 h-10 rounded-lg">
                       <SelectValue placeholder="Filter Sprint" />
@@ -234,14 +234,13 @@ export default function BacklogPageUI() {
 
                       <Badge
                         variant="outline"
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
                           sprint.status === "active"
                             ? "bg-black text-white border-black"
                             : ""
                         }`}
                       >
-                        {sprint.status.charAt(0).toUpperCase() +
-                          sprint.status.slice(1)}
+                        {sprint.status}
                       </Badge>
                     </div>
 

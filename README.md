@@ -31,3 +31,4 @@ Created using MERN
 - Created Backlog page (backlogs/page.js) 
 - Added Sprint settings like Sprint Dialog for creating, editing and deleting sprint (sprintDialog.jsx)
 - Created Header, Filter and stats in Mytask Page(tasks/page.jsx) 
+- Created View (grid - (MyTaskRowCard.jsx) / table - (MyTaskTableView.jsx)) view for MyTask Page.

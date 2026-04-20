@@ -1,8 +1,14 @@
 "use client";
 
-import { List, Grid3x3, Kanban, Search, X } from "lucide-react";
+import {
+  List,
+  Grid3x3,
+  Kanban,
+  Search,
+  X,
+  SlidersHorizontal,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import DropDown from "./../ui/Dropdown";
 import LayoutSetting from "../ui/LayoutSetting";
 
 export default function ProjectFilters({
@@ -18,6 +24,27 @@ export default function ProjectFilters({
     { value: "archived", label: "Archived" },
   ];
 
+  const taskStatusOptions = [
+    { value: "", label: "Status" },
+    { value: "todo", label: "Todo" },
+    { value: "in-progress", label: "In Progress" },
+    { value: "review", label: "Review" },
+    { value: "testing", label: "Testing" },
+    { value: "done", label: "Done" },
+  ];
+
+  const sprintOptions = [
+    { value: "", label: "Sprints" },
+    { value: "backlogs", label: "Backlogs" },
+    { value: "sprints", label: "Sprints" },
+  ];
+
+  const projectOptions = [
+    { value: 1, label: "Website Redesign" },
+    { value: 2, label: "Mobile App UI" },
+    { value: 3, label: "Admin Dashboard" },
+  ];
+
   const sortOptions = [
     { value: "", label: "Sort" },
     { value: "newest", label: "Newest First" },
@@ -26,12 +53,13 @@ export default function ProjectFilters({
     { value: "name-desc", label: "Name (Z-A)" },
   ];
 
-  const priorityOptions = [
-    { value: "", label: "Priority" },
-    { value: "low", label: "Low" },
-    { value: "medium", label: "Medium" },
-    { value: "high", label: "High" },
-    { value: "critical", label: "Critical" },
+  const dueDateOptions = [
+    { value: "", label: "Due Date" },
+    { value: "overdue", label: "Overdue" },
+    { value: "today", label: "Today" },
+    { value: "tomorrow", label: "Tomorrow" },
+    { value: "week", label: "This Week" },
+    { value: "month", label: "This Month" },
   ];
 
   const assigneeOption = [
@@ -39,6 +67,14 @@ export default function ProjectFilters({
     { id: 1, value: "john", label: "John Doe" },
     { id: 2, value: "jane", label: "Jane Smith" },
     { id: 3, value: "bob", label: "Bob Johnson" },
+  ];
+
+  const priorityOptions = [
+    { value: "", label: "Priority" },
+    { value: "low", label: "Low" },
+    { value: "medium", label: "Medium" },
+    { value: "high", label: "High" },
+    { value: "critical", label: "Critical" },
   ];
 
   const viewOptions = [
@@ -59,37 +95,89 @@ export default function ProjectFilters({
   };
 
   return (
-    <div className="w-full rounded-xl border bg-background px-4 py-4 md:px-5 shadow-sm my-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        {/* Left Side Filters */}
-        <div className="flex flex-1 flex-wrap items-center gap-4 md:gap-5">
+    <div className="w-full rounded-xl border border-border/60 bg-white shadow-sm px-3 py-3 my-3">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        {/* Left Section */}
+        <div className="flex flex-1 flex-wrap items-center gap-2 min-w-0">
           {/* Search */}
-          <div className="relative min-w-[220px] flex-1 md:max-w-sm">
-            <Search className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative w-full sm:w-55 md:w-62.5 shrink-0">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               placeholder={
-                page === "projects"
-                  ? "Search project, description..."
-                  : "Search task, assignee..."
+                page === "projects" ? "Search projects..." : "Search tasks..."
               }
               value={filters.search}
               onChange={(e) => updateFilters("search", e.target.value)}
-              className="w-full border-0 border-b bg-transparent pl-6 pr-2 pb-2 pt-1 text-sm outline-none focus:border-primary"
+              className="h-8 w-full rounded-lg border border-border bg-muted/30 pl-9 pr-2 text-sm outline-none transition-all focus:border-primary focus:bg-background"
             />
           </div>
 
-          {/* Status */}
-          <DropDown
-            options={statusOptions}
-            type="status"
-            change={updateFilters}
-            value={filters.status}
-          />
+          {/* Projects Page */}
+          {page === "projects" && (
+            <StyledDropDown
+              options={statusOptions}
+              type="status"
+              change={updateFilters}
+              value={filters.status}
+            />
+          )}
 
-          {/* Priority */}
+          {/* Project Details */}
           {page === "projectDetails" && (
-            <DropDown
+            <>
+              <StyledDropDown
+                options={taskStatusOptions}
+                type="status"
+                change={updateFilters}
+                value={filters.status}
+              />
+
+              <StyledDropDown
+                options={assigneeOption}
+                type="assignee"
+                change={updateFilters}
+                value={filters.assignee}
+              />
+            </>
+          )}
+
+          {/* My Tasks */}
+          {page === "myTasks" && (
+            <>
+              <StyleSearchDropdown
+                options={projectOptions}
+                type="projectId"
+                change={updateFilters}
+                value={filters.projectId}
+              />
+
+              <StyledDropDown
+                options={taskStatusOptions}
+                type="status"
+                change={updateFilters}
+                value={filters.status}
+              />
+
+              <StyledDropDown
+                options={sprintOptions}
+                type="sprint"
+                change={updateFilters}
+                value={filters.sprint}
+              />
+
+              <StyledDropDown
+                options={dueDateOptions}
+                type="dueDate"
+                change={updateFilters}
+                value={filters.dueDate}
+              />
+            </>
+          )}
+
+          {/* Shared Priority */}
+          {(page === "myTasks" || page === "projectDetails") && (
+            <StyledDropDown
               options={priorityOptions}
               type="priority"
               change={updateFilters}
@@ -98,39 +186,33 @@ export default function ProjectFilters({
           )}
 
           {/* Sort */}
-          <DropDown
+          <StyledDropDown
             options={sortOptions}
             type="sort"
             change={updateFilters}
             value={filters.sort}
           />
-
-          {/* Assignee */}
-          {page === "projectDetails" && (
-            <DropDown
-              options={assigneeOption}
-              type="assignee"
-              change={updateFilters}
-              value={filters.assignee}
-            />
-          )}
         </div>
 
-        {/* Right Side Actions */}
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Right Section */}
+        <div className="flex w-full sm:w-auto items-center justify-between sm:justify-end gap-2 shrink-0">
           <LayoutSetting
-            viewOptions={page === "projects" ? viewOptions : filterViewOption}
+            viewOptions={
+              page === "myTasks" || page === "projects"
+                ? viewOptions
+                : filterViewOption
+            }
             updateFilters={updateFilters}
             filters={filters}
           />
 
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={onClearFilter}
-            className="h-9 px-3 text-sm"
+            className="h-8 rounded-md px-3 text-xs font-medium shrink-0"
           >
-            <X className="mr-2 h-4 w-4" />
+            <X className="mr-1 h-4 w-4" />
             Reset
           </Button>
         </div>
@@ -139,24 +221,56 @@ export default function ProjectFilters({
   );
 }
 
-/* ---------------- DROPDOWN UI ---------------- */
-
 export function StyledDropDown({ options, type, change, value }) {
   return (
     <select
       value={value}
       onChange={(e) => change(type, e.target.value)}
-      className="min-w-[130px] border-0 border-b bg-transparent pb-2 pt-1 text-sm outline-none focus:border-primary w-full md:w-auto"
+      className="h-8 min-w-22 rounded-md border border-border bg-white px-1.5 text-xs outline-none transition-all focus:border-primary shrink-0"
     >
       {options.map((option) => (
-        <option
-          key={option.value}
-          value={option.value}
-          className="bg-background"
-        >
+        <option key={option.value} value={option.value}>
           {option.label}
         </option>
       ))}
     </select>
+  );
+}
+
+export function StyleSearchDropdown({ options, type, change, value }) {
+  const selectedOption = options.find(
+    (option) => String(option.value) === String(value),
+  );
+
+  const selectedLabel = selectedOption?.label || "";
+
+  return (
+    <div className="w-auto min-w-27.5 shrink-0">
+      <input
+        list={`${type}-options`}
+        id={type}
+        name={type}
+        value={selectedLabel}
+        placeholder={options?.[0]?.label || "Select"}
+        onChange={(e) => {
+          const inputValue = e.target.value;
+
+          const matchedOption = options.find(
+            (option) =>
+              option.label.toLowerCase().trim() ===
+              inputValue.toLowerCase().trim(),
+          );
+
+          change(type, matchedOption ? matchedOption.value : "");
+        }}
+        className="h-8 w-full rounded-md border border-border bg-white px-2 text-xs outline-none transition-all focus:border-primary"
+      />
+
+      <datalist id={`${type}-options`}>
+        {options.map((option) => (
+          <option key={option.value} value={option.label} />
+        ))}
+      </datalist>
+    </div>
   );
 }

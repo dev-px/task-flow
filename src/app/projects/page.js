@@ -9,16 +9,11 @@ import { FolderKanban, PlayCircle, CheckCircle2, Archive } from "lucide-react";
 import { projects } from "@/utils/helper";
 import AddEditProject from "@/components/project/ProjectPageDialogs/AddEditProject";
 import ProjectDetailList from "@/components/project/ProjectDetailList";
-import { initialProjectState } from "@/utils/constant";
+import { initialProjectFilters, initialProjectState } from "@/utils/constant";
 
 export default function ProjectPage() {
   const [showModal, setShowModal] = useState(false);
-  const [filters, setFilters] = useState({
-    search: "",
-    status: "",
-    sort: "",
-    view: "Grid",
-  });
+  const [filters, setFilters] = useState(initialProjectFilters);
   // for add project modal
   const [form, setForm] = useState(initialProjectState);
 
@@ -28,15 +23,6 @@ export default function ProjectPage() {
     { statusTitle: "Completed Projects", value: 8, icon: CheckCircle2 },
     { statusTitle: "Archived Projects", value: 4, icon: Archive },
   ];
-
-  const onClearFilter = () => {
-    setFilters({
-      search: "",
-      status: "",
-      sort: "",
-      view: "Grid",
-    });
-  };
 
   return (
     <div className="p-3">
@@ -54,7 +40,7 @@ export default function ProjectPage() {
         page="projects"
         filters={filters}
         setFilters={setFilters}
-        onClearFilter={onClearFilter}
+        onClearFilter={() => setFilters(initialProjectFilters)}
       />
 
       {/* Quick stats of projects */}

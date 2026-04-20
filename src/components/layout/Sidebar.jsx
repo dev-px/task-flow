@@ -23,7 +23,7 @@ export default function Sidebar() {
   const topLinks = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Projects", href: "/projects", icon: FolderKanban },
-    { name: "Tasks", href: "/tasks", icon: CheckSquare },
+    { name: "Tasks", href: "/mytasks", icon: CheckSquare },
     { name: "Activity", href: "/activity", icon: Activity },
   ];
 
