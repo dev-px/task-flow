@@ -58,7 +58,7 @@ export default function ProjectPage() {
       />
 
       {/* Quick stats of projects */}
-      <section className="my-8 ">
+      <section className="my-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {projectNumber.map((project) => (
             <StatusCards

@@ -30,3 +30,4 @@ Created using MERN
 - Add New and Delete Column part of kanban Board -- completed
 - Created Backlog page (backlogs/page.js) 
 - Added Sprint settings like Sprint Dialog for creating, editing and deleting sprint (sprintDialog.jsx)
+- Created Header, Filter and stats in Mytask Page(tasks/page.jsx) 

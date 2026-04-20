@@ -17,7 +17,7 @@ export default function ProjectHeader({
   projectId,
   handleProjectManipulation,
   setOpenNewBacklogTask,
-  setOpenSprintDialog
+  setOpenSprintDialog,
 }) {
   const Icon = type === "create" ? Plus : Pencil;
   const router = useRouter();

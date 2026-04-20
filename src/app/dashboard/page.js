@@ -98,17 +98,21 @@ export default function DashboardPage() {
   ];
   return (
     <div className="p-4">
-      <h1 className="font-bold text-xl">Good Morning, Dev</h1>
-      <div className="grid lg:grid-cols-4 gap-6 mt-8 md:grid-cols-2 grid-cols-1">
-        {status.map((stat) => (
-          <StatusCards
-            key={stat.title}
-            title={stat.title}
-            value={stat.value}
-            Icon={stat.icon}
-          />
-        ))}
-      </div>
+      <h1 className="font-bold text-2xl">Good Morning, Dev</h1>
+
+      {/* Dashboard stats */}
+      <section className="my-6">
+        <div className="grid lg:grid-cols-4 gap-6 md:grid-cols-2 grid-cols-1">
+          {status.map((stat) => (
+            <StatusCards
+              key={stat.title}
+              title={stat.title}
+              value={stat.value}
+              Icon={stat.icon}
+            />
+          ))}
+        </div>
+      </section>
 
       {/* Projects, Task and Activity */}
       {sections.map((sec) => (
