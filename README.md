@@ -32,3 +32,9 @@ Created using MERN
 - Added Sprint settings like Sprint Dialog for creating, editing and deleting sprint (sprintDialog.jsx)
 - Created Header, Filter and stats in Mytask Page(tasks/page.jsx) 
 - Created View (grid - (MyTaskRowCard.jsx) / table - (MyTaskTableView.jsx)) view for MyTask Page.
+feat: add Security Settings component with various security configurations
+- Added reusable Card and CardContent components for consistent UI inside UI/Card.jsx.
+- Implement Genreral Settings page isndie (Billing, Genral, Memeber, Roles, SecuritySettingTab) component for managing settings.
+- Create Field and SectionCard components for better layout and structure.
+- Implement Profile Page inside (AccountSecrity, Professional Info, Personal Info, Performance) component for managing profile.
+- Add Switch component for toggle functionality in settings.

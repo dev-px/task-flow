@@ -3,20 +3,20 @@ import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function TabsCompo({ tabs, activeTab }) {
   return (
-    <div className="overflow-x-auto hide-scrollbar border-b">
-      <TabsList className="flex justify-between items-center transition-all w-full bg-transparent p-0">
+    <div className="overflow-x-auto hide-scrollbar bg-gray-100 rounded-xl">
+      <TabsList className="flex justify-between items-center transition-all w-full">
         {tabs.map((tab) => (
           <TabsTrigger
             key={tab}
             value={tab}
             className={cn(
-              "px-4 py-2 text-base font-medium transition",
+              "px-4 py-2 text-base font-medium transition cursor-pointer rounded-xl capitalize",
               activeTab === tab
-                ? "border-black text-black tracking-wide"
+                ? " text-black tracking-wide"
                 : "border-transparent text-muted-foreground hover:text-black",
             )}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab}
           </TabsTrigger>
         ))}
       </TabsList>

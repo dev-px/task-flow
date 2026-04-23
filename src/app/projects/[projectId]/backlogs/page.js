@@ -28,17 +28,7 @@ import { dummyData } from "@/utils/helper";
 import { setBoard } from "@/redux/slices/boardSlice";
 import NewTaskDialog from "@/components/task/TaskDialogs/NewTaskDialog";
 import SprintDialog from "@/components/sprints/sprintDialog";
-
-function PriorityBadge({ value }) {
-  const map = {
-    Critical: "destructive",
-    High: "default",
-    Medium: "secondary",
-    Low: "outline",
-  };
-
-  return <Badge variant={map[value] || "secondary"}>{value}</Badge>;
-}
+import { Card, CardContent } from "@/components/ui/Card";
 
 export default function BacklogPageUI() {
   const { projectId } = useParams();
@@ -299,17 +289,13 @@ export default function BacklogPageUI() {
   );
 }
 
-// Simple Card UI component (no shadcn needed)
-export function Card({ className = "", children }) {
-  return (
-    <div
-      className={`rounded-2xl border border-gray-200 bg-white shadow-sm ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
+export function PriorityBadge({ value }) {
+  const map = {
+    Critical: "destructive",
+    High: "default",
+    Medium: "secondary",
+    Low: "outline",
+  };
 
-export function CardContent({ className = "", children }) {
-  return <div className={`p-4 ${className}`}>{children}</div>;
+  return <Badge variant={map[value] || "secondary"}>{value}</Badge>;
 }
