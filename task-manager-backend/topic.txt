@@ -1,0 +1,27 @@
+------ MIDDLEWARE ------
+compression -->  is the process of encoding data into a more compact format to reduce its total size. In the context of Node.js and web development, this typically refers to HTTP compression, which shrinks the data sent from your server to the client (like a browser).
+validation.middleware.js --> it is Higher-Order Function.
+
+------ ABOUT FOLDER STRUCTURE ------
+In "modules" folder we have folder for each feature and in each we have controller, service, respository(model) etc...
+
+The Architecture: This project uses a Domain-Driven (Modular) Architecture, grouping files by business feature (e.g., Auth, Task, Sprint) rather than by technical role, keeping everything related to one domain in a single, isolated folder. 
+Why we avoid traditional MVC: Standard MVC groups files by technical role (putting every controller for the entire app into one massive folder), which creates Git merge conflicts, makes code navigation a nightmare, and tightly couples the system.
+Why this is better: It is built for enterprise scalability; feature isolation makes it incredibly easy to maintain, add new developers without stepping on toes, and eventually break specific modules (like Notifications) out into their own independent microservices.
+The Disadvantages: It has a steeper learning curve, it is absolute overkill for small or simple applications, and it requires strict discipline to ensure modules don't accidentally become deeply entangled with one another.
+
+----- utils\async-handler.util.js -----
+"asyncHandler" is a Higher-Order Function. It is a function that takes another function as an argument and returns a new function.
+
+
+----- mongodb -----
+index:true --> Search Speed: Reduces the number of documents the database has to check.
+index: false --> Than mongodb do a full collection scan that takes a lot of time.
+Use .lean() for faster read-only queries it skips the "hydration" step
+if you use both index=true and .lean() helps to minimizes both the time spent searching and the time spent processing.
+
+
+
+
+--------------PENDING--------------
+Eviction hook in your member service to clear the cache whenever a member is updated or archived. If member status is chamged chanmge should be implement in redis also

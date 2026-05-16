@@ -1,0 +1,157 @@
+workpilot-backend/
+│
+├── src/
+│
+│   ├── app.js
+│   ├── server.js
+│
+│   ├── config/
+│   │   ├── db.config.js
+│   │   ├── redis.config.js
+│   │   ├── env.config.js
+│   │   ├── cloudinary.config.js
+│   │   ├── socket.config.js
+│   │   ├── queue.config.js
+│   │   ├── logger.config.js
+│   │   └── swagger.config.js
+│   │
+│   ├── constants/
+│   │   ├── roles.constant.js
+│   │   ├── permissions.constant.js
+│   │   ├── task-status.constant.js
+│   │   ├── sprint-status.constant.js
+│   │   ├── notification.constant.js
+│   │   ├── queue.constant.js
+│   │   ├── event.constant.js
+│   │   └── http-status.constant.js
+│   │
+│   ├── modules/
+│   │
+│   │   ├── auth/
+│   │   │   ├── auth.controller.js
+│   │   │   ├── auth.service.js
+│   │   │   ├── auth.repository.js
+│   │   │   ├── auth.validation.js
+│   │   │   ├── auth.routes.js
+│   │   │   ├── auth.schema.js
+│   │   │   └── auth.events.js   --> email notification --- event emitter
+│   │   │
+│   │   ├── user/
+│   │   ├── organization/
+│   │   ├── member/
+│   │   ├── project/
+│   │   ├── board/
+│   │   ├── sprint/
+│   │   ├── task/
+│   │   ├── approval/
+│   │   ├── notification/
+│   │   ├── activity-log/
+│   │   ├── audit-log/
+│   │   ├── file/
+│   │   ├── admin/
+│   │   └── analytics/
+│   │
+│   ├── middlewares/
+│   │   ├── auth.middleware.js
+│   │   ├── role.middleware.js
+│   │   ├── permission.middleware.js
+│   │   ├── ownership.middleware.js
+│   │   ├── validation.middleware.js
+│   │   ├── rate-limit.middleware.js
+│   │   ├── upload.middleware.js
+│   │   ├── error.middleware.js
+│   │   └── request-logger.middleware.js
+│   │
+│   ├── routes/
+│   │   ├── index.js
+│   │   └── v1.routes.js
+│   │
+│   ├── services/
+│   │   ├── email.service.js
+│   │   ├── token.service.js
+│   │   ├── redis.service.js
+│   │   ├── socket.service.js
+│   │   ├── file-upload.service.js
+│   │   ├── excel.service.js
+│   │   ├── audit.service.js
+│   │   ├── activity.service.js
+│   │   └── notification.service.js
+│   │
+│   ├── queues/
+│   │   ├── producers/
+│   │   │   ├── email.producer.js
+│   │   │   ├── notification.producer.js
+│   │   │   ├── excel.producer.js
+│   │   │   └── audit.producer.js
+│   │   │
+│   │   ├── consumers/
+│   │   │   ├── email.consumer.js
+│   │   │   ├── notification.consumer.js
+│   │   │   ├── excel.consumer.js
+│   │   │   └── audit.consumer.js
+│   │   │
+│   │   └── queue.manager.js
+│   │
+│   ├── events/
+│   │   ├── event-bus.js
+│   │   ├── task.events.js
+│   │   ├── auth.events.js
+│   │   ├── project.events.js
+│   │   └── notification.events.js
+│   │
+│   ├── cron/
+│   │   ├── reminder.cron.js
+│   │   ├── cleanup.cron.js
+│   │   └── report.cron.js
+│   │
+│   ├── utils/
+│   │   ├── api-response.util.js
+│   │   ├── async-handler.util.js
+│   │   ├── generate-token.js
+│   │   ├── password.util.js
+│   │   ├── excel-parser.js
+│   │   ├── pagination.util.js
+│   │   ├── logger.util.js
+│   │   └── date.util.js
+│   │
+│   ├── helpers/
+│   │   ├── permission.helper.js
+│   │   ├── role.helper.js
+│   │   └── redis-cache.helper.js
+│   │
+│   ├── errors/
+│   │   ├── ApiError.js
+│   │   ├── error.codes.js
+│   │   └── error.messages.js
+│   │
+│   ├── validators/
+│   │   ├── common.validator.js
+│   │   └── object-id.validator.js
+│   │
+│   ├── docs/
+│   │   └── swagger.yaml
+│   │
+│   └── tests/
+│       ├── unit/
+│       └── integration/
+│
+├── uploads/
+│
+├── logs/
+│
+├── .env
+├── .env.example
+├── .gitignore
+├── package.json
+├── docker-compose.yml
+├── Dockerfile
+├── README.md
+└── ecosystem.config.js
+
+
+
+(Services, Middlewares, Utilities), throws new ApiError(404, "Task not found")
+
+repository knows only mongodb so resposity calls inside service let mongodb handle their own error and service file throws the error
+
+controller use asyncHandler to catch the error
