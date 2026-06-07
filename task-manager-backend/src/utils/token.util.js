@@ -1,12 +1,13 @@
 import jwt from "jsonwebtoken";
 import redisClient from "../config/redis.config.js";
 import env from "../config/env.config.js";
+import logger from "../config/logger.config.js";
 
 const generateTokens = async (userId, email) => {
   const accessToken = jwt.sign(
     { userId: userId, email: email },
     env.ACCESS_TOKEN,
-    { expiresIn: "15m" },
+    { expiresIn: "59m" },
   );
 
   const refreshToken = jwt.sign({ userId: userId }, env.REFRESH_TOKEN, {
@@ -20,6 +21,9 @@ const generateTokens = async (userId, email) => {
     sevenDaysInSeconds,
     refreshToken,
   );
+
+  // const savedToken = await redisClient.get(`refreshToken:${userId}`);
+  // logger.info(`Verification - Token exists in Redis: ${!!savedToken}, ${savedToken}`);
 
   return { accessToken, refreshToken };
 };

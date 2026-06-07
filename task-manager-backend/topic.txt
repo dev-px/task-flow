@@ -25,3 +25,8 @@ if you use both index=true and .lean() helps to minimizes both the time spent se
 
 --------------PENDING--------------
 Eviction hook in your member service to clear the cache whenever a member is updated or archived. If member status is chamged chanmge should be implement in redis also
+
+
+- When signup user --> no role, no member
+- When login user --> now he is able to generate the organization
+

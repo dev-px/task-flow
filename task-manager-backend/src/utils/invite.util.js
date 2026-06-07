@@ -1,29 +1,45 @@
-// src/utils/invite.util.js
 import jwt from "jsonwebtoken";
 import env from "../config/env.config.js";
-import { emailQueue } from "../queues/email.queue.js";
+import { buildInviteEmail } from "./email-template.util.js";
 
-const generateAndQueueInvite = async ({
+const generateInvitePayload = ({
   email,
-  orgId,
+  organizationId,
   adminId,
   batchId = null,
 }) => {
-  // 1. Generate token
-  const token = jwt.sign({ email, orgId }, env.JWT_SECRET, { expiresIn: "2d" });
+  // 1. Generate Token & Expiry
+  const token = jwt.sign({ email, organizationId }, env.JWT_SECRET, {
+    expiresIn: "2d",
+  });
 
-  // 2. Calculate Expiry Date (2 days from now)
   const inviteExpiresAt = new Date();
   inviteExpiresAt.setDate(inviteExpiresAt.getDate() + 2);
 
-  // 3. Queue Email
-  const jobData = { email, orgId, token, adminId, batchId };
-  if (batchId) {
-    return { job: { name: "sendInviteEmail", data: jobData }, inviteExpiresAt };
-  } else {
-    await emailQueue.add("sendInviteEmail", jobData);
-    return { inviteExpiresAt };
-  }
+  // 2. Build the exact HTML template
+  const template = buildInviteEmail(token);
+
+  // 3. Standardize the BullMQ Job Data
+  const jobData = {
+    to: email,
+    subject: template.subject,
+    html: template.html,
+    adminId,
+    batchId,
+    organizationId,
+  };
+
+  // 4. Standardize Retry Logic
+  const jobOpts = {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 2000 },
+  };
+
+  // 5. Return the payload for the service to queue
+  return {
+    job: { name: "sendInviteEmail", data: jobData, opts: jobOpts },
+    inviteExpiresAt,
+  };
 };
 
-export default generateAndQueueInvite;
+export default generateInvitePayload;

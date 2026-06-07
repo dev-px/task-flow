@@ -4,15 +4,18 @@ import {
   ALL_PERMISSIONS,
   PERMISSIONS,
 } from "../../constants/permissions.constant.js";
+import fnDefaultRoleCreation from "../../constants/roles.constant.js";
 import ApiError from "../../errors/ApiError.js";
 import invalidateRoleCache from "../../helpers/redis-cache.helper.js";
 import slugify from "../../utils/slug.util.js";
 import {
   createManyRoles,
   getRoleById,
+  getRoleByOrgId,
   getRoleByOrgIdAndSlug,
   updateRoleByIdAndOrgId,
 } from "./role.respository.js";
+import Role from "./role.schema.js";
 
 const checkExistingRole = async (organizationId, roleData) => {
   const potentialSlug = slugify(roleData.name);
@@ -34,57 +37,42 @@ const getAllRolesService = async (organizationId) => {
 };
 
 const createDefaultRolesForOrgService = async (organizationId, session) => {
-  const defaultRoles = [
-    {
-      name: "Owner",
-      description: "Full administrative access to the entire workspace.",
-      organizationId,
-      permissions: ALL_PERMISSIONS, // The Owner gets every single power
-      isSystemDefault: true, // Cannot be deleted
-    },
-    {
-      name: "Admin",
-      description:
-        "Can manage projects, team members, and settings, but cannot manage billing.",
-      organizationId,
-      permissions: ALL_PERMISSIONS.filter(
-        (perm) => perm !== PERMISSIONS.ORG_BILLING_MANAGE, // Exclude billing
-      ),
-      isSystemDefault: true, // Cannot be deleted
-    },
-    {
-      name: "Member",
-      description:
-        "Standard employee. Can read projects and manage their own tasks.",
-      organizationId,
-      permissions: [
-        PERMISSIONS.PROJECT_READ,
-        PERMISSIONS.TASK_READ,
-        PERMISSIONS.TASK_CREATE,
-        PERMISSIONS.TASK_EDIT,
-        PERMISSIONS.MEMBER_READ,
-      ],
-      isSystemDefault: true,
-    },
-    {
-      name: "Guest",
-      description:
-        "External collaborator or client. Read-only access to projects and tasks.",
-      organizationId,
-      permissions: [PERMISSIONS.PROJECT_READ, PERMISSIONS.TASK_READ],
-      isSystemDefault: true,
-    },
-  ];
+  const defaultRoles = fnDefaultRoleCreation(organizationId);
+  const operations = defaultRoles.map((role) => {
+    return {
+      updateOne: {
+        filter: {
+          organizationId: organizationId,
+          slug: slugify(role.name),
+        },
+        update: {
+          $set: {
+            name: role.name,
+            slug: slugify(role.name), // Manually inject the slug here
+            description: role.description,
+            permissions: role.permissions,
+            isSystemDefault: role.isSystemDefault ?? true,
+          },
+        },
+        upsert: true,
+      },
+    };
+  });
+  console.log("operations", operations);
 
-  // Insert all three roles into the database at the exact same time
-  const [createdRoles] = await createManyRoles(defaultRoles, { session });
-  if (!createdRoles || createdRoles.length !== defaultRoles.length) {
+  await Role.bulkWrite(operations, { session });
+
+  // Fetch and return the finalized array of roles assigned to this tenant
+  const finalRoles = await getRoleByOrgId(organizationId, session);
+  console.log("finalRoles", finalRoles);
+  if (!finalRoles || finalRoles.length !== defaultRoles.length) {
     throw new ApiError(
       HTTP_STATUS.UNPROCESSABLE_ENTITY,
-      "Failed to create default roles for the organization.",
+      "Failed to provision workspace security profiles.",
     );
   }
-  return createdRoles;
+
+  return finalRoles;
 };
 
 const createNewRoleService = async (organizationId, roleData) => {

@@ -8,10 +8,14 @@ import {
   getMemberByIdService,
   getMemberService,
   inviteSingleMember,
+  memeberDeleteService,
+  memeberSuspendService,
   processBulkInvites,
   reinviteMemberService,
+  verifyInviteService,
 } from "./member.service.js";
 
+// Fetch all members for an organization
 const getMemberController = asyncHandler(async (req, res) => {
   const { orgId } = req.params;
   const memeber = await getMemberService(orgId, req.query);
@@ -24,9 +28,10 @@ const getMemberController = asyncHandler(async (req, res) => {
   );
 });
 
+// Fetch a specific member by ID
 const getMemberByIdController = asyncHandler(async (req, res) => {
-  const { orgId, memberId } = req?.params;
-  const memeber = await getMemberByIdService(orgId, memberId, req.query);
+  const { orgId, invitedmemberId } = req?.params;
+  const memeber = await getMemberByIdService(orgId, invitedmemberId, req.query);
 
   return successResponse(
     res,
@@ -36,19 +41,13 @@ const getMemberByIdController = asyncHandler(async (req, res) => {
   );
 });
 
+// Send invitation to a single member
 const inviteSingleMemberController = asyncHandler(async (req, res) => {
   const { orgId } = req.params;
-  const { email, roleName } = req.body;
-
-  // We assume you have an auth middleware that attaches the logged-in user to req.user
-  const adminId = req.user.userId;
-
-  if (!email || !roleName) {
-    return res.status(400).json({ error: "Email and Role are required." });
-  }
-
-  // Call the Service layer you built in Step 5 (Part A)
-  const result = await inviteSingleMember(orgId, adminId, email, roleName);
+  const { email, role } = req.body;
+  const adminId = req.user.id;
+  console.log("Inviting single member:", { orgId, email, role, adminId });
+  const result = await inviteSingleMember(orgId, adminId, email, role);
 
   return successResponse(
     res,
@@ -58,17 +57,20 @@ const inviteSingleMemberController = asyncHandler(async (req, res) => {
   );
 });
 
+// Handle bulk member invitations from Excel data
 const bulkInviteController = asyncHandler(async (req, res) => {
   const { orgId } = req.params;
-  const { data: excelData } = req.body; // The parsed JSON array from your frontend Excel uploader
+  const { data: excelData } = req.body; // Parsed JSON array from Excel uploader
 
-  const adminId = req.user.userId;
-  const adminRoleLevel = req.user.roleLevel; // Used if checking privilege escalation
+  const adminId = req.user.id;
+  const adminRoleLevel = req.user.roleLevel; // Check privilege escalation
 
+  // Validate Excel data
   if (!excelData || !Array.isArray(excelData) || excelData.length === 0) {
     return res.status(400).json({ error: "No valid Excel data provided." });
   }
 
+  // Process all invitations
   const { successful, failed } = await processBulkInvites(
     orgId,
     adminId,
@@ -76,7 +78,7 @@ const bulkInviteController = asyncHandler(async (req, res) => {
     excelData,
   );
 
-  // HTTP 207 Multi-Status - This tells the frontend "The request worked, but only parts of the data succeeded."
+  // Return partial success response (207 Multi-Status)
   return successResponse(
     res,
     `Processing complete. ${successful.length} queued, ${failed.length} failed.`,
@@ -86,8 +88,18 @@ const bulkInviteController = asyncHandler(async (req, res) => {
   );
 });
 
+// Verify invitation token validity
+const verifyInviteController = asyncHandler(async (req, res) => {
+  const { token } = req.query;
+  const data = await verifyInviteService(token);
+
+  return successResponse(res, "Invite is valid", data, HTTP_STATUS.OK);
+});
+
+// Accept an invitation and create user account
 const acceptInviteController = asyncHandler(async (req, res) => {
-  const { token, ...userData } = req.body;
+  const { token } = req.query;
+  const { ...userData } = req.body;
   const { user, accessToken, refreshToken } = await acceptInviteService(
     token,
     userData,
@@ -105,12 +117,14 @@ const acceptInviteController = asyncHandler(async (req, res) => {
   );
 });
 
+// Resend invitation to a member
 const reinviteMemberController = asyncHandler(async (req, res) => {
   const result = await reinviteMemberService(
     req.params.orgId,
-    req.params.memberId,
-    req.user.userId,
+    req.params.invitedmemberId,
+    req.user.id,
   );
+
   return successResponse(
     res,
     "Invite resent successfully",
@@ -119,15 +133,49 @@ const reinviteMemberController = asyncHandler(async (req, res) => {
   );
 });
 
+// Cancel a pending invitation
 const cancelInviteController = asyncHandler(async (req, res) => {
+  const adminId = req.user.id;
   const result = await cancelInviteService(
     req.params.orgId,
-    req.params.memberId,
+    req.params.invitedmemberId,
+    adminId,
   );
+
   return successResponse(
     res,
     "Invite cancelled successfully",
     result,
+    HTTP_STATUS.OK,
+  );
+});
+
+// Suspend a member account
+const memeberSuspendController = asyncHandler(async (req, res) => {
+  const { orgId, invitedmemberId } = req.params;
+  const suspendedMember = await memeberSuspendService(orgId, invitedmemberId);
+
+  return successResponse(
+    res,
+    "Member has successfully suspended",
+    suspendedMember,
+    HTTP_STATUS.OK,
+  );
+});
+
+// Delete a member from organization
+const memeberDeleteController = asyncHandler(async (req, res) => {
+  const { orgId, invitedmemberId } = req.params;
+  const deletedMember = await memeberDeleteService(
+    orgId,
+    invitedmemberId,
+    req.user.id,
+  );
+
+  return successResponse(
+    res,
+    "Member has successfully Deleted",
+    deletedMember,
     HTTP_STATUS.OK,
   );
 });
@@ -139,5 +187,8 @@ export {
   bulkInviteController,
   acceptInviteController,
   reinviteMemberController,
-  cancelInviteController
+  cancelInviteController,
+  memeberSuspendController,
+  memeberDeleteController,
+  verifyInviteController,
 };

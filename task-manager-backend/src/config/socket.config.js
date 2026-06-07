@@ -2,9 +2,11 @@ import { Server } from "socket.io";
 import logger from "./logger.config.js";
 import env from "./env.config.js";
 
+let io;
+
 const initializeSocket = (httpServer) => {
   // initialize the Socket.io server
-  const io = new Server(httpServer, {
+  io = new Server(httpServer, {
     cors: {
       origin: env.CLIENT_URL,
     },

@@ -30,7 +30,7 @@ const loginController = asyncHandler(async (req, res, next) => {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 
   res.cookie("refreshToken", refreshToken, cookieOptions);
@@ -62,7 +62,7 @@ const refreshTokenController = asyncHandler(async (req, res) => {
   const { refreshToken: incomingRefreshToken } = req.cookies;
 
   // Grab both new tokens from the service
-  const { newAccessToken, newRefreshToken } =
+  const { accessToken, refreshToken } =
     await refreshTokenService(incomingRefreshToken);
 
   // Overwrite the old cookie with the brand new Refresh Token
@@ -73,12 +73,12 @@ const refreshTokenController = asyncHandler(async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 
-  res.cookie("refreshToken", newRefreshToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
 
   successResponse(
     res,
     "Token refreshed successfully",
-    { accessToken: newAccessToken }, // Still only send Access Token in JSON
+    { accessToken: accessToken }, // Still only send Access Token in JSON
     HTTP_STATUS.OK,
   );
 });

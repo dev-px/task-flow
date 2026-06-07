@@ -17,7 +17,17 @@ const userSchema = new mongoose.Schema(
     isEmailVerified: { type: Boolean, default: false },
     lastLogin: { type: Date },
 
-    status: { type: String, enum: ["active", "suspended"], default: "active" },
+    status: {
+      type: String,
+      enum: ["active", "suspended", "deleted"],
+      default: "active",
+    },
+
+    isInvited: { type: Boolean, default: false },
+    canCreateOrganizations: { type: Boolean, default: false },
+
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: { type: Date },
   },
   { timestamps: true },
 );

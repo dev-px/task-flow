@@ -30,8 +30,16 @@ const roleSchema = new mongoose.Schema(
 
     // Protects the "Owner" and "Admin" roles from being accidentally deleted
     isSystemDefault: { type: Boolean, default: false, immutable: true },
-    isArchived: { type: Boolean, default: false },
     archieveDescription: { type: String, trim: true, default: "" },
+
+    // deletion
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   { timestamps: true },
 );
@@ -44,7 +52,8 @@ roleSchema.pre("validate", function (next) {
   if (this.isNew && this.name) {
     this.slug = slugify(this.name);
   }
-  next();
 });
 
-export const Role = mongoose.model("Role", roleSchema);
+const Role = mongoose.model("Role", roleSchema);
+
+export default Role;

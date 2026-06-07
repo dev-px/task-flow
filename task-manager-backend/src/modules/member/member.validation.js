@@ -6,7 +6,7 @@ const getMemberParams = Joi.object({
     "string.hex": "Organization ID must be a valid hexadecimal string.",
     "string.length": "Organization ID must be exactly 24 characters long.",
   }),
-  memberId: Joi.string().hex().length(24).messages({
+  invitedmemberId: Joi.string().hex().length(24).messages({
     "string.hex": "Member ID must be a valid hexadecimal string.",
     "string.length": "Member ID must be exactly 24 characters long.",
   }),
@@ -17,17 +17,15 @@ const getMembersQuerySchema = Joi.object({
   limit: Joi.number().integer().min(1).max(100).default(10),
   search: Joi.string().trim().allow(""),
   designation: Joi.string().trim().allow(""),
-  status: Joi.string().valid("invited", "active", "suspended").allow(""),
-  employeeId: Joi.string().trim().allow(""),
-  workType: Joi.string()
-    .valid("full-time", "part-time", "contractor")
+  status: Joi.string()
+    .valid("invited", "active", "suspended", "expired", "cancelled")
     .allow(""),
-  isArchived: Joi.boolean(),
+  isDeleted: Joi.boolean(),
 });
 
 const getMembersByIdQuerySchema = Joi.object({
   // if admin want to see archieved member
-  isArchived: Joi.boolean(),
+  isDeleted: Joi.boolean(),
 });
 
 // --- NEW INVITE SCHEMAS BELOW ---
@@ -78,12 +76,6 @@ const bulkInviteSchema = Joi.object({
 });
 
 const acceptInviteBodySchema = Joi.object({
-  token: Joi.string().required().messages({
-    "string.base": "Token must be a valid string.",
-    "string.empty": "Invitation token cannot be empty.",
-    "any.required": "Invitation token is required to accept the invite.",
-  }),
-
   name: Joi.string().trim().min(2).max(50).optional().messages({
     "string.base": "Name must be a valid string.",
     "string.empty": "Name cannot be empty.",
@@ -104,11 +96,20 @@ const acceptInviteBodySchema = Joi.object({
   }),
 });
 
+const verifyInviteQuerySchema = Joi.object({
+  token: Joi.string().required().messages({
+    "string.base": "Token must be a valid string.",
+    "string.empty": "Invitation token cannot be empty.",
+    "any.required": "Invitation token is required to accept the invite.",
+  }),
+});
+
 export {
   getMemberParams,
   getMembersQuerySchema,
   getMembersByIdQuerySchema,
   inviteSingleMemberSchema,
   bulkInviteSchema,
+  verifyInviteQuerySchema,
   acceptInviteBodySchema,
 };

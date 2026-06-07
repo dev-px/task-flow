@@ -4,10 +4,12 @@ import ApiError from "./../errors/ApiError.js";
 const validate =
   (schema, source = "body") =>
   (req, res, next) => {
-    const { error, value } = schema.validate(req[source], {
-      abortEarly: false,
-    });
+    const payload = req?.[source] || {};
 
+    const { error, value } = schema.validate(payload, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
     if (error) {
       const simpleErrors = {};
       error.details.forEach((err) => {
@@ -15,15 +17,19 @@ const validate =
       });
       return next(
         new ApiError(
-          res,
-          "Validation Failed",
           HTTP_STATUS.BAD_REQUEST,
+          "Validation Failed",
           simpleErrors,
         ),
       );
     }
 
-    req[source] = value;
+    if (source === "query") {
+      req.validatedQuery = value;
+    } else {
+      req[source] = value;
+    }
+
     next();
   };
 
@@ -33,3 +39,7 @@ const validate =
 // validate(mySchema, 'query')
 
 export default validate;
+
+// req.query = value, JavaScript sees that req.query has only a "get" method and no "set" method. It blocks the operation entirely and throws the exact crash you saw:Cannot set property query of #<IncomingMessage> which has only a getter for query. This is a security feature in Node.js to prevent tampering with the request object.
+
+// To fix this, you should assign the validated query parameters to a different property on the request object, such as req.validatedQuery. This way, you can keep the original req.query intact while still having access to the validated and sanitized query parameters in your controllers.

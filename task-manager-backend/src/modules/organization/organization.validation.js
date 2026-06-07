@@ -8,7 +8,6 @@ const createOrganizationSchema = Joi.object({
 });
 
 const updateGeneralSchema = Joi.object({
-  name: Joi.string().min(2).max(100).trim(),
   logoUrl: Joi.string().uri().allow("", null),
   companyEmail: Joi.string().email().trim().allow("", null),
   companyPhone: Joi.string().trim().allow("", null),
@@ -23,21 +22,21 @@ const updateGeneralSchema = Joi.object({
     "object.min": "You must provide at least one general setting to update.",
   });
 
-const updateSecuritySchema = Joi.object({
-  passwordPolicy: Joi.string().valid("Standard", "Strong", "Custom"),
-  twoFactorAuthentication: Joi.boolean(),
-  enforce2FAForAdmins: Joi.boolean(),
-  sessionTimeout: Joi.number().integer().min(5).max(1440),
-  maxConcurrentSessions: Joi.number().integer().min(1).max(10),
-  ipWhitelisting: Joi.boolean(),
-  whitelistedIPs: Joi.array().items(
-    Joi.string().ip({ version: ["ipv4", "ipv6"] }),
-  ),
-})
-  .min(1)
-  .messages({
-    "object.min": "You must provide at least one security setting to update.",
-  });
+// const updateSecuritySchema = Joi.object({
+//   passwordPolicy: Joi.string().valid("Standard", "Strong", "Custom"),
+//   twoFactorAuthentication: Joi.boolean(),
+//   enforce2FAForAdmins: Joi.boolean(),
+//   sessionTimeout: Joi.number().integer().min(5).max(1440),
+//   maxConcurrentSessions: Joi.number().integer().min(1).max(10),
+//   ipWhitelisting: Joi.boolean(),
+//   whitelistedIPs: Joi.array().items(
+//     Joi.string().ip({ version: ["ipv4", "ipv6"] }),
+//   ),
+// })
+//   .min(1)
+//   .messages({
+//     "object.min": "You must provide at least one security setting to update.",
+//   });
 
 const orgParamsSchema = Joi.object({
   orgId: Joi.string().hex().length(24).required().messages({
@@ -47,9 +46,17 @@ const orgParamsSchema = Joi.object({
   }),
 });
 
+const orgQuerySchema = Joi.object({
+  isDeleted: Joi.boolean().required().messages({
+    "boolean.base":
+      "The isDeleted field must be a boolean value (true or false).",
+    "any.required": "The isDeleted field is required.",
+  }),
+});
+
 export {
   createOrganizationSchema,
   updateGeneralSchema,
-  updateSecuritySchema,
   orgParamsSchema,
+  orgQuerySchema,
 };

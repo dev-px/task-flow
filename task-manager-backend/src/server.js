@@ -6,7 +6,8 @@ import connectDB from "./config/db.config.js";
 import redisClient from "./config/redis.config.js";
 import { Server } from "socket.io";
 import { initializeSocket } from "./config/socket.config.js";
-import "./queues/email.queue.js";
+import { initializeListeners } from "./events/listeners/audit.listener.js";
+import "./worker/worker.js";
 
 const startServer = async () => {
   try {
@@ -20,6 +21,9 @@ const startServer = async () => {
 
     // socket connect
     const io = initializeSocket(server);
+
+    // event emmiter for audit log
+    await initializeListeners();
 
     server.listen(env.PORT, () => {
       logger.info(`Server running on port ${env.PORT}`);

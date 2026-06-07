@@ -16,7 +16,7 @@ const redisOptions = {
 // new Redis() defaults to localhost:6379
 const redisClient = env.REDIS_URL
   ? new Redis(env.REDIS_URL, redisOptions)
-  : new Redis(redisOptions);
+  : new Redis({ host: "localhost", port: 6379, ...redisOptions });
 
 redisClient.on("connect", () => {
   logger.info("Redis connected successfully");

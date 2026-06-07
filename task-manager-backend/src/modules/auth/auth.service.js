@@ -71,7 +71,7 @@ const loginService = async (loginData) => {
 
   // 6. Clean up the user object to send back
   const userResponse = user.toObject();
-  if (!newUser) {
+  if (!userResponse) {
     throw new ApiError(
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
       "login failed, please try again",

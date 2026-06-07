@@ -5,6 +5,7 @@ const validateRequiredPermissions =
   (requiredPermission) => (req, res, next) => {
     try {
       const userRole = req.member.roleId;
+      console.log(userRole);
 
       if (!userRole) {
         return next(

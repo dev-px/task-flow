@@ -3,18 +3,38 @@ import asyncHandler from "./../../utils/async-handler.util.js";
 import HTTP_STATUS from "./../../constants/http-status.constant.js";
 import {
   createOrganizationService,
+  deleteOrgService,
   editOrganizationService,
   updateGeneralService,
   viewAllOrganizationsService,
+  viewOrgDetailService,
 } from "./organization.service.js";
 
 const viewAllOrganizationsController = asyncHandler(async (req, res) => {
-  const organizations = await viewAllOrganizationsService(req.user.id);
+  const { isDeleted } = req.validatedQuery || false;
+  console.log(req.validatedQuery.isDeleted, req, "middleware");
+  const organizations = await viewAllOrganizationsService(
+    req.user.id,
+    isDeleted,
+  );
   return successResponse(
     res,
     "Organization fetched successfully",
     organizations,
-    HTTP_STATUS.CREATED,
+    HTTP_STATUS.OK,
+  );
+});
+
+const viewOrgDetailController = asyncHandler(async (req, res) => {
+  const organizations = await viewOrgDetailService(
+    req.user.id,
+    req.params.orgId,
+  );
+  return successResponse(
+    res,
+    "Organization fetched successfully",
+    organizations,
+    HTTP_STATUS.OK,
   );
 });
 
@@ -35,33 +55,46 @@ const createOrganizationController = asyncHandler(async (req, res) => {
 const editOrganizationController = asyncHandler(async (req, res) => {
   const { orgId } = req.params;
   const organization = await editOrganizationService(
-    orgId,
     req.user.id,
+    orgId,
     req.body,
   );
 
   return successResponse(
     res,
-    "Organization updated successfully",
-    { organization, member },
+    "Organization name updated successfully",
+    organization,
     HTTP_STATUS.CREATED,
   );
 });
 
 const updateGeneralController = asyncHandler(async (req, res) => {
   const { orgId } = req.params;
-  const generalOrgInfo = await updateGeneralService(req.body, orgId);
+  const generalOrgInfo = await updateGeneralService(orgId, req.body);
   return successResponse(
     res,
-    "Organization general info updated successfully",
+    "Organization info updated successfully",
     generalOrgInfo,
     HTTP_STATUS.OK,
   );
 });
 
+const deleteOrgController = asyncHandler(async (req, res) => {
+  const { orgId } = req.params;
+  const generalOrgInfo = await deleteOrgService(req.user.id, orgId);
+  return successResponse(
+    res,
+    "Organization deletion is processing in the background.",
+    generalOrgInfo,
+    HTTP_STATUS.ACCEPTED,
+  );
+});
+
 export {
   viewAllOrganizationsController,
+  viewOrgDetailController,
   createOrganizationController,
   updateGeneralController,
   editOrganizationController,
+  deleteOrgController,
 };

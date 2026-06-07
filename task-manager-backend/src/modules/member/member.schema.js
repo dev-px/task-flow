@@ -22,7 +22,7 @@ const memberSchema = new mongoose.Schema(
       required: true,
     },
 
-    // for invitation
+    // --- INVITATION LIFECYCLE ---
     inviteEmail: {
       type: String,
       required: function () {
@@ -37,24 +37,26 @@ const memberSchema = new mongoose.Schema(
     inviteExpiresAt: { type: Date },
     inviteResendCount: { type: Number, default: 0 },
 
-    designation: { type: String, trim: true },
-    joiningDate: { type: Date },
-    employeeId: { type: String, trim: true },
-    managerId: { type: mongoose.Schema.Types.ObjectId, ref: "Member" },
-    workType: {
-      type: String,
-      enum: ["full-time", "part-time", "contractor"],
-      default: "full-time",
-    },
+    // --- DISPLAY / UI ---
+    designation: { type: String, trim: true }, // Keep this! e.g., "Frontend Dev" is useful context on a task
 
-    // State of the membership
+    // status
     status: {
       type: String,
       enum: ["invited", "active", "suspended", "expired", "cancelled"],
       default: "invited",
     },
-    isArchived: { type: Boolean, default: false },
-    //   user Preferences for specific company
+
+    // deletion
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    // notification prefrenece
     notifications: {
       emailNotifications: { type: Boolean, default: true },
       pushNotifications: { type: Boolean, default: true },
@@ -68,11 +70,11 @@ const memberSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// We need a new index to prevent sending multiple active invites to the same email
+// Indexes for fast lookups
 memberSchema.index({ organizationId: 1, inviteEmail: 1 });
-memberSchema.index({ userId: 1, organizationId: 1 }, { unique: true });
 memberSchema.index({ roleId: 1, userId: 1 });
 memberSchema.index({ userId: 1, status: 1 });
+memberSchema.index({ userId: 1, organizationId: 1 }, { unique: true, sparse: true });
 
 const Member = mongoose.model("Member", memberSchema);
 

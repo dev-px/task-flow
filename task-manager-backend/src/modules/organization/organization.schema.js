@@ -18,6 +18,11 @@ const organizationSchema = new mongoose.Schema(
     address: { type: String, trim: true },
     timezone: { type: String, default: "UTC" },
     businessHours: { type: String, default: "09:00-17:00" },
+    deletionStatus: {
+      type: String,
+      enum: ["active", "deleting", "deleted"],
+      default: "active",
+    },
 
     creatorId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -55,6 +60,15 @@ const organizationSchema = new mongoose.Schema(
       autoRenewal: { type: Boolean, default: true },
       totalSeats: { type: Number, default: 5 },
     },
+
+    // deleting
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   { timestamps: true },
 );
@@ -65,7 +79,6 @@ organizationSchema.pre("validate", function (next) {
   if (this.isNew && this.name) {
     this.slug = slugify(this.name);
   }
-  next();
 });
 
 const Organization = mongoose.model("Organization", organizationSchema);

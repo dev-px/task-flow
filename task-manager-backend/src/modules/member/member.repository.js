@@ -1,16 +1,23 @@
 import Member from "./member.schema.js";
 import mongoose from "mongoose";
-import { Role } from "./../role/role.schema.js";
+import Role from "./../role/role.schema.js";
 import ApiError from "../../errors/ApiError.js";
 import HTTP_STATUS from "../../constants/http-status.constant.js";
-import Counter from "./counter.schema.js";
+import { getUserByEmailArray } from "../user/user.repository.js";
 
 const getMemberByUserIdAndOrganizationId = async (userId, organizationId) => {
+  console.log("Fetching member by userId and organizationId:", {
+    userId,
+    organizationId,
+  });
   const member = await Member.findOne({ userId, organizationId })
     .populate("roleId")
     .lean();
   if (!member) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, "User not found");
+    throw new ApiError(
+      HTTP_STATUS.NOT_FOUND,
+      "Membership not found for this user in the organization",
+    );
   }
   return member;
 };
@@ -23,10 +30,11 @@ const getMemberByInviteEmailAndOrg = async (
   return await Member.findOne({ inviteEmail, organizationId }).session(session);
 };
 
-const getOrganizationsFromMember = async (userId) => {
+const getOrganizationsFromMember = async (userId, isDeleted) => {
   return await Member.find({
     userId: userId,
-    status: "ACTIVE",
+    status: "active",
+    isDeleted: isDeleted,
   }).populate("organizationId roleId");
 };
 
@@ -36,28 +44,43 @@ const createMemberForOrganization = async (memberData, session = null) => {
 };
 
 const getMembers = async (organizationId, queryParams = {}) => {
-  // 1. Clean Destructuring & Type Casting
-  // Everything coming from req.query is a string. We MUST convert page/limit to numbers.
   const page = parseInt(queryParams.page, 10) || 1;
   const limit = parseInt(queryParams.limit, 10) || 10;
   const skip = (page - 1) * limit;
-  const isArchived = queryParams.isArchived || false;
 
-  const { search, designation, status, workType, sortBy, sortOrder } =
-    queryParams;
+  const {
+    search,
+    designation,
+    status,
+    workType,
+    sortBy,
+    sortOrder,
+    isDeleted,
+  } = queryParams;
+
+  // 1. Base Match (Only Organization ID by default!)
+  const baseMatch = {
+    organizationId: new mongoose.Types.ObjectId(organizationId),
+  };
+
+  // Only filter by isDeleted if explicitly requested by the frontend
+  if (typeof isDeleted !== "undefined") {
+    // Converts string "true"/"false" from query params to actual boolean
+    baseMatch.isDeleted = isDeleted === "true" || isDeleted === true;
+  }
 
   // 2. Build the Dynamic Match Object cleanly
   const dynamicMatch = {};
 
   if (designation) dynamicMatch.designation = designation;
   if (status) dynamicMatch.status = status;
-  if (workType) dynamicMatch.workType = workType; // You extracted this earlier but forgot to use it!
+  if (workType) dynamicMatch.workType = workType;
 
   if (search) {
     dynamicMatch.$or = [
       { "userData.name": { $regex: search, $options: "i" } },
-      { "userData.email": { $regex: search, $options: "i" } }, // Good to search by email too!
-      { employeeId: { $regex: search, $options: "i" } },
+      { "userData.email": { $regex: search, $options: "i" } },
+      { inviteEmail: { $regex: search, $options: "i" } },
       { designation: { $regex: search, $options: "i" } },
     ];
   }
@@ -69,23 +92,14 @@ const getMembers = async (organizationId, queryParams = {}) => {
     joiningDate: "createdAt",
   };
 
-  // Default to sorting by joiningDate if they send an invalid string
   const actualSortField = sortFieldMap[sortBy] || "createdAt";
-
-  // Default to descending (-1) unless they explicitly ask for ascending ("asc")
   const actualSortOrder = sortOrder === "asc" ? 1 : -1;
-
   const dynamicSort = { [actualSortField]: actualSortOrder };
 
   // 3. The Pipeline
   const pipeline = [
-    // Stage 1: Base Match (Indexes hit here!)
-    {
-      $match: {
-        organizationId: new mongoose.Types.ObjectId(organizationId),
-        isArchived: isArchived,
-      },
-    },
+    // Stage 1: Base Match (Gets ALL members for the org)
+    { $match: baseMatch },
 
     // Stage 2: Join with User Collection
     {
@@ -96,7 +110,7 @@ const getMembers = async (organizationId, queryParams = {}) => {
         as: "userData",
       },
     },
-    { $unwind: "$userData" },
+    { $unwind: { path: "$userData", preserveNullAndEmptyArrays: true } },
 
     // Stage 3: Join with Role Collection (CRITICAL FOR UI)
     {
@@ -107,13 +121,10 @@ const getMembers = async (organizationId, queryParams = {}) => {
         as: "roleData",
       },
     },
-    { $unwind: "$roleData" },
+    { $unwind: { path: "$roleData", preserveNullAndEmptyArrays: true } },
 
     // Stage 4: Apply the dynamic filters we built above
-    // If there is no search/filter, dynamicMatch is just {}, which is highly optimized.
-    {
-      $match: dynamicMatch,
-    },
+    { $match: dynamicMatch },
 
     // Stage 5: Pagination & Formatting
     {
@@ -130,12 +141,14 @@ const getMembers = async (organizationId, queryParams = {}) => {
               designation: 1,
               workType: 1,
               status: 1,
+              isDeleted: 1,
               joinedAt: "$createdAt",
+              inviteEmail: 1,
               user: {
                 _id: "$userData._id",
                 name: "$userData.name",
-                email: "$userData.email",
-                avatar: "$userData.profilePicture", // Assuming you have an avatar field!
+                email: { $ifNull: ["$userData.email", "$inviteEmail"] },
+                avatarUrl: "$userData.avatarUrl",
               },
               role: {
                 _id: "$roleData._id",
@@ -159,14 +172,16 @@ const getMembers = async (organizationId, queryParams = {}) => {
   };
 };
 
+export default getMembers;
+
 const getMemberById = async (organizationId, memberId, queryParams = {}) => {
   // if admin want to see archieved member
-  const isArchived = queryParams.isArchived || false;
+  const isDeleted = queryParams.isDeleted || false;
 
   const member = await Member.findOne({
     _id: memberId,
     organizationId: organizationId,
-    isArchived: isArchived,
+    isDeleted: isDeleted,
   })
     .populate("userId", "name email profilePicture")
     .populate("roleId", "name permissions");
@@ -187,9 +202,9 @@ const getMemberById = async (organizationId, memberId, queryParams = {}) => {
 };
 
 // create single member
-const createMember = async (memberData) => {
+const createMember = async (memberData, session = null) => {
   const member = new Member(memberData);
-  return await member.save();
+  return await member.save({ session });
 };
 
 // create bulk member
@@ -198,35 +213,41 @@ const bulkInsertMembers = async (membersArray) => {
 };
 
 // get existing member
-const getExistingMembersByEmails = async (organizationId, emailArray) => {
-  return await Member.find({
+const getExistingUsersAndMembers = async (organizationId, emailArray) => {
+  // check in both User and Mmeber schema
+  const globalUsers = await getUserByEmailArray(emailArray);
+  const globalUserIds = globalUsers.map((user) => user._id);
+
+  const members = await Member.find({
     organizationId,
-    inviteEmail: { $in: emailArray },
-    status: { $in: ["invited", "active"] }, // Only care if they are currently pending or active
+    $or: [
+      { inviteEmail: { $in: emailArray } },
+      { userId: { $in: globalUserIds } },
+    ],
   })
-    .select("inviteEmail status")
+    .select("inviteEmail userId status isDeleted isArchived _id")
     .lean();
+
+  return { globalUsers, members };
 };
 
-const updateMemberStatus = async (memberId, status) => {
-  return await Member.findByIdAndUpdate(memberId, { status }, { new: true });
-};
-
-const generateSequentialEmployeeId = async (organizationId, session) => {
-  const counter = await Counter.findOneAndUpdate(
-    { organizationId },
-    { $inc: { sequenceValue: 1 } },
-    { new: true, upsert: true, session },
+// update member details
+const updateMemberDetails = async (
+  organizationId,
+  memberId,
+  updateData,
+  session = null,
+) => {
+  // Check if updateData already has Mongo operators (like $set or $inc)
+  // If it doesn't, we wrap it in $set automatically for convenience.
+  const hasOperators = Object.keys(updateData).some((key) =>
+    key.startsWith("$"),
   );
+  const finalUpdate = hasOperators ? updateData : { $set: updateData };
 
-  // Formats to something like "EMP-0001", "EMP-0002"
-  return `EMP-${counter.sequenceValue.toString().padStart(4, "0")}`;
-};
-
-const updateMemberDetails = async (memberId, updateData, session = null) => {
-  return await Member.findByIdAndUpdate(
-    memberId,
-    { $set: updateData },
+  return await Member.findOneAndUpdate(
+    { _id: memberId, organizationId: organizationId },
+    finalUpdate,
     { new: true, session },
   );
 };
@@ -240,8 +261,6 @@ export {
   getMemberById,
   createMember,
   bulkInsertMembers,
-  getExistingMembersByEmails,
-  updateMemberStatus,
+  getExistingUsersAndMembers,
   updateMemberDetails,
-  generateSequentialEmployeeId,
 };

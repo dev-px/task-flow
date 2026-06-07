@@ -30,9 +30,11 @@ export const PERMISSIONS = {
 
   // member-level permissions
   MEMBER_READ: "member:read",
-  MEMBER_INVITE: "member:invite",
-  MEMBER_REMOVE: "member:remove",
   MEMBER_CREATE: "member:create",
+  MEMBER_EDIT: "member:edit",
+  MEMBER_DELETE: "member:delete",
+  MEMBER_CANCEL_INVITE: "member:cancel",
+  MEMBER_REVOKED_ACCESS: "member:revoked"
 };
 
 export const ALL_PERMISSIONS = Object.values(PERMISSIONS);

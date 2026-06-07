@@ -21,7 +21,7 @@ const requireAuth = async (req, res, next) => {
     const decoded = jwt.verify(token, env.ACCESS_TOKEN);
 
     // 1. Verify global user existence
-    const user = await getUserById(decoded.id);
+    const user = await getUserById(decoded.userId);
     if (!user) {
       return next(
         new ApiError(HTTP_STATUS.UNAUTHORIZED, "User no longer exists."),
@@ -42,6 +42,7 @@ const requireAuth = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
+    console.error("Authentication error:", error);
     return next(
       new ApiError(
         HTTP_STATUS.UNAUTHORIZED,

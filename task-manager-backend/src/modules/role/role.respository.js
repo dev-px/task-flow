@@ -1,19 +1,19 @@
 import mongoose from "mongoose";
-import { Role } from "./role.schema.js";
+import Role from "./role.schema.js";
 
-const getRoleByOrgId = async (organizationId) => {
-  return await Role.find({ organizationId, isArchived: false });
+const getRoleByOrgId = async (organizationId, session = null) => {
+  return await Role.find({ organizationId, isDeleted: false }).session(session);
 };
 
 const getRoleById = async (roleId) => {
-  return await Role.findById({ roleId, isArchived: false });
+  return await Role.findById({ roleId, isDeleted: false });
 };
 
 const getRoleByOrgIdAndSlug = async (organizationId) => {
   return await Role.findOne({
     organizationId,
     slug: potentialSlug,
-    isArchived: false,
+    isDeleted: false,
   });
 };
 
@@ -34,7 +34,7 @@ const updateRoleByIdAndOrgId = async (roleId, orgId, updates) => {
 };
 
 const archiveRole = async (role, description) => {
-  role.isArchived = true;
+  role.isDeleted = true;
   role.archieveDescription = req.body.description;
   const archieveRoleData = await role.save();
 

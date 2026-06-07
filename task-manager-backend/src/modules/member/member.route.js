@@ -13,6 +13,9 @@ import {
   acceptInviteController,
   reinviteMemberController,
   cancelInviteController,
+  memeberSuspendController,
+  memeberDeleteController,
+  verifyInviteController,
 } from "./member.controller.js";
 import {
   getMemberParams,
@@ -21,71 +24,106 @@ import {
   inviteSingleMemberSchema,
   bulkInviteSchema,
   acceptInviteBodySchema,
+  verifyInviteQuerySchema,
 } from "./member.validation.js";
 
-const router = express.Router({ mergeParams: true });
+const router = express.Router();
 
-// shared Global Middleware Stack
-const globalStack = [requireAuth, requireOrganizationAccess];
-
-// permission-Specific Stacks
-const readStack = [
-  ...globalStack,
-  validateRequiredPermissions(PERMISSIONS.MEMBER_READ),
-];
-const writeStack = [
-  ...globalStack,
-  validateRequiredPermissions(PERMISSIONS.MEMBER_CREATE),
-];
-
-// get all members
+// verify-invite
 router.get(
-  "/",
-  validate(orgParamsSchema, "params"),
-  ...readStack,
-  validate(getMembersQuerySchema, "query"),
-  getMemberController,
-);
-
-// get member by ID
-router.get(
-  "/:memberId",
-  validate(getMemberParams, "params"),
-  ...readStack,
-  validate(getMembersByIdQuerySchema, "query"),
-  getMemberByIdController,
-);
-
-// single invite
-router.post(
-  "/invite/single",
-  ...writeStack,
-  validate(inviteSingleMemberSchema, "body"),
-  inviteSingleMemberController,
-);
-
-// bulk invite
-router.post(
-  "/invite/bulk",
-  ...writeStack,
-  validate(bulkInviteSchema, "body"),
-  bulkInviteController,
+  "/verify-invite",
+  validate(verifyInviteQuerySchema, "query"),
+  verifyInviteController,
 );
 
 // accept invite
 router.post(
   "/accept-invite",
-  validate(acceptInviteBodySchema, "query"),
+  validate(verifyInviteQuerySchema, "query"),
+  validate(acceptInviteBodySchema, "body"),
   acceptInviteController,
 );
 
-// POST /invite/:memberId/reinvite
+// get all members
+router.get(
+  "/:orgId",
+  requireAuth,
+  validate(orgParamsSchema, "params"),
+  requireOrganizationAccess,
+  validateRequiredPermissions(PERMISSIONS.MEMBER_READ),
+  validate(getMembersQuerySchema, "query"),
+  getMemberController,
+);
+
+// single invite
 router.post(
-  "/invite/:memberId/reinvite",
-  ...writeStack,
+  "/:orgId/invite/single",
+  requireAuth,
+  validate(inviteSingleMemberSchema, "body"),
+  requireOrganizationAccess,
+  validateRequiredPermissions(PERMISSIONS.MEMBER_CREATE),
+  inviteSingleMemberController,
+);
+
+// bulk invite
+router.post(
+  "/:orgId/invite/bulk",
+  requireAuth,
+  validate(bulkInviteSchema, "body"),
+  requireOrganizationAccess,
+  validateRequiredPermissions(PERMISSIONS.MEMBER_CREATE),
+  bulkInviteController,
+);
+
+// reinvite
+router.post(
+  "/:orgId/invite/:invitedmemberId/reinvite",
+  requireAuth,
+  validate(getMemberParams, "params"),
+  requireOrganizationAccess,
+  validateRequiredPermissions(PERMISSIONS.MEMBER_CREATE),
   reinviteMemberController,
 );
 
-router.post("/invite/:memberId/cancel", ...writeStack, cancelInviteController);
+// cancel invite
+router.post(
+  "/:orgId/invite/:invitedmemberId/cancel",
+  requireAuth,
+  validate(getMemberParams, "params"),
+  requireOrganizationAccess,
+  validateRequiredPermissions(PERMISSIONS.MEMBER_CANCEL_INVITE),
+  cancelInviteController,
+);
+
+// get member by ID
+router.get(
+  "/:orgId/:invitedmemberId",
+  requireAuth,
+  validate(getMemberParams, "params"),
+  requireOrganizationAccess,
+  validateRequiredPermissions(PERMISSIONS.MEMBER_READ),
+  validate(getMembersByIdQuerySchema, "query"),
+  getMemberByIdController,
+);
+
+// suspend the Member
+router.patch(
+  "/:orgId/:invitedmemberId/suspend",
+  requireAuth,
+  validate(getMemberParams, "params"),
+  requireOrganizationAccess,
+  validateRequiredPermissions(PERMISSIONS.MEMBER_REVOKED_ACCESS),
+  memeberSuspendController,
+);
+
+// archive or soft delete the member
+router.delete(
+  "/:orgId/:invitedmemberId/delete",
+  requireAuth,
+  validate(getMemberParams, "params"),
+  requireOrganizationAccess,
+  validateRequiredPermissions(PERMISSIONS.MEMBER_DELETE),
+  memeberDeleteController,
+);
 
 export default router;

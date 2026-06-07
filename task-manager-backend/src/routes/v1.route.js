@@ -15,7 +15,7 @@ router.use("/auth", authRoute);
 router.use("/users", userRoute);
 router.use("/organizations", organizationRoute);
 router.use("/roles", roleRouter);
-router.use("/member/:orgId", memberRouter);
+router.use("/member", memberRouter);
 // router.use("/projects", projectRoutes);
 
 // test route

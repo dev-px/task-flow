@@ -16,6 +16,8 @@ const env = {
   SMTP_PORT: process.env.SMTP_PORT,
   SMTP_SECURE: process.env.SMTP_SECURE,
   CLIENT_URL: process.env.CLIENT_URL,
+  SERVER_URL: process.env.SERVER_URL,
+  VERSION: process.env.VERSION,
   JWT_SECRET: process.env.JWT_SECRET,
 };
 
