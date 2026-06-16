@@ -4,6 +4,7 @@ import asyncHandler from "./../../utils/async-handler.util.js";
 import {
   archieveRoleService,
   createDefaultRolesForOrgService,
+  createNewRoleService,
   editRoleService,
   getAllRolesService,
 } from "./role.service.js";

@@ -13,6 +13,7 @@ const roleSchema = Joi.object({
   permissions: Joi.array()
     .items(Joi.string().valid(...ALL_PERMISSIONS))
     .unique()
+    .single()
     .default([])
     .messages({
       "array.unique": "Duplicate permissions are not allowed",

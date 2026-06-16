@@ -1,12 +1,12 @@
 import express from "express";
 import SUCCESS_MESSAGES from "./../errors/success.messages.js";
-import { successResponse } from "../utils/api-response.util.js";
 import HTTP_STATUS from "./../constants/http-status.constant.js";
 import authRoute from "./../modules/auth/auth.route.js";
 import userRoute from "./../modules/user/user.route.js";
 import organizationRoute from "./../modules/organization/organization.route.js";
 import roleRouter from "./../modules/role/role.route.js";
 import memberRouter from "./../modules/member/member.route.js";
+import { successResponse } from "../utils/api-response.util.js";
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ const router = express.Router();
 router.use("/auth", authRoute);
 router.use("/users", userRoute);
 router.use("/organizations", organizationRoute);
-router.use("/roles", roleRouter);
+router.use("/roles/:orgId", roleRouter);
 router.use("/member", memberRouter);
 // router.use("/projects", projectRoutes);
 

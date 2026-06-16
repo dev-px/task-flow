@@ -1,15 +1,9 @@
 import express from "express";
 import requireAuth from "../../middlewares/auth.middleware.js";
-import validateRequiredPermissions from "../../middlewares/permission.middleware.js";
-import { PERMISSIONS } from "../../constants/permissions.constant.js";
-import requireOrganizationAccess from "../../middlewares/organization.middleware.js";
-import {
-  archiveRoleController,
-  createNewRoleController,
-  editRoleController,
-  getAllRolesController,
-} from "./role.controller.js";
 import validate from "../../middlewares/validation.middleware.js";
+import validateRequiredPermissions from "../../middlewares/permission.middleware.js";
+import requireOrganizationAccess from "../../middlewares/organization.middleware.js";
+import { PERMISSIONS } from "../../constants/permissions.constant.js";
 import { orgParamsSchema } from "../organization/organization.validation.js";
 import {
   archieveRoleJustificationSchema,
@@ -17,12 +11,18 @@ import {
   editRoleSchema,
   roleSchema,
 } from "./role.validation.js";
+import {
+  archiveRoleController,
+  createNewRoleController,
+  editRoleController,
+  getAllRolesController,
+} from "./role.controller.js";
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 // get all roles within the organization
 router.get(
-  "/:orgId",
+  "/",
   requireAuth,
   validate(orgParamsSchema, "params"),
   requireOrganizationAccess,
@@ -32,7 +32,7 @@ router.get(
 
 // create new role within the organziation
 router.post(
-  "/:orgId",
+  "/",
   requireAuth,
   validate(orgParamsSchema, "params"),
   requireOrganizationAccess,
@@ -43,7 +43,7 @@ router.post(
 
 // edit an role except system default role (like admin, owner, etc)
 router.patch(
-  "/:orgId/:roleId",
+  "/:roleId",
   requireAuth,
   validate(editParamsRoleSchema, "params"),
   requireOrganizationAccess,
@@ -52,8 +52,9 @@ router.patch(
   editRoleController,
 );
 
+// archive or soft delete the role except the system default role (like admin, owner, etc)
 router.patch(
-  "/:orgId/:roleId",
+  "/:roleId/delete",
   requireAuth,
   validate(editParamsRoleSchema, "params"),
   requireOrganizationAccess,

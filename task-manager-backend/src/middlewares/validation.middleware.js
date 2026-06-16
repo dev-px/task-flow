@@ -5,15 +5,17 @@ const validate =
   (schema, source = "body") =>
   (req, res, next) => {
     const payload = req?.[source] || {};
-
+    console.log("Validating payload:", payload);
     const { error, value } = schema.validate(payload, {
       abortEarly: false,
       stripUnknown: true,
     });
+    console.log("Validation result:", { error, value });
     if (error) {
       const simpleErrors = {};
       error.details.forEach((err) => {
-        simpleErrors[err.context.key] = err.message.replace(/"/g, "");
+        const key = err.path.join(".");
+        simpleErrors[key] = err.message.replace(/"/g, "");
       });
       return next(
         new ApiError(
@@ -29,7 +31,7 @@ const validate =
     } else {
       req[source] = value;
     }
-
+    console.log(`Validation successful for ${source}:`, value);
     next();
   };
 
