@@ -18,7 +18,7 @@ import {
 import { CheckCircle2, Circle, Trash2, MessageSquare } from "lucide-react";
 
 import TabsCompo from "@/components/layout/TabsCompo";
-import { AddSubtaskDialog } from "./../../../../../components/task/TaskDialogs/AddSubtaskDialog";
+import { AddSubtaskDialog } from "../../../../../components/task/TaskDialogs/AddSubtaskDialog";
 import TaskFooter from "@/components/layout/TaskFooter";
 import { initialTaskDeatilsForm } from "@/utils/constant";
 

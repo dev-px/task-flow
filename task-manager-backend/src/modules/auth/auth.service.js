@@ -88,16 +88,25 @@ const refreshTokenService = async (incomingRefreshToken) => {
     throw new ApiError(HTTP_STATUS.UNAUTHORIZED, "No refresh token provided");
   }
 
-  const decoded = jwt.verify(incomingRefreshToken, env.REFRESH_TOKEN);
-  if (!decoded || !decoded.userId) {
-    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, "Invalid refresh token");
+  let decoded;
+
+  try {
+    // Attempt to verify the token
+    decoded = jwt.verify(incomingRefreshToken, env.REFRESH_TOKEN);
+  } catch (error) {
+    // Just throw the error. The controller will catch it and clear the cookie.
+    throw new ApiError(
+      HTTP_STATUS.UNAUTHORIZED,
+      "Refresh token is expired or invalid. Please log in again.",
+    );
   }
 
-  // getting the current valid token from Redis for this user
+  if (!decoded || !decoded.userId) {
+    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, "Invalid token payload");
+  }
+
   const storedToken = await redisClient.get(`refreshToken:${decoded.userId}`);
 
-  // 2. THE KILL SWITCH (Reuse Detection)
-  //  incoming refresh token does not match with the one stored in Redis, which means it has been reused
   if (storedToken !== incomingRefreshToken) {
     await redisClient.del(`refreshToken:${decoded.userId}`);
     throw new ApiError(
@@ -107,8 +116,9 @@ const refreshTokenService = async (incomingRefreshToken) => {
   }
 
   const user = await findUserById(decoded.userId);
-  if (!user)
+  if (!user) {
     throw new ApiError(HTTP_STATUS.UNAUTHORIZED, "User account not exists");
+  }
 
   const { accessToken, refreshToken } = await generateTokens(
     user._id,
@@ -122,7 +132,7 @@ const refreshTokenService = async (incomingRefreshToken) => {
     );
   }
 
-  return { accessToken, refreshToken };
+  return { accessToken, refreshToken, user };
 };
 
 // logout user

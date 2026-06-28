@@ -5,12 +5,12 @@ const validate =
   (schema, source = "body") =>
   (req, res, next) => {
     const payload = req?.[source] || {};
-    console.log("Validating payload:", payload);
+    // console.log("Validating payload:", payload);
     const { error, value } = schema.validate(payload, {
       abortEarly: false,
       stripUnknown: true,
     });
-    console.log("Validation result:", { error, value });
+    // console.log("Validation result:", { error, value });
     if (error) {
       const simpleErrors = {};
       error.details.forEach((err) => {
@@ -31,8 +31,9 @@ const validate =
     } else {
       req[source] = value;
     }
-    console.log(`Validation successful for ${source}:`, value);
+    // console.log(`Validation successful for ${source}:`, value);
     next();
+    // console.log("checking in body for organization", req.params.orgId, "check");
   };
 
 // Usage:

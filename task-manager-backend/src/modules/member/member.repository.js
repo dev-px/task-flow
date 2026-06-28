@@ -6,12 +6,8 @@ import HTTP_STATUS from "../../constants/http-status.constant.js";
 import { getUserByEmailArray } from "../user/user.repository.js";
 
 const getMemberByUserIdAndOrganizationId = async (userId, organizationId) => {
-  console.log("Fetching member by userId and organizationId:", {
-    userId,
-    organizationId,
-  });
   const member = await Member.findOne({ userId, organizationId })
-    .populate("roleId")
+    .populate("roleId organizationId")
     .lean();
   if (!member) {
     throw new ApiError(
@@ -30,12 +26,58 @@ const getMemberByInviteEmailAndOrg = async (
   return await Member.findOne({ inviteEmail, organizationId }).session(session);
 };
 
-const getOrganizationsFromMember = async (userId, isDeleted) => {
-  return await Member.find({
+const getOrganizationsFromMember = async (
+  userId,
+  search,
+  sortBy,
+  isDeleted,
+) => {
+  const memberQuery = {
     userId: userId,
     status: "active",
     isDeleted: isDeleted,
-  }).populate("organizationId roleId");
+  };
+
+  const orgMatchQuery = {};
+  if (search && search !== "undefined" && search.trim() !== "") {
+    orgMatchQuery.name = { $regex: search, $options: "i" };
+  }
+
+  let members = await Member.find(memberQuery)
+    .populate({
+      path: "organizationId",
+      match: orgMatchQuery,
+    })
+    .populate("roleId")
+    .lean();
+
+  members = members.filter((member) => member.organizationId !== null);
+
+  members.sort((a, b) => {
+    const orgA = a.organizationId;
+    const orgB = b.organizationId;
+
+    switch (sortBy) {
+      case "oldest":
+        // Ascending (1): Older dates go first
+        return new Date(orgA.createdAt) - new Date(orgB.createdAt);
+
+      case "name-asc":
+        // Ascending (1): A to Z
+        return orgA.name.localeCompare(orgB.name);
+
+      case "name-desc":
+        // Descending (-1): Z to A
+        return orgB.name.localeCompare(orgA.name);
+
+      case "newest":
+      default:
+        // Descending (-1): Newer dates go first (Fallback default)
+        return new Date(orgB.createdAt) - new Date(orgA.createdAt);
+    }
+  });
+
+  return members;
 };
 
 const createMemberForOrganization = async (memberData, session = null) => {

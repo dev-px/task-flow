@@ -1,20 +1,14 @@
-'use client'
+"use client";
 
-import { Provider } from 'react-redux';
-import { useState } from 'react';
-import { QueryClientProvider } from '@tanstack/react-query';
-import makeStore from './../redux/store';
-import createQueryClient from './../lib/queryClient';
+import { Provider } from "react-redux";
+import { useState } from "react";
+import makeStore from "./../redux/store";
 
 export default function Providers({ children }) {
-    const [store] = useState(() => makeStore())
-    const [queryClient] = useState(() => createQueryClient())
+  // useState is used to create a store instance that will persist across re-renders of the Providers component. 
+  // This ensures that the same store instance is used throughout the application, 
+  // allowing for consistent state management and avoiding unnecessary re-creation of the store on every render.
+  const [store] = useState(() => makeStore());
 
-    return (
-        <QueryClientProvider client={queryClient}>
-            <Provider store={store}>
-                {children}
-            </Provider>
-        </QueryClientProvider>
-    )
+  return <Provider store={store}>{children}</Provider>;
 }

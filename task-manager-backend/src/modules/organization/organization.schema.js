@@ -4,6 +4,7 @@ import slugify from "../../utils/slug.util.js";
 const organizationSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
+    description: { type: String, trim: true },
     slug: {
       type: String,
       required: true,
@@ -12,10 +13,10 @@ const organizationSchema = new mongoose.Schema(
       immutable: true,
     },
     logoUrl: { type: String, default: "" },
-    companyEmail: { type: String, trim: true },
-    companyPhone: { type: String, trim: true },
-    website: { type: String, trim: true },
-    address: { type: String, trim: true },
+    companyEmail: { type: String, trim: true, default: "" },
+    companyPhone: { type: String, trim: true, default: "" },
+    website: { type: String, trim: true, default: "" },
+    address: { type: String, trim: true, default: "" },
     timezone: { type: String, default: "UTC" },
     businessHours: { type: String, default: "09:00-17:00" },
     deletionStatus: {
@@ -28,6 +29,7 @@ const organizationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      immutable: true
     },
 
     // security: {
@@ -47,18 +49,22 @@ const organizationSchema = new mongoose.Schema(
     billing: {
       currentPlan: {
         type: String,
-        enum: ["Free", "Business Pro", "Enterprise"],
+        enum: ["Free", "pro", "enterprise"],
         default: "Free",
       },
-      stripeCustomerId: { type: String },
-      stripeSubscriptionId: { type: String },
+      stripeCustomerId: { type: String, default: "" },
+      stripeSubscriptionId: { type: String, default: "" },
       billingCycle: {
         type: String,
         enum: ["Monthly", "Annually"],
         default: "Monthly",
       },
+      status: {
+        type: String,
+        enum: ["active", "past_due", "canceled"],
+        default: "active",
+      },
       autoRenewal: { type: Boolean, default: true },
-      totalSeats: { type: Number, default: 5 },
     },
 
     // deleting
@@ -72,8 +78,6 @@ const organizationSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
-
-organizationSchema.index({ creatorId: 1 }, { unique: true });
 
 organizationSchema.pre("validate", function (next) {
   if (this.isNew && this.name) {

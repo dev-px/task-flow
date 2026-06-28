@@ -23,7 +23,10 @@ import NewColumnDialog from "@/components/project/ProjectPageDialogs/NewColumnDi
 import NewTaskDialog from "@/components/task/TaskDialogs/NewTaskDialog";
 import ManageMembersModal from "@/components/project/ProjectPageDialogs/ManageMember";
 import TaskDetailsDialog from "@/components/task/TaskDialogs/TaskDetailsDailog";
-import { initialProjectDetailsFilters, initialProjectState } from "@/utils/constant";
+import {
+  initialProjectDetailsFilters,
+  initialProjectState,
+} from "@/utils/constant";
 
 export default function KanBanPage() {
   const { projectId } = useParams();
@@ -148,12 +151,12 @@ export default function KanBanPage() {
   const findTaskById = (id) => tasks[id];
 
   useEffect(() => {
-    console.log("columns:", columns);
-    console.log("columnOrder:", columnOrder);
-    console.log("columnTaskIds:", columnTaskIds);
-    console.log("tasks:", tasks);
-    console.log("backlogTaskIds:", backlogTaskIds);
-    console.log("sprints:", sprints);
+    // console.log("columns:", columns);
+    // console.log("columnOrder:", columnOrder);
+    // console.log("columnTaskIds:", columnTaskIds);
+    // console.log("tasks:", tasks);
+    // console.log("backlogTaskIds:", backlogTaskIds);
+    // console.log("sprints:", sprints);
   }, [columns, columnOrder, columnTaskIds, tasks, backlogTaskIds, sprints]);
 
   return (

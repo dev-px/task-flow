@@ -1,11 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import {
-  User,
-  Camera,
-  Save,
-} from "lucide-react";
+import { User, Camera, Save } from "lucide-react";
 
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
@@ -106,8 +102,8 @@ export default function PersonalInfoTab() {
   };
 
   const handleSaveProfile = () => {
-    console.log("Saved Profile:", profileData);
-    console.log("Profile Image:", profileImage);
+    // console.log("Saved Profile:", profileData);
+    // console.log("Profile Image:", profileImage);
 
     setHasChanges(false);
   };

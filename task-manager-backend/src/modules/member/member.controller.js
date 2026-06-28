@@ -46,7 +46,7 @@ const inviteSingleMemberController = asyncHandler(async (req, res) => {
   const { orgId } = req.params;
   const { email, role } = req.body;
   const adminId = req.user.id;
-  console.log("Inviting single member:", { orgId, email, role, adminId });
+  // console.log("Inviting single member:", { orgId, email, role, adminId });
   const result = await inviteSingleMember(orgId, adminId, email, role);
 
   return successResponse(

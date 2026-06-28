@@ -1,3 +1,32 @@
+export const initialAuthState = {
+  name: "",
+  email: "",
+  password: "",
+};
+
+export const initialOrgFilterState = {
+  search: "",
+  isDeleted: false,
+  sortBy: "newest",
+};
+
+export const initialOrgCreateState = {
+  name: "",
+  description: "",
+  logoUrl: "",
+  companyEmail: "",
+  companyPhone: "",
+  website: "",
+  address: "",
+  timezone: "",
+  defaultLanguage: "",
+  businessHours: "",
+};
+
+export const initialMemberFilterState = {
+  
+}
+
 export const initialProjectState = {
   name: "",
   description: "",

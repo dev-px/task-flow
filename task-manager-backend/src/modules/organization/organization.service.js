@@ -2,6 +2,7 @@ import { mongoose } from "mongoose";
 import { createDefaultRolesForOrgService } from "../role/role.service.js";
 import {
   createMemberForOrganization,
+  getMemberByUserIdAndOrganizationId,
   getOrganizationsFromMember,
 } from "../member/member.repository.js";
 import {
@@ -30,15 +31,21 @@ const checkExistingOrganization = async (orgData) => {
 };
 
 // view all organizations for a user
-const viewAllOrganizationsService = async (userId, isDeleted) => {
-  // user status must be active in the organization
-  const organizations = await getOrganizationsFromMember(userId, isDeleted);
+const viewAllOrganizationsService = async (
+  userId,
+  search,
+  sortBy,
+  isDeleted,
+) => {
+  const organizations = await getOrganizationsFromMember(
+    userId,
+    search,
+    sortBy,
+    isDeleted,
+  );
 
   if (!organizations || organizations.length === 0) {
-    throw new ApiError(
-      HTTP_STATUS.NOT_FOUND,
-      "No organizations found for the user.",
-    );
+    return [];
   }
 
   const myOrganizations = organizations.map((membership) => ({
@@ -51,8 +58,11 @@ const viewAllOrganizationsService = async (userId, isDeleted) => {
 };
 
 // view particular organization details
-const viewOrgDetailService = async (organizationId) => {
-  const organization = await getOrganizationById(organizationId);
+const viewOrgDetailService = async (userId, organizationId) => {
+  const organization = await getMemberByUserIdAndOrganizationId(
+    userId,
+    organizationId,
+  );
   if (!organization) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Organization not found");
   }
@@ -61,7 +71,6 @@ const viewOrgDetailService = async (organizationId) => {
 
 // create organization, default roles and membership for the creator as owner
 const createOrganizationService = async (orgData, userId) => {
-  console.log(orgData);
   const potentialSlug = await checkExistingOrganization(orgData);
 
   // three things happens - Create Organization --> create default roles --> create membership for the creator as owner
@@ -71,6 +80,7 @@ const createOrganizationService = async (orgData, userId) => {
   const session = await mongoose.startSession();
   // session.startTransaction();
   try {
+    // check for limit acc to org plan
     // create organization
     const newOrganization = await createOrganization(
       { ...orgData, creatorId: userId, slug: potentialSlug },
@@ -118,45 +128,22 @@ const createOrganizationService = async (orgData, userId) => {
 };
 
 // update name of the Organization
-const editOrganizationService = async (
-  organizationId,
-  userId,
-  updatedOrgData,
-) => {
-  const existOrgData = await viewOrgDetailService(organizationId);
-
-  if (existOrgData?.name === updatedOrgData?.name) {
-    throw new ApiError(
-      HTTP_STATUS.NOT_FOUND,
-      "Organization Name must not be same as previous",
-    );
-  }
-
+const updateOrganizationService = async (organizationId, updatedOrgData) => {
+  console.log("checking in service for orgId", organizationId);
+  // console.log(organizationId, userId, updatedOrgData)
   const organization = await updateOrganization(organizationId, updatedOrgData);
+
   if (!organization) {
     throw new ApiError(
       HTTP_STATUS.UNPROCESSABLE_ENTITY,
-      "Failed to update Organization Detail",
+      "Failed to update Organization Detail. Please try again.",
     );
   }
+
   return organization;
 };
 
-// update general info of the organization
-const updateGeneralService = async (organizationId, generalData) => {
-  await viewOrgDetailService(organizationId);
-
-  const generalOrgInfo = await updateOrganization(organizationId, generalData);
-  if (!generalOrgInfo) {
-    throw new ApiError(
-      HTTP_STATUS.NOT_FOUND,
-      "Organization's General info update failed.",
-    );
-  }
-
-  return generalOrgInfo;
-};
-
+// delete the organization
 const deleteOrgService = async (userId, organizationId) => {
   const organization = await viewOrgDetailService(organizationId);
   if (organization.isDeleted) {
@@ -192,7 +179,6 @@ export {
   viewAllOrganizationsService,
   viewOrgDetailService,
   createOrganizationService,
-  updateGeneralService,
-  editOrganizationService,
+  updateOrganizationService,
   deleteOrgService,
 };

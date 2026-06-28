@@ -36,7 +36,7 @@ const createUser = async (userData, session = null) => {
 };
 
 const updateUserById = async (userId, updateData, session = null) => {
-  console.log("Updating user:", { userId, updateData, session });
+  // console.log("Updating user:", { userId, updateData, session });
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     { $set: updateData },

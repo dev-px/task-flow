@@ -5,7 +5,7 @@ const validateRequiredPermissions =
   (requiredPermission) => (req, res, next) => {
     try {
       const userRole = req.member.roleId;
-      console.log(userRole);
+      // console.log(userRole);
 
       if (!userRole) {
         return next(
@@ -26,6 +26,11 @@ const validateRequiredPermissions =
         );
       }
 
+      // console.log(
+      //   "checking in body for organization",
+      //   req.params.orgId,
+      //   "check",
+      // );
       next();
     } catch (error) {
       next(error);

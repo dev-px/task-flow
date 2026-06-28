@@ -46,7 +46,7 @@ export default function NewColumnDialog({ open, setOpen, columnId, type }) {
 
       dispatch(addColumn(reduxPayload));
 
-      console.log(payload);
+      // console.log(payload);
     } catch (error) {
       console.error("Task creation failed", error);
     } finally {

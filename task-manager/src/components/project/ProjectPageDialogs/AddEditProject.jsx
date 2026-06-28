@@ -55,7 +55,7 @@ export default function AddEditProject({
       ...(type === "edit" && { id: projectId }),
       ...(type === "create" && { ...newProjectExtraFields }),
     };
-    console.log(`${type} project details when submitting`, payload);
+    // console.log(`${type} project details when submitting`, payload);
     closeModal();
   };
 

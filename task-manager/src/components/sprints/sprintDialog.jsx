@@ -88,13 +88,13 @@ export default function SprintDialog({
       id: mode === "edit" ? sprint?.id : `SPR-${Date.now()}`,
     };
 
-    console.log("Sprint Payload:", payload);
+    // console.log("Sprint Payload:", payload);
 
     setOpen(false);
   };
 
   const handleDeleteSprint = () => {
-    console.log("Delete Sprint:", sprint?.id);
+    // console.log("Delete Sprint:", sprint?.id);
     setOpen(false);
   };
 

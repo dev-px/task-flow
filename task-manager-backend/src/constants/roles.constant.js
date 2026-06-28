@@ -1,7 +1,7 @@
 import { ALL_PERMISSIONS, PERMISSIONS } from "./permissions.constant.js";
 
 const fnDefaultRoleCreation = (organizationId) => {
-  console.log("organizationId", organizationId);
+  // console.log("organizationId", organizationId);
   return [
     {
       name: "Owner",

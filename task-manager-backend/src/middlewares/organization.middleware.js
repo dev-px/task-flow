@@ -3,7 +3,7 @@ import ApiError from "./../errors/ApiError.js";
 import HTTP_STATUS from "./../constants/http-status.constant.js";
 import { getMemberByUserIdAndOrganizationId } from "../modules/member/member.repository.js";
 import logger from "../config/logger.config.js";
-import { getOrganizationById } from "../modules/organization/organization.repository.js";
+// import { getOrganizationById } from "../modules/organization/organization.repository.js";
 
 const requireOrganizationAccess = async (req, res, next) => {
   try {
@@ -23,7 +23,7 @@ const requireOrganizationAccess = async (req, res, next) => {
         userId,
         organizationId,
       );
-      console.log("memberRecord", memberRecord, req.params.orgId, req.user.id);
+      // console.log("memberRecord", memberRecord, req.params.orgId, req.user.id);
 
       // Cache only if it exists, is active, and is not deleted
       if (
@@ -67,11 +67,12 @@ const requireOrganizationAccess = async (req, res, next) => {
     req.member = memberRecord;
     // const savedCache = await redisClient.get(cacheKey);
     // logger.info(`SavedCache exists in Redis: ${!!savedCache}, ${savedCache}`);
-    console.log("Organization access granted for user:", {
-      id: userId,
-      orgId: organizationId,
-      memberStatus: memberRecord.status,
-    });
+    // console.log("Organization access granted for user:", {
+    //   id: userId,
+    //   orgId: organizationId,
+    //   memberStatus: memberRecord.status,
+    // });
+    // console.log("checking in body for organization", req.params.orgId, "check");
     next();
   } catch (error) {
     next(error);

@@ -4,17 +4,19 @@ import HTTP_STATUS from "./../../constants/http-status.constant.js";
 import {
   createOrganizationService,
   deleteOrgService,
-  editOrganizationService,
-  updateGeneralService,
+  updateOrganizationService,
   viewAllOrganizationsService,
   viewOrgDetailService,
 } from "./organization.service.js";
+import logger from "../../config/logger.config.js";
 
 const viewAllOrganizationsController = asyncHandler(async (req, res) => {
-  const { isDeleted } = req.validatedQuery || false;
-  console.log(req.validatedQuery.isDeleted, req, "middleware");
+  const { search, sortBy, isDeleted } = req.validatedQuery || {};
+  console.log(req.user.id);
   const organizations = await viewAllOrganizationsService(
     req.user.id,
+    search,
+    sortBy,
     isDeleted,
   );
   return successResponse(
@@ -26,6 +28,7 @@ const viewAllOrganizationsController = asyncHandler(async (req, res) => {
 });
 
 const viewOrgDetailController = asyncHandler(async (req, res) => {
+  console.log("checking orgId", req.params.orgId, req.method);
   const organizations = await viewOrgDetailService(
     req.user.id,
     req.params.orgId,
@@ -52,29 +55,22 @@ const createOrganizationController = asyncHandler(async (req, res) => {
   );
 });
 
-const editOrganizationController = asyncHandler(async (req, res) => {
+const updateOrganizationController = asyncHandler(async (req, res) => {
+  logger.info(
+    "checking in body for organization in controller",
+    req.params.orgId,
+    "check",
+  );
   const { orgId } = req.params;
-  const organization = await editOrganizationService(
-    req.user.id,
-    orgId,
+  const organization = await updateOrganizationService(
+    req.params.orgId,
     req.body,
   );
 
   return successResponse(
     res,
-    "Organization name updated successfully",
+    "Organization updated successfully",
     organization,
-    HTTP_STATUS.CREATED,
-  );
-});
-
-const updateGeneralController = asyncHandler(async (req, res) => {
-  const { orgId } = req.params;
-  const generalOrgInfo = await updateGeneralService(orgId, req.body);
-  return successResponse(
-    res,
-    "Organization info updated successfully",
-    generalOrgInfo,
     HTTP_STATUS.OK,
   );
 });
@@ -94,7 +90,6 @@ export {
   viewAllOrganizationsController,
   viewOrgDetailController,
   createOrganizationController,
-  updateGeneralController,
-  editOrganizationController,
+  updateOrganizationController,
   deleteOrgController,
 };

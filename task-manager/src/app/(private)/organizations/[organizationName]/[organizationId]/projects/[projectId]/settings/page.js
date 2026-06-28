@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useParams } from "next/navigation";
-import TabsCompo from "@/components/layout/TabsCompo";
-import TaskFooter from "@/components/layout/TaskFooter";
 import { Plus, FileText, Trash2, ExternalLink, Paperclip } from "lucide-react";
 import { initialProjectSettingForm } from "@/utils/constant";
 import { dummyData } from "@/utils/helper";
+import TabsCompo from "@/components/layout/TabsCompo";
+import TaskFooter from "@/components/layout/TaskFooter";
 
 const tabs = ["general", "members", "timeline", "links", "documents", "danger"];
 
@@ -146,12 +146,12 @@ export default function ProjectSettingsPage() {
     const changedData = getChangedFields(initialData, settingsForm);
 
     if (Object.keys(changedData).length === 0) {
-      console.log("No changes made");
+      // console.log("No changes made");
       return;
     }
 
     try {
-      console.log("Sending only changed fields:", changedData);
+      // console.log("Sending only changed fields:", changedData);
 
       // update initialData after save
       setInitialData(settingsForm);

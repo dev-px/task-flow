@@ -9,7 +9,7 @@ import {
 export default function LayoutSetting({ viewOptions, updateFilters, filters }) {
   return (
     <div className="flex items-center gap-1 rounded-xl border bg-background shadow-sm">
-      {viewOptions.map((option) => {
+      {viewOptions?.map((option) => {
         const Icon = option.icon;
         const isActive = filters.view === option.value;
 

@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
     },
 
     isInvited: { type: Boolean, default: false },
-    canCreateOrganizations: { type: Boolean, default: false },
+    // canCreateOrganizations: { type: Boolean, default: true },
 
     isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date },

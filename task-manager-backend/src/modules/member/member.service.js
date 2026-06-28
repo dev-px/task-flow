@@ -101,7 +101,7 @@ const inviteSingleMember = async (
       m.inviteEmail === email ||
       (globalUser && m.userId?.toString() === globalUser._id.toString()),
   );
-  console.log("Existing member found:", existingMember, globalUsers);
+  // console.log("Existing member found:", existingMember, globalUsers);
 
   if (globalUser) {
     // if (globalUser.isDeleted || globalUser.status === "deleted") {
@@ -307,7 +307,7 @@ const processBulkInvites = async (organizationId, adminId, excelData) => {
             invitedBy: adminId,
             inviteExpiresAt: inviteExpiresAt,
             status: "invited",
-            ...(globalUser && { userId: globalUser._id }), // The 'undefined' fix!
+            ...(globalUser && { userId: globalUser._id }),
           },
         },
       });
@@ -358,7 +358,7 @@ const verifyInviteService = async (token) => {
   try {
     decoded = jwt.verify(token, env.JWT_SECRET);
   } catch (err) {
-    console.log("Decoded invite token:", decoded);
+    // console.log("Decoded invite token:", decoded);
     throw new ApiError(
       HTTP_STATUS.UNAUTHORIZED,
       "Invitation link is invalid or has expired.",
@@ -437,10 +437,10 @@ const acceptInviteService = async (token, userData) => {
       if (name) updatePayload.name = name;
       if (profilePicture) updatePayload.avatarUrl = profilePicture;
 
-      console.log("Existing user accepted invite:", {
-        existingUser,
-        updatePayload,
-      });
+      // console.log("Existing user accepted invite:", {
+      //   existingUser,
+      //   updatePayload,
+      // });
       if (Object.keys(updatePayload).length > 0) {
         await updateUserById(existingUser?.[0]?._id, updatePayload, session);
       }
@@ -556,7 +556,7 @@ const cancelInviteService = async (
   adminId,
 ) => {
   const member = await getMemberById(organizationId, invitedMemberId);
-  console.log("invited member", member);
+  // console.log("invited member", member);
   if (!member) throw new ApiError(HTTP_STATUS.NOT_FOUND, "Member not found.");
 
   if (member.status !== "invited") {
@@ -608,10 +608,10 @@ const cancelInviteService = async (
 };
 
 const memeberSuspendService = async (organizationId, memberId) => {
-  console.log("Updating member details service:", {
-    organizationId,
-    memberId,
-  });
+  // console.log("Updating member details service:", {
+  //   organizationId,
+  //   memberId,
+  // });
   const suspendedMember = await updateMemberDetails(organizationId, memberId, {
     status: "suspended",
   });

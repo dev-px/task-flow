@@ -25,7 +25,6 @@ const invalidateRoleCache = async (organizationId, roleId) => {
   }
 };
 
-
 /**
  * Wipes the cache for a SINGLE member.
  * Call this when a member's role is changed, or when they are removed from the workspace.
@@ -34,7 +33,7 @@ const invalidateRoleCache = async (organizationId, roleId) => {
 //   try {
 //     const cacheKey = `org:${organizationId}:member:${userId}`;
 //     await redisClient.del(cacheKey);
-//     console.log(`[Redis] Cleared cache for user ${userId}`);
+//     // console.log(`[Redis] Cleared cache for user ${userId}`);
 //   } catch (error) {
 //     logger.error("[Redis Invalidation Error]:", error);
 //   }

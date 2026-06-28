@@ -111,7 +111,7 @@ export default function NotificationSettingTab() {
 
   const handleSaveSettings = () => {
     // Replace this with API call later
-    console.log("Saved Notification Settings:", notifications);
+    // console.log("Saved Notification Settings:", notifications);
 
     setHasChanges(false);
     setSavedMessage("Notification settings saved successfully.");

@@ -15,14 +15,14 @@ const app = express();
 if (env.NODE_ENV === "production") {
   app.use(helmet());
 }
-app.use(cors());
-// app.use(
-//   cors({
-//     origin:
-//       process.env.NODE_ENV === "production" ? ["https://yourdomain.com"] : "*",
-//     credentials: true,
-//   }),
-// );
+
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  }),
+);
+
 app.use(compression());
 app.use(express.json());
 app.use(cookieParser());

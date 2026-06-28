@@ -1,8 +1,6 @@
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
-import Sidebar from "@/components/layout/Sidebar";
-import Navbar from "@/components/layout/Navbar";
 import Providers from "./providers";
-import { TooltipProvider } from "@/components/ui/tooltip"
 
 export const metadata = {
   title: "Task Flow",
@@ -12,17 +10,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="h-screen antialiased flex overflow-hidden">
-        <Providers>
-          <TooltipProvider>
-            <Sidebar />
-            <div className="flex flex-col flex-1 min-w-0">
-              <Navbar />
-              <main className="flex-1 overflow-y-auto p-4">{children}</main>
-            </div>
-          </TooltipProvider>
-        </Providers>
+      <body className="h-screen antialiased flex overflow-hidden"
+        suppressHydrationWarning>
+        <Toaster />
+        <Providers>{children}</Providers>
       </body>
-    </html >
+    </html>
   );
 }

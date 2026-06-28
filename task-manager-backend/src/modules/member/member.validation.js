@@ -13,23 +13,44 @@ const getMemberParams = Joi.object({
 });
 
 const getMembersQuerySchema = Joi.object({
-  page: Joi.number().integer().min(1).default(1),
-  limit: Joi.number().integer().min(1).max(100).default(10),
-  search: Joi.string().trim().allow(""),
-  designation: Joi.string().trim().allow(""),
+  page: Joi.number().integer().min(1).default(1).messages({
+    "number.base": "Page must be a valid number.",
+    "number.integer": "Page must be a whole number.",
+    "number.min": "Page number cannot be less than 1.",
+  }),
+  limit: Joi.number().integer().min(1).max(100).default(10).messages({
+    "number.base": "Limit must be a valid number.",
+    "number.integer": "Limit must be a whole number.",
+    "number.min": "Limit cannot be less than 1.",
+    "number.max": "Limit cannot exceed 100 items per page.",
+  }),
+  search: Joi.string().trim().allow("").messages({
+    "string.base": "Search query must be a string of text.",
+  }),
+  designation: Joi.string().trim().allow("").messages({
+    "string.base": "Designation must be a string of text.",
+  }),
   status: Joi.string()
     .valid("invited", "active", "suspended", "expired", "cancelled")
-    .allow(""),
-  isDeleted: Joi.boolean(),
+    .allow("")
+    .messages({
+      "string.base": "Status must be a string.",
+      "any.only":
+        "Status must be exactly one of: invited, active, suspended, expired, or cancelled.",
+    }),
+  isDeleted: Joi.boolean().messages({
+    "boolean.base": "isDeleted must be a true or false value.",
+  }),
 });
 
 const getMembersByIdQuerySchema = Joi.object({
-  // if admin want to see archieved member
-  isDeleted: Joi.boolean(),
+  // if admin wants to see archived member
+  isDeleted: Joi.boolean().messages({
+    "boolean.base": "isDeleted flag must be either true or false.",
+  }),
 });
 
 // --- NEW INVITE SCHEMAS BELOW ---
-
 const inviteSingleMemberSchema = Joi.object({
   email: Joi.string().email().trim().lowercase().required().messages({
     "string.base": "Email must be a valid string.",
@@ -42,25 +63,23 @@ const inviteSingleMemberSchema = Joi.object({
     "string.empty": "Role cannot be empty.",
     "any.required": "Role is required to assign to the invited member.",
   }),
-});
+}).unknown(true);
 
 // Schema for a single row in the bulk invite Excel/JSON array
 const bulkInviteItemSchema = Joi.object({
-  // Using Capital 'Email' and 'Role' to match your previous Excel parsing logic
-  // (Change these to lowercase if your frontend maps them to standard JSON format first)
-  Email: Joi.string().email().trim().lowercase().required().messages({
+  email: Joi.string().email().trim().lowercase().required().messages({
     "string.empty": "A row is missing an email address.",
     "string.email": "A row contains an invalid email address: {#value}",
     "any.required": "Email is required for all rows.",
   }),
-  Role: Joi.string().trim().required().messages({
+  role: Joi.string().trim().required().messages({
     "string.empty": "A row is missing a role.",
     "any.required": "Role is required for all rows.",
   }),
-}).unknown(true); // .unknown(true) allows ignoring extra columns from the Excel file (e.g., "Name", "Department")
+}).unknown(true);
+// .unknown(true) allows ignoring extra columns from the Excel file (e.g., "Name", "Department")
 
 const bulkInviteSchema = Joi.object({
-  // Assuming the frontend sends the array wrapped in an object like { excelData: [...] }
   excelData: Joi.array()
     .items(bulkInviteItemSchema)
     .min(1)

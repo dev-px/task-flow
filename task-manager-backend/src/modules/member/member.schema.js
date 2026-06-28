@@ -38,7 +38,7 @@ const memberSchema = new mongoose.Schema(
     inviteResendCount: { type: Number, default: 0 },
 
     // --- DISPLAY / UI ---
-    designation: { type: String, trim: true }, // Keep this! e.g., "Frontend Dev" is useful context on a task
+    designation: { type: String, trim: true },
 
     // status
     status: {

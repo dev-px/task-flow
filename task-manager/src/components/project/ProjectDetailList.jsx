@@ -2,10 +2,16 @@
 
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import usePermissions from "@/hooks/usePermissions";
 
 export default function ProjectDetailList({ projects }) {
   const router = useRouter();
+  const params = useParams();
+  const { hasPermission, isLoading } = usePermissions();
+  const orgName = params?.organizationName;
+  const orgId = params?.organizationId;
+  const baseUrl = orgName && orgId ? `/organizations/${orgName}/${orgId}` : "";
 
   return (
     <table className="w-full text-sm border-collapse">
@@ -46,10 +52,10 @@ export default function ProjectDetailList({ projects }) {
             <tr
               className="hover:bg-gray-50 transition cursor-pointer"
               key={project.id}
-              onClick={() => router.push(`/projects/${id}`)}
+              onClick={() => router.push(`${baseUrl}/projects/${id}`)}
             >
               <td className="px-5 py-4 font-medium">
-                <Link href={`/projects/${id}`}>{title}</Link>
+                <Link href={`${baseUrl}/projects/${id}`}>{title}</Link>
               </td>
 
               <td className="px-5 py-4 text-gray-500 max-w-62.5 truncate">

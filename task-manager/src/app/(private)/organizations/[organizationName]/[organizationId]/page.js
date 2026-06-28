@@ -1,10 +1,38 @@
+"use client";
+
 import Link from "next/link";
+
 import Cards from "@/components/project/Cards";
 import Section from "@/components/project/Section";
 import StatusCards from "@/components/project/StatusCards";
 import { FolderKanban, ListChecks, Clock, AlertTriangle } from "lucide-react";
+import { useGetOneOrganizationQuery } from "@/redux/services/orgApi";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useParams } from "next/navigation";
+import { setPermission, setRole } from "@/redux/slices/orgSlice";
 
-export default function DashboardPage() {
+export default function OrgDashboardPage() {
+  const params = useParams();
+  const userDetail = useSelector((state) => state.auth.user);
+  const permissions = useSelector((state) => state.org.permissions);
+  const dispatch = useDispatch();
+  const activeOrgId =
+    params.organizationId || useSelector((state) => state.org.activeOrgId);
+  const {
+    data,
+    isLoading: isOrgDashLoading,
+    isError: orgDashError,
+  } = useGetOneOrganizationQuery(activeOrgId, {
+    skip: !activeOrgId,
+  });
+  const orgData = data?.data;
+
+  useEffect(() => {
+    dispatch(setPermission(orgData?.roleId?.permissions));
+    dispatch(setRole(orgData?.roleId?.role));
+  }, [activeOrgId, data, permissions]);
+
   const sections = [
     {
       name: "Project",
@@ -96,9 +124,12 @@ export default function DashboardPage() {
       icon: AlertTriangle,
     },
   ];
+
   return (
-    <div className="p-4">
-      <h1 className="font-bold text-2xl">Good Morning, Dev</h1>
+    <div className="p-3">
+      <h1 className="text-2xl font-bold">
+        Good Monrning, {userDetail.name.split(" ")[0]}
+      </h1>
 
       {/* Dashboard stats */}
       <section className="my-6">

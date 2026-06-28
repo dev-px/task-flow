@@ -2,8 +2,7 @@ import express from "express";
 import {
   createOrganizationController,
   deleteOrgController,
-  editOrganizationController,
-  updateGeneralController,
+  updateOrganizationController,
   viewAllOrganizationsController,
   viewOrgDetailController,
 } from "./organization.controller.js";
@@ -12,13 +11,12 @@ import {
   createOrganizationSchema,
   orgParamsSchema,
   orgQuerySchema,
-  updateGeneralSchema,
+  updateOrganizationSchema,
 } from "./organization.validation.js";
 import { PERMISSIONS } from "../../constants/permissions.constant.js";
 import requireOrganizationAccess from "./../../middlewares/organization.middleware.js";
 import validateRequiredPermissions from "./../../middlewares/permission.middleware.js";
 import validate from "../../middlewares/validation.middleware.js";
-import { requireOrgCreationAccess } from "../../middlewares/global-permission.middleware.js";
 
 const router = express.Router();
 
@@ -34,13 +32,12 @@ router.get(
 router.post(
   "/",
   requireAuth,
-  requireOrgCreationAccess,
   validate(createOrganizationSchema, "body"),
   createOrganizationController,
 );
 
 // view particular organization detail
-router.patch(
+router.get(
   "/:orgId",
   requireAuth,
   validate(orgParamsSchema, "params"),
@@ -56,19 +53,8 @@ router.patch(
   validate(orgParamsSchema, "params"),
   requireOrganizationAccess,
   validateRequiredPermissions(PERMISSIONS.ORG_EDIT),
-  validate(createOrganizationSchema, "body"),
-  editOrganizationController,
-);
-
-// update general info for the organization
-router.patch(
-  "/:orgId/general",
-  requireAuth,
-  validate(orgParamsSchema, "params"),
-  requireOrganizationAccess,
-  validateRequiredPermissions(PERMISSIONS.ORG_GENERAL_EDIT),
-  validate(updateGeneralSchema, "body"),
-  updateGeneralController,
+  validate(updateOrganizationSchema, "body"),
+  updateOrganizationController,
 );
 
 // delete organization

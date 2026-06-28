@@ -1,11 +1,4 @@
-import {
-  Pencil,
-  Plus,
-  PlusSquare,
-  Rocket,
-  Settings,
-  Users,
-} from "lucide-react";
+import { Pencil, Plus, Rocket, Settings, Users, ListTodo } from "lucide-react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 
@@ -15,21 +8,25 @@ export default function ProjectHeader({
   type,
   setShowManageMembersModal,
   projectId,
+  orgId,
   handleProjectManipulation,
+  handleEditOrganization,
   setOpenNewBacklogTask,
   setOpenSprintDialog,
+  setShowInviteModal
 }) {
   const Icon = type === "create" ? Plus : Pencil;
   const router = useRouter();
 
   return (
     <div className="flex justify-between items-center flex-col md:flex-row">
-      <div className="flex flex-col gap-2 mb-4 self-start md:mb-0">
+      <div className="flex flex-col gap-1 mb-4 self-start md:mb-0">
         <h1 className="font-bold text-xl">{pTitle}</h1>
         <p className="text-gray-500">{pDescription}</p>
       </div>
 
       <div className="flex flex-wrap gap-2 justify-between sm:justify-end w-full md:w-auto">
+        {/* project create/edit */}
         {(type === "create" || type === "edit") && (
           <Button
             size="lg"
@@ -45,9 +42,9 @@ export default function ProjectHeader({
           </Button>
         )}
 
+        {/* project edit extra */}
         {type === "edit" && (
           <>
-            {/* manage members */}
             <Button
               size="lg"
               variant="outline"
@@ -58,18 +55,17 @@ export default function ProjectHeader({
               <span className="hidden md:block">Manage Members</span>
             </Button>
 
-            {/* Backlog navigation */}
             <Button
               size="lg"
               variant="outline"
               className="flex-1 rounded-sm cursor-pointer"
               onClick={() => router.push(`/projects/${projectId}/backlogs`)}
             >
-              <Users size={18} />
+              <ListTodo size={18} />{" "}
+              {/* Fixed: You had Users icon here previously */}
               <span className="hidden md:block">Backlogs</span>
             </Button>
 
-            {/* Project Details Setting navigation */}
             <Button
               size="lg"
               variant="outline"
@@ -82,6 +78,7 @@ export default function ProjectHeader({
           </>
         )}
 
+        {/* project backlog */}
         {type === "backlog" && (
           <>
             <Button
@@ -102,6 +99,18 @@ export default function ProjectHeader({
               <span className="hidden md:block">Create Sprint</span>
             </Button>
           </>
+        )}
+
+        {/* member page */}
+        {type === "members" && (
+          <Button
+            size="lg"
+            className="flex-1 rounded-sm bg-black text-white hover:bg-gray-800 cursor-pointer"
+            onClick={() => setShowInviteModal(true)}
+          >
+            <Plus size={18} className="mr-2" />
+            <span className="hidden md:block">Invite Member</span>
+          </Button>
         )}
       </div>
     </div>

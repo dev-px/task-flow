@@ -20,7 +20,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useParams } from "next/navigation";
-import ProjectHeader from "./../../../../components/project/ProjectHeader";
+import ProjectHeader from "../../../../components/project/ProjectHeader";
 import StatusCards from "@/components/project/StatusCards";
 import TaskDetailsDialog from "@/components/task/TaskDialogs/TaskDetailsDailog";
 import { useDispatch, useSelector } from "react-redux";
@@ -63,13 +63,13 @@ export default function BacklogPageUI() {
   ];
 
   useEffect(() => {
-    console.log("columns:", columns);
-    console.log("columnOrder:", columnOrder);
-    console.log("columnTaskIds:", columnTaskIds);
-    console.log("tasks:", tasks);
-    console.log("backlogTaskIds:", backlogTaskIds);
-    console.log("sprints:", sprints);
-    console.log("selectedSprint:", selectedSprint);
+    // console.log("columns:", columns);
+    // console.log("columnOrder:", columnOrder);
+    // console.log("columnTaskIds:", columnTaskIds);
+    // console.log("tasks:", tasks);
+    // console.log("backlogTaskIds:", backlogTaskIds);
+    // console.log("sprints:", sprints);
+    // console.log("selectedSprint:", selectedSprint);
   }, [
     columns,
     columnOrder,

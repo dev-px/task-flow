@@ -3,7 +3,8 @@ import ApiError from "../../errors/ApiError.js";
 import Organization from "./organization.schema.js";
 
 const getOrganizationById = async (organizationId) => {
-  const organization = await Organization.findById(organizationId).lean();
+  // console.log("checking in org repo", organizationId);
+  const organization = await Organization.findById(organizationId).populate("roleId").lean();
   if (!organization) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Organization not found");
   }
