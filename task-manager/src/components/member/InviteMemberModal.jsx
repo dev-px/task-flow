@@ -9,12 +9,13 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import TabsCompo from "../layout/TabsCompo";
+import { useBulkInviteMutation, useInviteSingleMemberMutation } from "@/redux/services/memberApi";
 
 const ROLES = ["Owner", "Admin", "Member", "Viewer"];
 
-export default function InviteMemberModal({ onClose }) {
+export default function InviteMemberModal({ onClose, orgId }) {
   const [activeTab, setActiveTab] = useState("Single Invite");
 
   // Single Invite State
@@ -25,13 +26,21 @@ export default function InviteMemberModal({ onClose }) {
     designation: "",
   });
   const [singleErrors, setSingleErrors] = useState({});
+  const [
+    inviteSingleMember,
+    { isLoading: IsSingleLoading, isError: singleError },
+  ] = useInviteSingleMemberMutation({ orgId, singleForm }, {skip: !orgId});
 
   // Bulk Invite State
   const fileInputRef = useRef(null);
   const [parsedData, setParsedData] = useState(null);
   const [bulkErrors, setBulkErrors] = useState([]);
 
-  // ---- VALIDATION LOGIC (Used by both) ----
+  const [
+    bulkInvite,
+    { isLoading: IsBulkLoading, isError: BulkError },
+  ] = useBulkInviteMutation({ orgId, parsedData }, {skip:!orgId});
+
   const validateRow = (row) => {
     const errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -63,7 +72,6 @@ export default function InviteMemberModal({ onClose }) {
   const downloadTemplate = () => {
     // Generate empty CSV template with exact headers
     const headers = "name,email,role,designation\n";
-    const sampleRow = "John Doe,john@example.com,Member,Developer\n"; // Optional sample
     const blob = new Blob([headers + sampleRow], {
       type: "text/csv;charset=utf-8;",
     });

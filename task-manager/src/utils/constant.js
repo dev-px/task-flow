@@ -23,9 +23,7 @@ export const initialOrgCreateState = {
   businessHours: "",
 };
 
-export const initialMemberFilterState = {
-  
-}
+export const initialMemberFilterState = {};
 
 export const initialProjectState = {
   name: "",
@@ -99,14 +97,14 @@ export const initialTaskDeatilsForm = {
 export const initialProjectFilters = {
   search: "",
   status: "",
-  sort: "",
+  sortBy: "",
   view: "Grid",
 };
 export const initialProjectDetailsFilters = {
   search: "",
   status: "",
   priority: "",
-  sort: "",
+  sortBy: "",
   assignee: "",
   group: "",
   view: "Kanban",
@@ -121,5 +119,5 @@ export const initialMyTasksFilter = {
   view: "Grid",
   sprint: "",
   dueDate: "",
-  sort: "",
+  sortBy: "",
 };

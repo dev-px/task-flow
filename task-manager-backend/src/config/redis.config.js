@@ -12,11 +12,9 @@ const redisOptions = {
     : undefined,
 };
 
-// REDIS_URL exists in .env (Upstash), it connects to the cloud.
-// new Redis() defaults to localhost:6379
-const redisClient = env.REDIS_URL
-  ? new Redis(env.REDIS_URL, redisOptions)
-  : new Redis({ host: "localhost", port: 6379, ...redisOptions });
+const REDIS_URL =
+  env.NODE_ENV === "development" ? env.LOCAL_REDIS_URL : env.PROD_REDIS_URL;
+const redisClient = new Redis(REDIS_URL, redisOptions);
 
 redisClient.on("connect", () => {
   logger.info("Redis connected successfully");

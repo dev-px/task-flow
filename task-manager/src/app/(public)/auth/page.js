@@ -82,6 +82,7 @@ const AuthPage = () => {
       } finally {
         setFormData(initialAuthState);
         setError({});
+        setIsLogin(true);
       }
     }
   };

@@ -90,15 +90,7 @@ const getMembers = async (organizationId, queryParams = {}) => {
   const limit = parseInt(queryParams.limit, 10) || 10;
   const skip = (page - 1) * limit;
 
-  const {
-    search,
-    designation,
-    status,
-    workType,
-    sortBy,
-    sortOrder,
-    isDeleted,
-  } = queryParams;
+  const { search, status, sortBy, isDeleted } = queryParams;
 
   // 1. Base Match (Only Organization ID by default!)
   const baseMatch = {
@@ -114,9 +106,7 @@ const getMembers = async (organizationId, queryParams = {}) => {
   // 2. Build the Dynamic Match Object cleanly
   const dynamicMatch = {};
 
-  if (designation) dynamicMatch.designation = designation;
   if (status) dynamicMatch.status = status;
-  if (workType) dynamicMatch.workType = workType;
 
   if (search) {
     dynamicMatch.$or = [
@@ -127,16 +117,23 @@ const getMembers = async (organizationId, queryParams = {}) => {
     ];
   }
 
-  // We map the frontend query strings to the actual database fields
-  const sortFieldMap = {
-    name: "userData.name",
-    employeeId: "employeeId",
-    joiningDate: "createdAt",
-  };
+  let dynamicSort = { createdAt: -1 };
 
-  const actualSortField = sortFieldMap[sortBy] || "createdAt";
-  const actualSortOrder = sortOrder === "asc" ? 1 : -1;
-  const dynamicSort = { [actualSortField]: actualSortOrder };
+  switch (sortBy) {
+    case "oldest":
+      dynamicSort = { createdAt: 1 };
+      break;
+    case "name-asc":
+      dynamicSort = { "userData.name": 1 };
+      break;
+    case "name-desc":
+      dynamicSort = { "userData.name": -1 };
+      break;
+    case "newest":
+    default:
+      dynamicSort = { createdAt: -1 };
+      break;
+  }
 
   // 3. The Pipeline
   const pipeline = [
@@ -181,7 +178,6 @@ const getMembers = async (organizationId, queryParams = {}) => {
               _id: 1,
               employeeId: 1,
               designation: 1,
-              workType: 1,
               status: 1,
               isDeleted: 1,
               joinedAt: "$createdAt",

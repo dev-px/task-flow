@@ -27,8 +27,8 @@ const getMembersQuerySchema = Joi.object({
   search: Joi.string().trim().allow("").messages({
     "string.base": "Search query must be a string of text.",
   }),
-  designation: Joi.string().trim().allow("").messages({
-    "string.base": "Designation must be a string of text.",
+  sortBy: Joi.string().messages({
+    "string.base": "SortBy must be a string.",
   }),
   status: Joi.string()
     .valid("invited", "active", "suspended", "expired", "cancelled")

@@ -40,7 +40,6 @@ const PROJECT_OPTIONS = [
 ];
 
 const SORT_OPTIONS = [
-  { value: "", label: "Sort" },
   { value: "newest", label: "Newest First" },
   { value: "oldest", label: "Oldest First" },
   { value: "name-asc", label: "Name (A-Z)" },
@@ -87,6 +86,26 @@ const ORG_DELETED_OPTIONS = [
   { value: "true", label: "Deleted Organizations" },
 ];
 
+const MEMBER_DELETED_OPTIONS = [
+  { value: "false", label: "Active Member" },
+  { value: "true", label: "Deleted Memeber" },
+];
+
+const MEMBER_LIMIT = [
+  { value: 10, label: 10 },
+  { value: 20, label: 20 },
+  { value: 50, label: 50 },
+  { value: 100, label: 100 },
+];
+
+const MEMEBER_STATUS = [
+  { value: "active", label: "Active" },
+  { value: "invited", label: "Invited" },
+  { value: "suspended", label: "Suspended" },
+  { value: "expired", label: "Expired" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
 export default function ProjectFilters({
   page,
   filters,
@@ -104,6 +123,7 @@ export default function ProjectFilters({
   const getSearchPlaceholder = () => {
     if (page === "organizations") return "Search organizations...";
     if (page === "projects") return "Search projects...";
+    if (page === "members") return "Search members....";
     return "Search tasks...";
   };
 
@@ -153,9 +173,9 @@ export default function ProjectFilters({
               />
               <StyledDropDown
                 options={SORT_OPTIONS}
-                type="sort"
+                type="sortBy"
                 change={updateFilters}
-                value={filters.sort}
+                value={filters.sortBy}
               />
             </>
           )}
@@ -183,9 +203,9 @@ export default function ProjectFilters({
               />
               <StyledDropDown
                 options={SORT_OPTIONS}
-                type="sort"
+                type="sortBy"
                 change={updateFilters}
-                value={filters.sort}
+                value={filters.sortBy}
               />
             </>
           )}
@@ -225,9 +245,38 @@ export default function ProjectFilters({
               />
               <StyledDropDown
                 options={SORT_OPTIONS}
-                type="sort"
+                type="sortBy"
                 change={updateFilters}
-                value={filters.sort}
+                value={filters.sortBy}
+              />
+            </>
+          )}
+
+          {page === "members" && (
+            <>
+              <StyledDropDown
+                options={MEMBER_DELETED_OPTIONS}
+                type="isDeleted"
+                change={updateFilters}
+                value={filters.isDeleted}
+              />
+              <StyledDropDown
+                options={MEMEBER_STATUS}
+                type="status"
+                change={updateFilters}
+                value={filters.status}
+              />
+              <StyledDropDown
+                options={SORT_OPTIONS}
+                type="sortBy"
+                change={updateFilters}
+                value={filters.sortBy}
+              />
+              <StyledDropDown
+                options={MEMBER_LIMIT}
+                type="limit"
+                change={updateFilters}
+                value={filters.limit}
               />
             </>
           )}

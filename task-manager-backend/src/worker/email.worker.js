@@ -31,6 +31,7 @@ const emailWorker = new Worker(
   {
     connection: redisClient,
     limiter: { max: 5, duration: 1000 },
+    stalledInterval: 300000,
   },
 );
 

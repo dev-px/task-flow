@@ -38,3 +38,6 @@ feat: add Security Settings component with various security configurations
 - Create Field and SectionCard components for better layout and structure.
 - Implement Profile Page inside (AccountSecrity, Professional Info, Personal Info, Performance) component for managing profile.
 - Add Switch component for toggle functionality in settings.
+- Updated .env configuration to include separate Redis URLs for prod and local development.
+- Added email worker configuration to handle stalled jobs.
+- Enhanced member sorting functionality and project filters.

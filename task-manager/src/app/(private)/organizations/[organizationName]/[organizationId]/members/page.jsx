@@ -1,43 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProjectFilters from "@/components/project/ProjectFilters";
 import ProjectHeader from "@/components/project/ProjectHeader";
-import { MoreHorizontal, Trash, Ban, Mail } from "lucide-react";
+import { MoreHorizontal, Trash, Ban, Mail, Edit2Icon } from "lucide-react";
 import InviteMemberModal from "@/components/member/InviteMemberModal";
+import {
+  useGetAllMembersQuery,
+  useGetOneMemberQuery,
+} from "@/redux/services/memberApi";
+import { useParams } from "next/navigation";
+import usePermissions from "@/hooks/usePermissions";
 
 const initialMemberFilterState = {
   search: "",
-  designation: "",
   status: "",
   isDeleted: "false",
+  limit: 10,
+  sortBy: "newest",
 };
 
-// Mock Data
-const MOCK_MEMBERS = [
-  {
-    _id: "1",
-    userId: { name: "Alice Smith", email: "alice@example.com" },
-    roleId: { name: "Owner" },
-    inviteEmail: "",
-    designation: "Product Manager",
-    status: "active",
-    acceptedAt: "2023-10-01T10:00:00Z",
-  },
-  {
-    _id: "2",
-    userId: null,
-    roleId: { name: "Member" },
-    inviteEmail: "bob.jones@example.com",
-    designation: "Frontend Developer",
-    status: "invited",
-    invitedAt: "2023-10-15T14:30:00Z",
-  },
-];
-
 export default function MemberPage() {
+  const {hasPermissions} = usePermissions();
   const [filters, setFilters] = useState(initialMemberFilterState);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const params = useParams();
+  const { organizationId } = params;
+
+  const {
+    data,
+    isLoading: isMemberLoading,
+    isError: memeberLoadingError,
+  } = useGetAllMembersQuery({
+    orgId: organizationId,
+    ...filters,
+  });
+  // const [
+  //   getOneMember,
+  //   { isLoading: isOneMemberLoading, isError: oneMemeberLoadingError },
+  // ] = useGetOneMemberQuery(organizationId, { skip: !organizationId });
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -47,6 +48,8 @@ export default function MemberPage() {
       year: "numeric",
     }).format(new Date(dateString));
   };
+
+  const memberData = data?.data?.members;
 
   return (
     <div className="p-3 bg-white w-full">
@@ -81,16 +84,16 @@ export default function MemberPage() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {MOCK_MEMBERS.map((member) => (
+            {memberData?.map((member) => (
               <tr key={member._id} className="hover:bg-gray-50 transition">
                 <td className="px-4 py-4">
-                  {member.userId ? (
+                  {member.user ? (
                     <div className="flex flex-col">
                       <span className="font-medium text-gray-900">
-                        {member.userId.name}
+                        {member.user.name}
                       </span>
                       <span className="text-xs text-gray-500">
-                        {member.userId.email}
+                        {member.user.email}
                       </span>
                     </div>
                   ) : (
@@ -107,7 +110,7 @@ export default function MemberPage() {
 
                 <td className="px-4 py-4">
                   <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs font-medium">
-                    {member.roleId.name}
+                    {member.role.name}
                   </span>
                 </td>
 
@@ -129,12 +132,18 @@ export default function MemberPage() {
 
                 <td className="px-4 py-4 text-gray-500 hidden md:table-cell text-xs">
                   {member.status === "active"
-                    ? formatDate(member.acceptedAt)
+                    ? formatDate(member.joinedAt)
                     : formatDate(member.invitedAt)}
                 </td>
 
                 <td className="px-4 py-4 text-right">
                   <div className="flex items-center justify-end gap-3 text-gray-400">
+                    <button
+                      className="hover:text-black transition"
+                      title="Edit Member"
+                    >
+                      <Edit2Icon size={18} />
+                    </button>
                     {member.status === "invited" ? (
                       <button
                         className="hover:text-black transition cursor-pointer"
@@ -163,13 +172,16 @@ export default function MemberPage() {
           </tbody>
         </table>
 
-        {MOCK_MEMBERS.length === 0 && (
+        {memberData?.length === 0 && (
           <div className="p-8 text-center text-gray-500">No members found.</div>
         )}
       </div>
 
       {showInviteModal && (
-        <InviteMemberModal onClose={() => setShowInviteModal(false)} />
+        <InviteMemberModal
+          onClose={() => setShowInviteModal(false)}
+          orgId={organizationId}
+        />
       )}
     </div>
   );
