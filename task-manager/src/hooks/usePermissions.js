@@ -10,11 +10,14 @@ const usePermissions = () => {
   const hasPermission = (permissionString) => {
     return permissions.includes(permissionString);
   };
+
+  const high_roles = ["Admin", "Owner"]
   
   return {
     permissions,
     role,
     hasPermission,
+    high_roles,
     isLoading: false,
   };
 };

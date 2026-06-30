@@ -607,11 +607,22 @@ const cancelInviteService = async (
   return cancelledMember;
 };
 
-const memeberSuspendService = async (organizationId, memberId) => {
-  // console.log("Updating member details service:", {
-  //   organizationId,
-  //   memberId,
-  // });
+const memeberSuspendService = async (organizationId, memberId, userId) => {
+  const member = await getMemberById(organizationId, memberId);
+  if (!member) {
+    throw new ApiError(
+      HTTP_STATUS.NOT_FOUND,
+      "Member not found in this organization.",
+    );
+  }
+
+  // Prevent self-deletion
+  if (member.user && member.user._id.toString() === userId.toString()) {
+    throw new ApiError(
+      HTTP_STATUS.FORBIDDEN,
+      "You cannot suspend your own account.",
+    );
+  }
   const suspendedMember = await updateMemberDetails(organizationId, memberId, {
     status: "suspended",
   });
@@ -629,8 +640,22 @@ const memeberSuspendService = async (organizationId, memberId) => {
 };
 
 const memeberDeleteService = async (organizationId, memberId, userId) => {
+  const member = await getMemberById(organizationId, memberId);
+  if (!member) {
+    throw new ApiError(
+      HTTP_STATUS.NOT_FOUND,
+      "Member not found in this organization.",
+    );
+  }
+
+  // prevent user to delete itself
+  if (member.user && member.user._id.toString() === userId.toString()) {
+    throw new ApiError(
+      HTTP_STATUS.FORBIDDEN,
+      "You cannot delete your own account.",
+    );
+  }
   const deletedMember = await updateMemberDetails(organizationId, memberId, {
-    status: "suspended",
     isDeleted: true,
     deletedAt: new Date(),
     deletedBy: userId,

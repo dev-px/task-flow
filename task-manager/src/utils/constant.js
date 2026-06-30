@@ -23,7 +23,13 @@ export const initialOrgCreateState = {
   businessHours: "",
 };
 
-export const initialMemberFilterState = {};
+export const initialMemberFilterState = {
+  search: "",
+  status: "",
+  isDeleted: "false",
+  limit: 10,
+  sortBy: "newest",
+};
 
 export const initialProjectState = {
   name: "",

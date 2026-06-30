@@ -75,7 +75,7 @@ export default function Sidebar() {
     { name: "Logout", href: "/logout", icon: LogOut },
   ];
 
-const isActive = (href) => {
+  const isActive = (href) => {
     if (href === "/organizations") return pathname === "/organizations";
     return pathname.startsWith(href);
   };
@@ -150,32 +150,5 @@ const isActive = (href) => {
     </aside>
   );
 }
-// src\app\(private)\organizations\[organizationName]\[organizationId]\members
-// [
-//     "org:read",
-//     "org:create",
-//     "org:edit",
-//     "org:delete",
-//     "org:general:edit",
-//     "org:security:edit",
-//     "org:billing:view",
-//     "org:billing:manage",
-//     "role:read",
-//     "role:create",
-//     "role:edit",
-//     "role:archive",
-//     "project:create",
-//     "project:read",
-//     "project:edit",
-//     "project:delete",
-//     "task:create",
-//     "task:read",
-//     "task:edit",
-//     "task:delete",
-//     "member:read",
-//     "member:create",
-//     "member:edit",
-//     "member:delete",
-//     "member:cancel",
-//     "member:revoked"
-// ]
+
+

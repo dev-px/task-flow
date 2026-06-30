@@ -153,7 +153,11 @@ const cancelInviteController = asyncHandler(async (req, res) => {
 // Suspend a member account
 const memeberSuspendController = asyncHandler(async (req, res) => {
   const { orgId, invitedmemberId } = req.params;
-  const suspendedMember = await memeberSuspendService(orgId, invitedmemberId);
+  const suspendedMember = await memeberSuspendService(
+    orgId,
+    invitedmemberId,
+    req.user.id,
+  );
 
   return successResponse(
     res,

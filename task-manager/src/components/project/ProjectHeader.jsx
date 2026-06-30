@@ -8,12 +8,11 @@ export default function ProjectHeader({
   type,
   setShowManageMembersModal,
   projectId,
-  orgId,
   handleProjectManipulation,
-  handleEditOrganization,
   setOpenNewBacklogTask,
   setOpenSprintDialog,
-  setShowInviteModal
+  setShowInviteModal,
+  hasPermission
 }) {
   const Icon = type === "create" ? Plus : Pencil;
   const router = useRouter();
@@ -102,7 +101,7 @@ export default function ProjectHeader({
         )}
 
         {/* member page */}
-        {type === "members" && (
+        {type === "members" && hasPermission("member:create") (
           <Button
             size="lg"
             className="flex-1 rounded-sm bg-black text-white hover:bg-gray-800 cursor-pointer"
