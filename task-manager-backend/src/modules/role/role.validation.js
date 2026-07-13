@@ -3,36 +3,45 @@ import { ALL_PERMISSIONS } from "../../constants/permissions.constant.js";
 
 const roleSchema = Joi.object({
   name: Joi.string().min(2).max(100).trim().required().messages({
-    "string.empty": "Organization name is required.",
-    "string.min": "Organization name must be at least 2 characters.",
+    "string.empty": "Role name is required.",
+    "string.min": "Role name must be at least 2 characters.",
   }),
-  description: Joi.string().trim().max(255).allow("").default("").messages({
+  description: Joi.string().trim().max(255).required().messages({
+    "string.empty": "Description is required.",
     "string.max": "Description is too long (max 255 chars)",
     "string.base": "Description must be text",
   }),
   permissions: Joi.array()
-    .items(Joi.string().valid(...ALL_PERMISSIONS))
-    .unique()
-    .single()
-    .default([])
+    .items(Joi.string().valid(...ALL_PERMISSIONS)).unique().single()
+    .min(1).max(ALL_PERMISSIONS.length).required()
     .messages({
       "array.unique": "Duplicate permissions are not allowed",
       "any.only": "One or more permissions are invalid",
+      "array.min": "At least one permission must be selected",
+      "any.required": "Permissions are required",
+      "array.max": `You can select a maximum of ${ALL_PERMISSIONS.length} permissions`,
     }),
 });
 
 const editRoleSchema = Joi.object({
-  name: Joi.string().min(2).max(100).trim(),
-  description: Joi.string().trim().max(255).allow("").messages({
+  name: Joi.string().min(2).max(100).trim().required().messages({
+    "string.empty": "Role name is required.",
+    "string.min": "Role name must be at least 2 characters.",
+  }),
+  description: Joi.string().trim().max(255).required().messages({
+    "string.empty": "Description is required.",
     "string.max": "Description is too long (max 255 chars)",
     "string.base": "Description must be text",
   }),
   permissions: Joi.array()
-    .items(Joi.string().valid(...ALL_PERMISSIONS))
-    .unique()
+    .items(Joi.string().valid(...ALL_PERMISSIONS)).unique().single()
+    .min(1).max(ALL_PERMISSIONS.length).required()
     .messages({
       "array.unique": "Duplicate permissions are not allowed",
       "any.only": "One or more permissions are invalid",
+      "array.min": "At least one permission must be selected",
+      "any.required": "Permissions are required",
+      "array.max": `You can select a maximum of ${ALL_PERMISSIONS.length} permissions`,
     }),
 })
   .min(1)

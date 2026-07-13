@@ -9,7 +9,9 @@ import ApiError from "../../errors/ApiError.js";
 import invalidateRoleCache from "../../helpers/redis-cache.helper.js";
 import slugify from "../../utils/slug.util.js";
 import {
+  archiveRole,
   createManyRoles,
+  createRole,
   getRoleById,
   getRoleByOrgId,
   getRoleByOrgIdAndSlug,
@@ -28,11 +30,47 @@ const checkExistingRole = async (organizationId, roleData) => {
   }
 };
 
-const getAllRolesService = async (organizationId) => {
-  const roles = await getRoleByOrgId(organizationId);
-  if (!roles) {
+const getAllRolesService = async (
+  organizationId,
+  queryParams,
+  session = null,
+) => {
+  const {
+    search = "",
+    isDeleted = false,
+    sortBy = "newest",
+  } = queryParams || {};
+  const query = {
+    organizationId,
+    isDeleted: isDeleted === "true" || isDeleted === true,
+  };
+
+  if (search) {
+    query.name = { $regex: search, $options: "i" };
+  }
+
+  let sortQuery = {};
+  switch (sortBy) {
+    case "oldest":
+      sortQuery = { createdAt: 1 };
+      break;
+    case "name-asc":
+      sortQuery = { name: 1 };
+      break;
+    case "name-desc":
+      sortQuery = { name: -1 };
+      break;
+    case "newest":
+    default:
+      sortQuery = { createdAt: -1 };
+      break;
+  }
+
+  const roles = await getRoleByOrgId(query, sortQuery, session);
+  if (!roles || roles.length === 0) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "No roles found");
   }
+
   return roles;
 };
 
@@ -78,7 +116,7 @@ const createDefaultRolesForOrgService = async (organizationId, session) => {
 const createNewRoleService = async (organizationId, roleData) => {
   await checkExistingRole(organizationId, roleData);
 
-  const role = createNewRole({ ...roleData, organizationId: organizationId });
+  const role = createRole({ ...roleData, organizationId: organizationId });
   if (!role) {
     throw new ApiError(
       HTTP_STATUS.UNPROCESSABLE_ENTITY,
@@ -126,7 +164,7 @@ const editRoleService = async (orgId, roleId, updates) => {
   return updatedRole;
 };
 
-const archieveRoleService = async (roleId) => {
+const archieveRoleService = async (roleId, description, userId) => {
   const role = await getRoleById(roleId);
   if (!role) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Role not found");
@@ -139,7 +177,14 @@ const archieveRoleService = async (roleId) => {
     );
   }
 
-  const archieveRole = await archiveRole(role, req.body);
+  if (role.isDeleted) {
+    throw new ApiError(
+      HTTP_STATUS.UNPROCESSABLE_ENTITY,
+      "Role is already archived.",
+    );
+  }
+
+  const archieveRole = await archiveRole(role, description, userId);
   if (!archieveRole) {
     throw new ApiError(
       HTTP_STATUS.UNPROCESSABLE_ENTITY,

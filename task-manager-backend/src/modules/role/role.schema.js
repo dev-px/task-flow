@@ -28,9 +28,8 @@ const roleSchema = new mongoose.Schema(
       },
     ],
 
-    // Protects the "Owner" and "Admin" roles from being accidentally deleted
     isSystemDefault: { type: Boolean, default: false, immutable: true },
-    archieveDescription: { type: String, trim: true, default: "" },
+    deleteDescription: { type: String, trim: true, default: "" },
 
     // deletion
     isDeleted: { type: Boolean, default: false, index: true },

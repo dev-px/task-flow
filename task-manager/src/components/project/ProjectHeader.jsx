@@ -1,6 +1,7 @@
 import { Pencil, Plus, Rocket, Settings, Users, ListTodo } from "lucide-react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
+import usePermissions from "@/hooks/usePermissions";
 
 export default function ProjectHeader({
   pTitle,
@@ -12,7 +13,8 @@ export default function ProjectHeader({
   setOpenNewBacklogTask,
   setOpenSprintDialog,
   setShowInviteModal,
-  hasPermission
+  hasPermission,
+  handleCreateEditDialog
 }) {
   const Icon = type === "create" ? Plus : Pencil;
   const router = useRouter();
@@ -100,8 +102,19 @@ export default function ProjectHeader({
           </>
         )}
 
+        {type === "organizations" && (
+          <Button
+            size="lg"
+            className="flex-1 rounded-sm bg-black text-white hover:bg-gray-800 cursor-pointer"
+            onClick={handleProjectManipulation}
+          >
+            <Plus size={18} className="mr-2" />
+            <span className="hidden md:block">Create Organization</span>
+          </Button>
+        )}
+
         {/* member page */}
-        {type === "members" && hasPermission("member:create") (
+        {type === "members" && hasPermission("member:create") && (
           <Button
             size="lg"
             className="flex-1 rounded-sm bg-black text-white hover:bg-gray-800 cursor-pointer"
@@ -109,6 +122,17 @@ export default function ProjectHeader({
           >
             <Plus size={18} className="mr-2" />
             <span className="hidden md:block">Invite Member</span>
+          </Button>
+        )}
+
+        {type === "roles" && hasPermission("role:create") && (
+          <Button
+            size="lg"
+            className="flex-1 rounded-sm bg-black text-white hover:bg-gray-800 cursor-pointer"
+            onClick={handleCreateEditDialog}
+          >
+            <Plus size={18} className="mr-2" />
+            <span className="hidden md:block">Create Role</span>
           </Button>
         )}
       </div>

@@ -31,6 +31,12 @@ export const initialMemberFilterState = {
   sortBy: "newest",
 };
 
+export const initialRoleFilters = {
+  search: "",
+  isDeleted: false,
+  sortBy: "newest",
+};
+
 export const initialProjectState = {
   name: "",
   description: "",

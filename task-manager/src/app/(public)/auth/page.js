@@ -88,95 +88,97 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="w-96 mx-auto mt-16 border border-black p-8 rounded-lg shadow-md bg-white">
-      <h2 className="border-b border-black pb-3 text-center text-xl font-bold">
-        {isLogin ? "Login" : "Sign Up"}
-      </h2>
+    <div className="w-full flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md border border-black p-8 rounded-lg shadow-md bg-white">
+        <h2 className="border-b border-black pb-3 text-center text-xl font-bold">
+          {isLogin ? "Login" : "Sign Up"}
+        </h2>
 
-      <form className="flex flex-col gap-4 mt-6" onSubmit={handleSubmit}>
-        {!isLogin && (
+        <form className="flex flex-col gap-4 mt-6" onSubmit={handleSubmit}>
+          {!isLogin && (
+            <div>
+              <input
+                type="text"
+                placeholder="Name"
+                value={formData.name}
+                onChange={(e) => handleFormEdit(e, "name")}
+                className={`border px-3 py-2 rounded w-full ${error.name ? "border-red-500" : "border-black"}`}
+              />
+              {error.name && <p className="text-red-500 text-sm">{error.name}</p>}
+            </div>
+          )}
+
           <div>
             <input
-              type="text"
-              placeholder="Name"
-              value={formData.name}
-              onChange={(e) => handleFormEdit(e, "name")}
-              className={`border px-3 py-2 rounded w-full ${error.name ? "border-red-500" : "border-black"}`}
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={(e) => handleFormEdit(e, "email")}
+              className={`border px-3 py-2 rounded w-full ${error.email ? "border-red-500" : "border-black"}`}
             />
-            {error.name && <p className="text-red-500 text-sm">{error.name}</p>}
+            {error.email && <p className="text-red-500 text-sm">{error.email}</p>}
+          </div>
+
+          <div>
+            <input
+              type="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={(e) => handleFormEdit(e, "password")}
+              className={`border px-3 py-2 rounded w-full ${error.password ? "border-red-500" : "border-black"}`}
+            />
+            {error.password && (
+              <p className="text-red-500 text-sm">{error.password}</p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="border border-black px-3 py-2 rounded bg-black text-white hover:bg-gray-800 transition"
+            disabled={loginLoading || signupLoading}
+          >
+            {isLogin
+              ? loginLoading
+                ? "Logging in..."
+                : "Login"
+              : signupLoading
+                ? "Signing up..."
+                : "Sign Up"}
+          </button>
+        </form>
+
+        {isLogin ? (
+          <div className="mt-6 border-t border-black pt-3 text-sm text-center">
+            <button
+              className="underline bg-transparent border-none"
+              onClick={() => setShowForgot(true)}
+            >
+              Forgot Password?
+            </button>
+            <p className="mt-3">
+              Don’t have an account?{" "}
+              <span
+                className="underline cursor-pointer"
+                onClick={() => setIsLogin(false)}
+              >
+                Sign Up
+              </span>
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 border-t border-black pt-3 text-sm text-center">
+            <p>
+              Already have an account?{" "}
+              <span
+                className="underline cursor-pointer"
+                onClick={() => setIsLogin(true)}
+              >
+                Login
+              </span>
+            </p>
           </div>
         )}
-
-        <div>
-          <input
-            type="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={(e) => handleFormEdit(e, "email")}
-            className={`border px-3 py-2 rounded w-full ${error.email ? "border-red-500" : "border-black"}`}
-          />
-          {error.email && <p className="text-red-500 text-sm">{error.email}</p>}
-        </div>
-
-        <div>
-          <input
-            type="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={(e) => handleFormEdit(e, "password")}
-            className={`border px-3 py-2 rounded w-full ${error.password ? "border-red-500" : "border-black"}`}
-          />
-          {error.password && (
-            <p className="text-red-500 text-sm">{error.password}</p>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          className="border border-black px-3 py-2 rounded bg-black text-white hover:bg-gray-800 transition"
-          disabled={loginLoading || signupLoading}
-        >
-          {isLogin
-            ? loginLoading
-              ? "Logging in..."
-              : "Login"
-            : signupLoading
-              ? "Signing up..."
-              : "Sign Up"}
-        </button>
-      </form>
-
-      {isLogin ? (
-        <div className="mt-6 border-t border-black pt-3 text-sm text-center">
-          <button
-            className="underline bg-transparent border-none"
-            onClick={() => setShowForgot(true)}
-          >
-            Forgot Password?
-          </button>
-          <p className="mt-3">
-            Don’t have an account?{" "}
-            <span
-              className="underline cursor-pointer"
-              onClick={() => setIsLogin(false)}
-            >
-              Sign Up
-            </span>
-          </p>
-        </div>
-      ) : (
-        <div className="mt-6 border-t border-black pt-3 text-sm text-center">
-          <p>
-            Already have an account?{" "}
-            <span
-              className="underline cursor-pointer"
-              onClick={() => setIsLogin(true)}
-            >
-              Login
-            </span>
-          </p>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

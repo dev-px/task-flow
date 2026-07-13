@@ -10,6 +10,7 @@ import { initialOrgCreateState, initialOrgFilterState } from "@/utils/constant";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { setActiveOrgId, setActiveOrgName } from "@/redux/slices/orgSlice";
+import Spinner from "@/components/layout/Spinner";
 
 const Organization = () => {
   const [filters, setFilters] = useState(initialOrgFilterState);
@@ -47,7 +48,7 @@ const Organization = () => {
       <ProjectHeader
         pTitle="Organizations"
         pDescription="Manage and organize your organizations."
-        type="Organization"
+        type="organizations"
         setShowModal={setCreateShowOrgModal}
         handleProjectManipulation={handleOpenCreateModal}
       />
@@ -60,11 +61,11 @@ const Organization = () => {
         onClearFilter={() => setFilters(initialOrgFilterState)}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-        {/* If loading or error, handle UI appropriately */}
-        {isOrgLoading && <p>Loading organizations...</p>}
-        {orgDataError && <p>Error loading organizations.</p>}
+      {/* If loading or error, handle UI appropriately */}
+      {isOrgLoading && <Spinner text="Loading organizations..." />}
+      {orgDataError && <p className="text-gray-500 text-center mt-5">Error loading organizations.</p>}
 
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
         {/* Map through the API response data */}
         {orgList?.map((org) => (
           <Link
@@ -78,12 +79,12 @@ const Organization = () => {
             />
           </Link>
         ))}
-
-        {/* Fallback if no data */}
-        {!isOrgLoading && (!orgData || orgData.length === 0) && (
-          <p className="text-gray-500">No organizations found.</p>
-        )}
       </div>
+
+      {/* Fallback if no data */}
+      {!isOrgLoading && (!orgList || orgList.length === 0) && (
+        <p className="text-gray-500 text-center mt-5">No organizations found.</p>
+      )}
 
       <AddOrgDialog
         showModal={showCreateOrgModal}

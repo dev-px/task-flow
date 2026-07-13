@@ -2,6 +2,7 @@ import api from "./api";
 
 export const memberApi = api.injectEndpoints({
   endpoints: (builder) => ({
+
     // 1. Verify Invite (GET /verify-invite)
     verifyInvite: builder.query({
       query: (params) => ({
@@ -16,11 +17,11 @@ export const memberApi = api.injectEndpoints({
       query: ({ params, body }) => ({
         url: `/members/accept-invite`,
         method: "POST",
-        params, // Query params (verifyInviteQuerySchema)
-        body, // Body payload (acceptInviteBodySchema)
+        params,
+        body,
       }),
       // Invalidates the list so the new member appears immediately
-      invalidatesTags: ["Members"],
+      invalidatesTags: [{ type: "Members", id: "LIST" }],
     }),
 
     // 3. Get All Members (GET /:orgId)
@@ -30,7 +31,14 @@ export const memberApi = api.injectEndpoints({
         method: "GET",
         params,
       }),
-      providesTags: ["Members"],
+      // Labels the list itself AND every individual member inside it
+      providesTags: (result) =>
+        result
+          ? [
+            ...result.data.members.map(({ _id }) => ({ type: "Members", id: _id })),
+            { type: "Members", id: "LIST" },
+          ]
+          : [{ type: "Members", id: "LIST" }],
     }),
 
     // 4. Get Single Member by ID (GET /:orgId/:invitedmemberId)
@@ -53,17 +61,17 @@ export const memberApi = api.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Members"],
+      invalidatesTags: [{ type: "Members", id: "LIST" }],
     }),
 
     // 6. Bulk Invite (POST /:orgId/invite/bulk)
     bulkInvite: builder.mutation({
-      query: ({ orgId, body }) => ({
+      query: ({ orgId, ...excelData }) => ({
         url: `/members/${orgId}/invite/bulk`,
         method: "POST",
-        body,
+        body: excelData,
       }),
-      invalidatesTags: ["Members"],
+      invalidatesTags: [{ type: "Members", id: "LIST" }],
     }),
 
     // 7. Reinvite Member (POST /:orgId/invite/:invitedmemberId/reinvite)
@@ -72,6 +80,11 @@ export const memberApi = api.injectEndpoints({
         url: `/members/${orgId}/invite/${invitedmemberId}/reinvite`,
         method: "POST",
       }),
+      // Reinviting changes their status, so invalidate this user and the list
+      invalidatesTags: (result, error, { invitedmemberId }) => [
+        { type: "Members", id: invitedmemberId },
+        { type: "Members", id: "LIST" },
+      ],
     }),
 
     // 8. Cancel Invite (POST /:orgId/invite/:invitedmemberId/cancel)
@@ -80,7 +93,10 @@ export const memberApi = api.injectEndpoints({
         url: `/members/${orgId}/invite/${invitedmemberId}/cancel`,
         method: "POST",
       }),
-      invalidatesTags: ["Members"],
+      invalidatesTags: (result, error, { invitedmemberId }) => [
+        { type: "Members", id: invitedmemberId },
+        { type: "Members", id: "LIST" },
+      ],
     }),
 
     // 9. Suspend Member (PATCH /:orgId/:invitedmemberId/suspend)
@@ -90,26 +106,40 @@ export const memberApi = api.injectEndpoints({
         method: "PATCH",
         body,
       }),
-      // Invalidates both the main list and the specific cached member
       invalidatesTags: (result, error, { invitedmemberId }) => [
-        "Members",
         { type: "Members", id: invitedmemberId },
+        { type: "Members", id: "LIST" },
       ],
     }),
 
-    // 10. Delete/Archive Member (DELETE /:orgId/:invitedmemberId/delete)
+    // 10. Patch/Edit Member (DELETE /:orgId/:invitedmemberId/editMember)
+    editMember: builder.mutation({
+      query: ({ orgId, invitedmemberId, body }) => ({
+        url: `/members/${orgId}/${invitedmemberId}/editMember`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (result, error, { invitedmemberId }) => [
+        { type: "Members", id: invitedmemberId },
+        { type: "Members", id: "LIST" },
+      ],
+    }),
+
+    // 11. Delete/Archive Member (DELETE /:orgId/:invitedmemberId/delete)
     deleteMember: builder.mutation({
       query: ({ orgId, invitedmemberId }) => ({
         url: `/members/${orgId}/${invitedmemberId}/delete`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Members"],
+      invalidatesTags: (result, error, { invitedmemberId }) => [
+        { type: "Members", id: invitedmemberId },
+        { type: "Members", id: "LIST" },
+      ],
     }),
   }),
-  overrideExisting: false,
+  overrideExisting: true,
 });
 
-// Export the auto-generated hooks for use in your React components
 export const {
   useVerifyInviteQuery,
   useAcceptInviteMutation,
@@ -120,5 +150,6 @@ export const {
   useReinviteMemberMutation,
   useCancelInviteMutation,
   useSuspendMemberMutation,
+  useEditMemberMutation,
   useDeleteMemberMutation,
 } = memberApi;

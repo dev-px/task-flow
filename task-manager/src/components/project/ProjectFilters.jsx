@@ -87,8 +87,8 @@ const ORG_DELETED_OPTIONS = [
 ];
 
 const MEMBER_DELETED_OPTIONS = [
-  { value: "false", label: "Active Member" },
-  { value: "true", label: "Deleted Memeber" },
+  { value: "false", label: "Active Members" },
+  { value: "true", label: "Non-Active Memebers" },
 ];
 
 const MEMBER_LIMIT = [
@@ -105,6 +105,11 @@ const MEMEBER_STATUS = [
   { value: "expired", label: "Expired" },
   { value: "cancelled", label: "Cancelled" },
 ];
+
+const ROLE_DELETED_OPTIONS = [
+  {value: "false", label: "Active Roles"},
+  {value: "true", label: "Deleted Roles"}
+]
 
 export default function ProjectFilters({
   page,
@@ -277,6 +282,23 @@ export default function ProjectFilters({
                 type="limit"
                 change={updateFilters}
                 value={filters.limit}
+              />
+            </>
+          )}
+
+          {page === "roles" && (
+            <>
+              <StyledDropDown
+                options={ROLE_DELETED_OPTIONS}
+                type="isDeleted"
+                change={updateFilters}
+                value={filters.isDeleted}
+              />
+              <StyledDropDown
+                options={SORT_OPTIONS}
+                type="sortBy"
+                change={updateFilters}
+                value={filters.sortBy}
               />
             </>
           )}

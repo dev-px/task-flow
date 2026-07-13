@@ -1,30 +1,32 @@
 import express from "express";
 import requireAuth from "./../../middlewares/auth.middleware.js";
-import requireOrganizationAccess from "./../../middlewares/organization.middleware.js";
 import validate from "./../../middlewares/validation.middleware.js";
+import requireOrganizationAccess from "./../../middlewares/organization.middleware.js";
 import validateRequiredPermissions from "./../../middlewares/permission.middleware.js";
 import { PERMISSIONS } from "./../../constants/permissions.constant.js";
 import { orgParamsSchema } from "../organization/organization.validation.js";
 import {
-  getMemberByIdController,
   getMemberController,
-  inviteSingleMemberController,
   bulkInviteController,
-  acceptInviteController,
-  reinviteMemberController,
-  cancelInviteController,
-  memeberSuspendController,
-  memeberDeleteController,
   verifyInviteController,
+  acceptInviteController,
+  cancelInviteController,
+  getMemberByIdController,
+  memeberDeleteController,
+  editMemberByIdController,
+  reinviteMemberController,
+  memeberSuspendController,
+  inviteSingleMemberController,
 } from "./member.controller.js";
 import {
   getMemberParams,
-  getMembersByIdQuerySchema,
-  getMembersQuerySchema,
-  inviteSingleMemberSchema,
   bulkInviteSchema,
+  getMembersQuerySchema,
   acceptInviteBodySchema,
   verifyInviteQuerySchema,
+  editMemberDetailsSchema,
+  inviteSingleMemberSchema,
+  getMembersByIdQuerySchema,
 } from "./member.validation.js";
 
 const router = express.Router();
@@ -40,7 +42,7 @@ router.get(
 router.post(
   "/accept-invite",
   validate(verifyInviteQuerySchema, "query"),
-  validate(acceptInviteBodySchema, "body"),
+  // validate(acceptInviteBodySchema, "body"),
   acceptInviteController,
 );
 
@@ -105,6 +107,17 @@ router.get(
   validate(getMembersByIdQuerySchema, "query"),
   getMemberByIdController,
 );
+
+// edit member details and permissions
+router.patch(
+  "/:orgId/:invitedmemberId/editMember",
+  requireAuth,
+  validate(getMemberParams, "params"),
+  requireOrganizationAccess,
+  validate(editMemberDetailsSchema, "body"),
+  validateRequiredPermissions(PERMISSIONS.MEMBER_EDIT),
+  editMemberByIdController,
+)
 
 // suspend the Member
 router.patch(

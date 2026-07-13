@@ -10,6 +10,8 @@ const userSchema = new mongoose.Schema(
       sparse: true,
       unique: true,
       lowercase: true,
+      trim: true,
+      set: (v) => v === "" ? undefined : v, 
     },
     avatarUrl: { type: String, default: "" },
 

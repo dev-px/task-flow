@@ -15,6 +15,7 @@ import {
   archiveRoleController,
   createNewRoleController,
   editRoleController,
+  getAllPermissionController,
   getAllRolesController,
 } from "./role.controller.js";
 
@@ -29,6 +30,16 @@ router.get(
   validateRequiredPermissions(PERMISSIONS.ROLE_READ),
   getAllRolesController,
 );
+
+// get all permission
+router.get(
+  "/permissions",
+  requireAuth,
+  validate(orgParamsSchema, "params"),
+  requireOrganizationAccess,
+  validateRequiredPermissions(PERMISSIONS.ROLE_READ),
+  getAllPermissionController
+)
 
 // create new role within the organziation
 router.post(

@@ -1,7 +1,7 @@
 import env from "../config/env.config.js";
 
 export const buildInviteEmail = (token) => {
-  const inviteLink = `${env.SERVER_URL}/api/${env.VERSION}/member/verify-invite?token=${token}`;
+  const inviteLink = `${env.CLIENT_URL}/acceptInvitePage?token=${token}`;
   return {
     subject: "You have been invited to join the workspace!",
     html: `
@@ -13,7 +13,7 @@ export const buildInviteEmail = (token) => {
 };
 
 export const buildPasswordResetEmail = (resetToken) => {
-  const resetLink = `${env.SERVER_URL}/api/${env.VERSION}/reset-password?token=${resetToken}`;
+  const resetLink = `${env.CLIENT_URL}/?token=${resetToken}`;
   return {
     subject: "Reset Your Password",
     html: `

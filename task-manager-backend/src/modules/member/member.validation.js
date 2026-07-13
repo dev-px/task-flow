@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { ALL_PERMISSIONS } from "../../constants/permissions.constant.js";
 
 const getMemberParams = Joi.object({
   orgId: Joi.string().hex().length(24).required().messages({
@@ -52,18 +53,24 @@ const getMembersByIdQuerySchema = Joi.object({
 
 // --- NEW INVITE SCHEMAS BELOW ---
 const inviteSingleMemberSchema = Joi.object({
+  designation: Joi.string().trim().max(100).required().messages({
+    "string.base": "Designation must be a valid string.",
+    "string.empty": "Designation cannot be empty.",
+    "string.max": "Designation cannot exceed 100 characters.",
+    "any.required": "Designation is required to send an invite.",
+  }),
   email: Joi.string().email().trim().lowercase().required().messages({
     "string.base": "Email must be a valid string.",
     "string.empty": "Email address cannot be empty.",
     "string.email": "Please provide a valid email address.",
     "any.required": "Email address is required to send an invite.",
   }),
-  role: Joi.string().trim().required().messages({
-    "string.base": "Role must be a valid string.",
-    "string.empty": "Role cannot be empty.",
-    "any.required": "Role is required to assign to the invited member.",
+  role: Joi.string().hex().length(24).required().messages({
+    "string.empty": "Organization ID is required.",
+    "string.hex": "Organization ID must be a valid hexadecimal string.",
+    "string.length": "Organization ID must be exactly 24 characters long.",
   }),
-}).unknown(true);
+});
 
 // Schema for a single row in the bulk invite Excel/JSON array
 const bulkInviteItemSchema = Joi.object({
@@ -76,8 +83,13 @@ const bulkInviteItemSchema = Joi.object({
     "string.empty": "A row is missing a role.",
     "any.required": "Role is required for all rows.",
   }),
-}).unknown(true);
-// .unknown(true) allows ignoring extra columns from the Excel file (e.g., "Name", "Department")
+  designation: Joi.string().trim().max(100).required().messages({
+    "string.base": "Designation must be a valid string.",
+    "string.empty": "Designation cannot be empty.",
+    "string.max": "Designation cannot exceed 100 characters.",
+    "any.required": "Designation is required to send an invite.",
+  }),
+});
 
 const bulkInviteSchema = Joi.object({
   excelData: Joi.array()
@@ -95,22 +107,17 @@ const bulkInviteSchema = Joi.object({
 });
 
 const acceptInviteBodySchema = Joi.object({
-  name: Joi.string().trim().min(2).max(50).optional().messages({
+  name: Joi.string().trim().max(50).optional().messages({
     "string.base": "Name must be a valid string.",
-    "string.empty": "Name cannot be empty.",
-    "string.min": "Name must be at least 2 characters long.",
     "string.max": "Name cannot exceed 50 characters.",
   }),
 
-  password: Joi.string().min(8).optional().messages({
+  password: Joi.string().optional().messages({
     "string.base": "Password must be a valid string.",
-    "string.empty": "Password cannot be empty.",
-    "string.min": "Password must be at least 8 characters long.",
   }),
 
   avatarUrl: Joi.string().uri().optional().messages({
     "string.base": "Avatar URL must be a valid string.",
-    "string.empty": "Avatar URL cannot be empty.",
     "string.uri": "Please provide a valid URL for the avatar image.",
   }),
 });
@@ -123,6 +130,26 @@ const verifyInviteQuerySchema = Joi.object({
   }),
 });
 
+const editMemberDetailsSchema = Joi.object({
+  designation: Joi.string().trim().max(100).messages({
+    "string.base": "Designation must be a valid string.",
+    "string.max": "Designation cannot exceed 100 characters.",
+    "any.required": "Designation is required for the member.",
+  }),
+  roleId: Joi.string().trim().optional().messages({
+    "string.base": "Role must be a valid string.",
+  }),
+  additionalPermissions: Joi.array()
+    .items(Joi.string().valid(...ALL_PERMISSIONS)).unique().single()
+    .max(ALL_PERMISSIONS.length).required()
+    .messages({
+      "array.unique": "Duplicate permissions are not allowed",
+      "any.only": "One or more permissions are invalid",
+      "any.required": "Permissions are required",
+      "array.max": `You can select a maximum of ${ALL_PERMISSIONS.length} permissions`,
+    }),
+});
+
 export {
   getMemberParams,
   getMembersQuerySchema,
@@ -131,4 +158,6 @@ export {
   bulkInviteSchema,
   verifyInviteQuerySchema,
   acceptInviteBodySchema,
+  editMemberDetailsSchema
 };
+

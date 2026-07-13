@@ -1,4 +1,5 @@
 import HTTP_STATUS from "../../constants/http-status.constant.js";
+import { ALL_PERMISSIONS } from "../../constants/permissions.constant.js";
 import { successResponse } from "../../utils/api-response.util.js";
 import asyncHandler from "./../../utils/async-handler.util.js";
 import {
@@ -19,6 +20,15 @@ const getAllRolesController = asyncHandler(async (req, res) => {
     HTTP_STATUS.OK,
   );
 });
+
+const getAllPermissionController = asyncHandler(async (req, res) => {
+  return successResponse(
+    res,
+    "Permission fetched successfully",
+    ALL_PERMISSIONS,
+    HTTP_STATUS.OK
+  )
+})
 
 const createNewRoleController = asyncHandler(async (req, res) => {
   const { orgId } = req.params;
@@ -46,7 +56,7 @@ const editRoleController = asyncHandler(async (req, res) => {
 
 const archiveRoleController = async (req, res) => {
   const { roleId } = req.params;
-  const archivedRole = await archieveRoleService(roleId);
+  const archivedRole = await archieveRoleService(roleId, req.body.description, req.user.id);
   return successResponse(
     res,
     "Role archived successfully",
@@ -57,6 +67,7 @@ const archiveRoleController = async (req, res) => {
 
 export {
   getAllRolesController,
+  getAllPermissionController,
   createNewRoleController,
   editRoleController,
   archiveRoleController,

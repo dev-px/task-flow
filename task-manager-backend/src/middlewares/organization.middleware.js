@@ -5,6 +5,7 @@ import { getMemberByUserIdAndOrganizationId } from "../modules/member/member.rep
 import logger from "../config/logger.config.js";
 // import { getOrganizationById } from "../modules/organization/organization.repository.js";
 
+// check whether the user is of this particular organization or not
 const requireOrganizationAccess = async (req, res, next) => {
   try {
     // Dynamic extraction supporting route params, query, or custom headers

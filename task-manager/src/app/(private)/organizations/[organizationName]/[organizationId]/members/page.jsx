@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import ProjectFilters from "@/components/project/ProjectFilters";
 import ProjectHeader from "@/components/project/ProjectHeader";
-import { MoreHorizontal, Trash, Ban, Mail, Edit2Icon } from "lucide-react";
+import { MoreHorizontal, Trash, Ban, Mail, Edit2Icon, MailX } from "lucide-react";
 import InviteMemberModal from "@/components/member/InviteMemberModal";
 import {
+  useCancelInviteMutation,
   useDeleteMemberMutation,
   useGetAllMembersQuery,
-  useGetOneMemberQuery,
+  useReinviteMemberMutation,
   useSuspendMemberMutation,
 } from "@/redux/services/memberApi";
 import { useParams } from "next/navigation";
@@ -43,15 +44,16 @@ export default function MemberPage() {
   } = useGetAllMembersQuery({
     orgId: organizationId,
     ...filters,
-  });
+  }, { skip: (!hasPermission("member:read") || !organizationId) });
   const [deleteMember, { isLoading: isDelMemberLoading }] =
     useDeleteMemberMutation();
   const [suspendMember, { isLoading: isSuspendedMemberLoading }] =
     useSuspendMemberMutation();
-  // const [
-  //   getOneMember,
-  //   { isLoading: isOneMemberLoading, isError: oneMemeberLoadingError },
-  // ] = useGetOneMemberQuery(organizationId, { skip: !organizationId });
+  const [reinviteMember, { isLoading: isReinviteMemberLoading }] =
+    useReinviteMemberMutation();
+  const [cancelInvite, { isLoading: isLoadingInviteCancel }] =
+    useCancelInviteMutation()
+
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -62,33 +64,62 @@ export default function MemberPage() {
     }).format(new Date(dateString));
   };
 
+  // ---- DELETE HANDLERS ----
   const handleMemberDelete = async (memberId) => {
     try {
-      const result = await deleteMember({
+      const response = await deleteMember({
         orgId: organizationId,
         invitedmemberId: memberId,
       }).unwrap();
-      toast.success(result.data.message);
+      toast.success(response.message);
     } catch (error) {
       toast.error(error.data.message);
     }
   };
 
+  // ---- SUSPEND HANDLERS ----
   const handleSuspendMember = async (memberId) => {
     try {
-      await suspendMember({
+      const response = await suspendMember({
         orgId: organizationId,
         invitedmemberId: memberId,
       }).unwrap();
-      toast.success(result.data.message);
+      toast.success(response.message);
     } catch (error) {
       toast.error(error.data.message);
     }
   };
+
+  // ---- RE-INVITE HANDLERS ----
+  const handleReInvite = async (memberId) => {
+    try {
+      const response = await reinviteMember({
+        orgId: organizationId,
+        invitedmemberId: memberId
+      }).unwrap();
+      console.log(response)
+      toast.success(response.message);
+    } catch (error) {
+      toast.error(error.data.message);
+    }
+  }
+
+  // ---- CANCEL INVITE HANDLERS ----
+  const handleCancelInvite = async (memberId) => {
+    try {
+      const response = await cancelInvite({
+        orgId: organizationId,
+        invitedmemberId: memberId
+      }).unwrap();
+      console.log(response)
+      toast.success(response.message);
+    } catch (error) {
+      toast.error(error.data.message);
+    }
+  }
 
   const handleEditMemberDialog = (member) => {
     setShowEditModal(true);
-    console.log(member);
     setSelectedMember(member);
   };
 
@@ -98,7 +129,7 @@ export default function MemberPage() {
     <div className="p-3 bg-white w-full">
       <ProjectHeader
         pTitle="Organization Members"
-        pDescription="Manage roles, permissions, and team invites."
+        pDescription="Manage your organization's members"
         type="members"
         setShowInviteModal={setShowInviteModal}
         hasPermission={hasPermission}
@@ -112,6 +143,7 @@ export default function MemberPage() {
       />
 
       <div className="w-full overflow-x-auto mt-4 rounded-lg border border-gray-200">
+
         <table className="w-full text-sm border-collapse">
           <thead className="text-left border-b bg-gray-100">
             <tr>
@@ -123,103 +155,124 @@ export default function MemberPage() {
             </tr>
           </thead>
 
-            <tbody className="divide-y">
-              {memberData?.map((member) => (
-                <tr key={member._id} className="hover:bg-gray-50 transition">
-                  <td className="px-4 py-4">
-                    {member.user ? (
-                      <div className="flex flex-col">
-                        <span className="font-medium text-gray-900">
-                          {member.user.name}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {member.user.email}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col">
-                        <span className="font-medium italic text-gray-500">
-                          Pending Invite
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {member.inviteEmail}
-                        </span>
-                      </div>
-                    )}
-                  </td>
-
-                  <td className="px-4 py-4">
-                    <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs font-medium">
-                      {member.role.name}
-                    </span>
-                  </td>
-
-                  <td className="px-4 py-4 text-gray-600 hidden sm:table-cell truncate max-w-[150px]">
-                    {member.designation || "—"}
-                  </td>
-
-                  <td className="px-4 py-4">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium capitalize ${
-                        member.status === "active"
-                          ? "bg-green-50 text-green-700"
-                          : "bg-yellow-50 text-yellow-700"
-                      }`}
-                    >
-                      {member.status}
-                    </span>
-                  </td>
-
-                  <td className="px-4 py-4 text-gray-500 hidden md:table-cell text-xs">
-                    {member.status === "active"
-                      ? formatDate(member.joinedAt)
-                      : formatDate(member.invitedAt)}
-                  </td>
-
-                  <td className="px-4 py-4 text-right">
-                    <div className="flex items-center justify-start gap-6 text-gray-400">
-                      {hasPermission("member:edit") && (
-                        <button
-                          className="hover:text-black transition cursor-pointer"
-                          title="Edit Member"
-                          onClick={() => handleEditMemberDialog(member)}
-                        >
-                          <Edit2Icon size={18} />
-                        </button>
-                      )}
-                      {member.status === "invited" ? (
-                        <button
-                          className="hover:text-black transition cursor-pointer"
-                          title="Resend Invite"
-                        >
-                          <Mail size={18} />
-                        </button>
-                      ) : (
-                        <button
-                          className="hover:text-black transition cursor-pointer"
-                          title="Suspend Member"
-                          onClick={() => handleSuspendMember(member._id)}
-                          disabled={isSuspendedMemberLoading}
-                        >
-                          <Ban size={18} />
-                        </button>
-                      )}
-                      {hasPermission("member:delete") && (
-                        <button
-                          className="hover:text-red-600 transition cursor-pointer"
-                          title="Delete Member"
-                          onClick={() => handleMemberDelete(member._id)}
-                          disabled={isDelMemberLoading}
-                        >
-                          <Trash size={18} />
-                        </button>
-                      )}
+          <tbody className="divide-y">
+            {memberData?.map((member) => (
+              <tr key={member._id} className="hover:bg-gray-50 transition">
+                <td className="px-4 py-4">
+                  {member.user ? (
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-900">
+                        {member.user.name}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {member.user.email}
+                      </span>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+                  ) : (
+                    <div className="flex flex-col">
+                      <span className="font-medium italic text-gray-500">
+                        Pending Invite
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {member.inviteEmail}
+                      </span>
+                    </div>
+                  )}
+                </td>
+
+                <td className="px-4 py-4">
+                  <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs font-medium">
+                    {member.role.name}
+                  </span>
+                </td>
+
+                <td className="px-4 py-4 text-gray-600 hidden sm:table-cell truncate max-w-[150px]">
+                  {member.designation || "—"}
+                </td>
+
+                <td className="px-4 py-4">
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium capitalize ${member.status === "active"
+                      ? "bg-green-50 text-green-700"
+                      : "bg-yellow-50 text-yellow-700"
+                      }`}
+                  >
+                    {member.status}
+                  </span>
+                </td>
+
+                <td className="px-4 py-4 text-gray-500 hidden md:table-cell text-xs">
+                  {member.status === "active"
+                    ? formatDate(member.joinedAt)
+                    : formatDate(member.invitedAt)}
+                </td>
+
+                <td className="px-4 py-4 text-right">
+                  <div className="flex items-center justify-start gap-6 text-gray-400">
+                    {hasPermission("member:edit") && (
+                      <button
+                        className="hover:text-black transition cursor-pointer"
+                        title="Edit Member"
+                        onClick={() => handleEditMemberDialog(member)}
+                      >
+                        <Edit2Icon size={18} />
+                      </button>
+                    )}
+                    {member.status === "invited" ? (
+                      <>
+                        {hasPermission("member:create") && (
+                          <>
+                            <button
+                              className="hover:text-black transition cursor-pointer"
+                              title="Resend Invite"
+                              onClick={() => handleReInvite(member._id)}
+                            >
+                              <Mail size={18} />
+                            </button>
+                            <button
+                              className="hover:text-black transition cursor-pointer"
+                              title="Cancel Invite"
+                              onClick={() => handleCancelInvite(member._id)}
+                            >
+                              <MailX size={18} />
+                            </button>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {hasPermission("member:revoked") && (
+                          <button
+                            className="hover:text-black transition cursor-pointer"
+                            title="Suspend Member"
+                            onClick={() => handleSuspendMember(member._id)}
+                            disabled={isSuspendedMemberLoading}
+                          >
+                            <Ban size={18} />
+                          </button>
+                        )}
+                        {hasPermission("member:delete") && (
+                          <button
+                            className="hover:text-red-600 transition cursor-pointer"
+                            title="Delete Member"
+                            onClick={() => handleMemberDelete(member._id)}
+                            disabled={isDelMemberLoading}
+                          >
+                            <Trash size={18} />
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
+
+        {memberData?.length === 0 && memeberLoadingError && (
+          <div className="p-8 text-center text-gray-500">Something went wrong. Please try again!</div>
+        )}
 
         {memberData?.length === 0 && (
           <div className="p-8 text-center text-gray-500">No members found.</div>

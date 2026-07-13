@@ -1,10 +1,13 @@
+import env from "../../config/env.config.js";
 import HTTP_STATUS from "../../constants/http-status.constant.js";
+import ApiError from "../../errors/ApiError.js";
 import { successResponse } from "../../utils/api-response.util.js";
 import asyncHandler from "../../utils/async-handler.util.js";
 import SUCCESS_MESSAGES from "./../../errors/success.messages.js";
 import {
   acceptInviteService,
   cancelInviteService,
+  editMemberByIdService,
   getMemberByIdService,
   getMemberService,
   inviteSingleMember,
@@ -44,14 +47,11 @@ const getMemberByIdController = asyncHandler(async (req, res) => {
 // Send invitation to a single member
 const inviteSingleMemberController = asyncHandler(async (req, res) => {
   const { orgId } = req.params;
-  const { email, role } = req.body;
-  const adminId = req.user.id;
-  // console.log("Inviting single member:", { orgId, email, role, adminId });
-  const result = await inviteSingleMember(orgId, adminId, email, role);
+  const result = await inviteSingleMember(orgId, req.body, req.user.id);
 
   return successResponse(
     res,
-    `Invitation successfully queued for ${email}`,
+    `Invitation successfully queued for ${req.body.email}`,
     result,
     HTTP_STATUS.CREATED,
   );
@@ -60,31 +60,61 @@ const inviteSingleMemberController = asyncHandler(async (req, res) => {
 // Handle bulk member invitations from Excel data
 const bulkInviteController = asyncHandler(async (req, res) => {
   const { orgId } = req.params;
-  const { data: excelData } = req.body; // Parsed JSON array from Excel uploader
-
+  const { excelData } = req.body;
   const adminId = req.user.id;
-  const adminRoleLevel = req.user.roleLevel; // Check privilege escalation
 
   // Validate Excel data
   if (!excelData || !Array.isArray(excelData) || excelData.length === 0) {
-    return res.status(400).json({ error: "No valid Excel data provided." });
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      "No valid Excel data provided."
+    );
   }
 
   // Process all invitations
   const { successful, failed } = await processBulkInvites(
     orgId,
     adminId,
-    adminRoleLevel,
+    req.member,
     excelData,
   );
 
-  // Return partial success response (207 Multi-Status)
+  const successfulCount = successful.length;
+  const failedCount = failed.length;
+
+  const responsePayload = {
+    successful,
+    successfulCount,
+    failed,
+    failedCount,
+  };
+
+  // Determine HTTP Status and Message based on results
+  let statusCode;
+  let message;
+
+  if (successfulCount > 0 && failedCount > 0) {
+    // 1. Partial Success
+    statusCode = 207;
+    message = `Sent ${successfulCount} successful invites, but ${failedCount} failed.`;
+
+  } else if (successfulCount === 0) {
+    // 2. Total Failure
+    statusCode = HTTP_STATUS.BAD_REQUEST;
+    message = `Failed to send invites. All ${failedCount} invites failed.`;
+
+  } else {
+    // 3. Total Success
+    statusCode = HTTP_STATUS.CREATED;
+    message = `Successfully sent all ${successfulCount} invites!`;
+  }
+
+  // Return formatted response
   return successResponse(
     res,
-    `Processing complete. ${successful.length} queued, ${failed.length} failed.`,
-    successful.length,
-    HTTP_STATUS.PARTIAL_CREATED,
-    { failedCount: failedCount, failedData: failed },
+    message,
+    responsePayload,
+    statusCode
   );
 });
 
@@ -105,13 +135,21 @@ const acceptInviteController = asyncHandler(async (req, res) => {
     userData,
   );
 
+  const cookieOptions = {
+    httpOnly: true,
+    secure: env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+
+  res.cookie("refreshToken", refreshToken, cookieOptions);
+
   return successResponse(
     res,
     "Welcome to the workspace!",
     {
       user,
       accessToken,
-      refreshToken,
     },
     HTTP_STATUS.OK,
   );
@@ -184,6 +222,25 @@ const memeberDeleteController = asyncHandler(async (req, res) => {
   );
 });
 
+const editMemberByIdController = asyncHandler(async (req, res) => {
+  const { orgId, invitedmemberId } = req.params;
+  const updatedMember = await editMemberByIdService(
+    orgId,
+    req.member,
+    invitedmemberId,
+    req.body,
+    req.user.id
+  );
+
+  return successResponse(
+    res,
+    "Member has successfully Updated",
+    updatedMember,
+    HTTP_STATUS.OK,
+  );
+
+})
+
 export {
   getMemberController,
   getMemberByIdController,
@@ -195,4 +252,5 @@ export {
   memeberSuspendController,
   memeberDeleteController,
   verifyInviteController,
+  editMemberByIdController
 };

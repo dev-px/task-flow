@@ -27,14 +27,6 @@ export const authApi = api.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
-
-    // getMe: builder.query({
-    //   query: () => ({
-    //     url: "/auth/me",
-    //     method: "GET",
-    //   }),
-    //   providesTags: ["User"],
-    // }),
   }),
 });
 

@@ -1,40 +1,40 @@
 import HTTP_STATUS from "../constants/http-status.constant.js";
 import ApiError from "./../errors/ApiError.js";
 
+// for query, params, and body data valdiates
 const validate =
   (schema, source = "body") =>
-  (req, res, next) => {
-    const payload = req?.[source] || {};
-    // console.log("Validating payload:", payload);
-    const { error, value } = schema.validate(payload, {
-      abortEarly: false,
-      stripUnknown: true,
-    });
-    // console.log("Validation result:", { error, value });
-    if (error) {
-      const simpleErrors = {};
-      error.details.forEach((err) => {
-        const key = err.path.join(".");
-        simpleErrors[key] = err.message.replace(/"/g, "");
+    (req, res, next) => {
+      const payload = req?.[source] || {};
+      const { error, value } = schema.validate(payload, {
+        abortEarly: false,
+        stripUnknown: true,
       });
-      return next(
-        new ApiError(
-          HTTP_STATUS.BAD_REQUEST,
-          "Validation Failed",
-          simpleErrors,
-        ),
-      );
-    }
+      // console.log("Validation result:", { error, value });
+      if (error) {
+        const simpleErrors = {};
+        error.details.forEach((err) => {
+          const key = err.path.join(".");
+          simpleErrors[key] = err.message.replace(/"/g, "");
+        });
+        return next(
+          new ApiError(
+            HTTP_STATUS.BAD_REQUEST,
+            "Validation Failed",
+            simpleErrors,
+          ),
+        );
+      }
 
-    if (source === "query") {
-      req.validatedQuery = value;
-    } else {
-      req[source] = value;
-    }
-    // console.log(`Validation successful for ${source}:`, value);
-    next();
-    // console.log("checking in body for organization", req.params.orgId, "check");
-  };
+      if (source === "query") {
+        req.validatedQuery = value;
+      } else {
+        req[source] = value;
+      }
+      // console.log(`Validation successful for ${source}:`, value);
+      next();
+      // console.log("checking in body for organization", req.params.orgId, "check");
+    };
 
 // Usage:
 // validate(mySchema, 'body')

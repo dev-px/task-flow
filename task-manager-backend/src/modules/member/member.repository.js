@@ -19,11 +19,11 @@ const getMemberByUserIdAndOrganizationId = async (userId, organizationId) => {
 };
 
 const getMemberByInviteEmailAndOrg = async (
-  inviteEmail,
+  email,
   organizationId,
   session = null,
 ) => {
-  return await Member.findOne({ inviteEmail, organizationId }).session(session);
+  return await Member.findOne({ inviteEmail: email, organizationId }).session(session);
 };
 
 const getOrganizationsFromMember = async (
@@ -176,12 +176,12 @@ const getMembers = async (organizationId, queryParams = {}) => {
           {
             $project: {
               _id: 1,
-              employeeId: 1,
               designation: 1,
               status: 1,
               isDeleted: 1,
               joinedAt: "$createdAt",
               inviteEmail: 1,
+              additionalPermissions: 1,
               user: {
                 _id: "$userData._id",
                 name: "$userData.name",
@@ -191,6 +191,7 @@ const getMembers = async (organizationId, queryParams = {}) => {
               role: {
                 _id: "$roleData._id",
                 name: "$roleData.name",
+                permissions: "$roleData.permissions"
               },
             },
           },
@@ -222,7 +223,7 @@ const getMemberById = async (organizationId, memberId, queryParams = {}) => {
     isDeleted: isDeleted,
   })
     .populate("userId", "name email profilePicture")
-    .populate("roleId", "name permissions");
+    .populate("roleId", "name permissions slug");
 
   if (!member) {
     return null;
@@ -247,7 +248,8 @@ const createMember = async (memberData, session = null) => {
 
 // create bulk member
 const bulkInsertMembers = async (membersArray) => {
-  return await Member.insertMany(membersArray, { ordered: false });
+  const memberInserted = await Member.bulkWrite(membersArray, { ordered: false });
+  return memberInserted;
 };
 
 // get existing member

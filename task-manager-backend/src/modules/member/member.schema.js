@@ -9,6 +9,7 @@ const memberSchema = new mongoose.Schema(
         return this.status === "active";
       },
       index: true,
+      sparse: true
     },
     organizationId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -66,6 +67,9 @@ const memberSchema = new mongoose.Schema(
       mentionsAndComments: { type: Boolean, default: true },
       weeklySummary: { type: Boolean, default: true },
     },
+
+    // additional permissions
+    additionalPermissions: []
   },
   { timestamps: true },
 );
@@ -74,7 +78,12 @@ const memberSchema = new mongoose.Schema(
 memberSchema.index({ organizationId: 1, inviteEmail: 1 });
 memberSchema.index({ roleId: 1, userId: 1 });
 memberSchema.index({ userId: 1, status: 1 });
-memberSchema.index({ userId: 1, organizationId: 1 }, { unique: true, sparse: true });
+memberSchema.index({ userId: 1, organizationId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { userId: { $type: "objectId" } }
+  }
+);
 
 const Member = mongoose.model("Member", memberSchema);
 
