@@ -22,7 +22,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 
   let result = await baseQuery(args, api, extraOptions);
 
-  // If we get a 401, the token is expired or missing
+  // If we get a 401, the access token is expired or missing
   if (result.error && result.error.status === 401) {
     if (!mutex.isLocked()) {
       const release = await mutex.acquire();
@@ -39,7 +39,6 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
           let currentUser = api.getState().auth.user;
           const newToken = refreshResult.data.accessToken;
 
-          // 2. If Redux lost the user (e.g., hard refresh), fetch them now!
           if (!currentUser) {
             const meResult = await baseQuery(
               { url: "/auth/me", method: "GET" },
@@ -64,22 +63,12 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
           // 4. Retry the original query that failed
           result = await baseQuery(args, api, extraOptions);
         } else {
-          // If refresh fails, throw an error to trigger the catch block
-          toast.error("Refresh token expired or invalid");
+          api.dispatch(setLogout());
+          // api.dispatch(api.util.resetApiState());
         }
       } catch (error) {
-        // 5. IF REFRESH FAILS: Call the backend logout API
-        await baseQuery(
-          { url: "/auth/logout", method: "POST" },
-          api,
-          extraOptions,
-        );
-
-        // 6. Wipe frontend Redux auth state
         api.dispatch(setLogout());
-
-        // 7. Wipe all cached RTK Query data to prevent data leaks
-        api.dispatch(api.util.resetApiState());
+        // api.dispatch(api.util.resetApiState());
       } finally {
         release();
       }

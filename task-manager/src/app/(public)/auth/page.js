@@ -75,7 +75,7 @@ const AuthPage = () => {
           }
         }
       } catch (err) {
-        console.error("Error during authentication:", err);
+        console.log("Error during authentication:", err);
         toast.error(
           err?.data?.message || "An error occurred. Please try again.",
         );
@@ -104,7 +104,9 @@ const AuthPage = () => {
                 onChange={(e) => handleFormEdit(e, "name")}
                 className={`border px-3 py-2 rounded w-full ${error.name ? "border-red-500" : "border-black"}`}
               />
-              {error.name && <p className="text-red-500 text-sm">{error.name}</p>}
+              {error.name && (
+                <p className="text-red-500 text-sm">{error.name}</p>
+              )}
             </div>
           )}
 
@@ -116,7 +118,9 @@ const AuthPage = () => {
               onChange={(e) => handleFormEdit(e, "email")}
               className={`border px-3 py-2 rounded w-full ${error.email ? "border-red-500" : "border-black"}`}
             />
-            {error.email && <p className="text-red-500 text-sm">{error.email}</p>}
+            {error.email && (
+              <p className="text-red-500 text-sm">{error.email}</p>
+            )}
           </div>
 
           <div>

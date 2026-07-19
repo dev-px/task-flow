@@ -1,274 +1,156 @@
-import { useState } from "react";
-import {
-  Shield,
-  KeyRound,
-  Monitor,
-  Lock,
-  Bell,
-  Smartphone,
-} from "lucide-react";
+"use client";
 
+import { useDispatch } from "react-redux";
+import { Shield, KeyRound, Monitor, Lock, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import SectionCard from "../layout/SectionCard";
-import Field from "../layout/Field";
+import Spinner from "../layout/Spinner";
 import { Card, CardContent } from "../ui/Card";
-import { Label } from "../ui/label";
-
-const accessOptions = ["Admin", "Manager", "Member"];
-const securitySections = [
-  {
-    title: "Login & Authentication",
-    fields: [
-      "username",
-      "registeredEmail",
-      "backupEmail",
-      "recoveryPhone",
-      "changePassword",
-      "twoFactorAuth",
-    ],
-  },
-  {
-    title: "Access Control",
-    fields: [
-      "roleBasedAccess",
-      "permissionLevel",
-      "workspaceAccess",
-      "securityAlerts",
-    ],
-  },
-];
-const permissionOptions = ["Full Access", "Limited Access", "Read Only"];
-const workspaceOptions = ["Engineering", "Product", "Marketing", "HR"];
+import { useGetAllActiveSessionQuery, useLogoutAllDevicesMutation, useLogoutMutation } from "@/redux/services/authApi";
+import { setLogout } from "@/redux/slices/authSlice";
+import toast from "react-hot-toast";
 
 export default function AccountSecurityTab() {
-  const [securityData, setSecurityData] = useState({
-    activeSessions: 3,
-    failedLoginAttempts: 2,
-    lastLoginTime: "Today • 10:42 AM",
-    loginHistory: [
-      { device: "Chrome", location: "Varanasi", status: "Success" },
-      { device: "Safari", location: "Delhi", status: "Success" },
-    ],
-    recentSecurityActivity: [
-      "Password changed 2 days ago",
-      "New device login detected",
-    ],
-    username: "johndoe",
-    registeredEmail: "john@example.com",
-    backupEmail: "backup@example.com",
-    recoveryPhone: "+91 9876543210",
-    changePassword: "",
-    roleBasedAccess: "Manager",
-    permissionLevel: "Full Access",
-    workspaceAccess: "Engineering",
-    twoFactorAuth: true,
-    securityAlerts: true,
-  });
+  const dispatch = useDispatch();
+  const { data: responseData, isLoading } = useGetAllActiveSessionQuery();
 
-  const updateField = (field, value) => {
-    setSecurityData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  // Setup mutations
+  const [logout, { isLoading: isLoggingOut }] =
+    useLogoutMutation();
+  const [logoutAllDevices, { isLoading: isRevokingAll }] =
+    useLogoutAllDevicesMutation();
+
+  const sessionsData = responseData?.data || responseData;
+  const activeCount = sessionsData?.count || 0;
+
+  const currentDeviceSession = sessionsData?.sessions?.find(
+    (s) => s.isCurrentDevice,
+  );
+  const lastActiveTimeStr = currentDeviceSession
+    ? new Date(currentDeviceSession.lastActiveAt).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "N/A";
+
+  // Logout Current Device
+  const handleLogoutCurrent = async () => {
+    try {
+      const response = await logout().unwrap();
+      dispatch(setLogout());
+
+      window.location.href = "/auth";
+    } catch (err) {
+      console.error("Failed to logout current device:", err);
+      toast.error(err.data.messaeg)
+    }
   };
+
+  // Logout All Devices
+  const handleGlobalRevoke = async () => {
+    if (
+      confirm(
+        "Are you sure you want to log out from all trusted connected devices? This will terminate your current session as well.",
+      )
+    ) {
+      try {
+        // 1. Tell backend to drop all Redis sessions linked to this user
+        await logoutAllDevices().unwrap();
+
+        // 2. Wipe the Redux global store instantly
+        dispatch(setLogout());
+
+        // 3. Redirect back to auth page
+        window.location.href = "/auth";
+      } catch (err) {
+        console.error("Failed global session index deletion:", err);
+      }
+    }
+  };
+
+  if (isLoading)
+    return (
+      <div className="flex justify-center p-10">
+        <Spinner />
+      </div>
+    );
 
   return (
     <SectionCard
       title="Account & Security"
-      description="Manage authentication, access control, and security settings."
+      description="Manage active system interfaces, live device configurations, and authorization parameters."
       icon={Shield}
     >
       <div className="space-y-8">
+        {/* Dynamic Metric Displays powered by Redis Index State */}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <SecurityMetricCard
             icon={KeyRound}
             title="Active Sessions"
-            value="3"
-            subtitle="Across trusted devices"
+            value={activeCount.toString()}
+            subtitle="Registered in Redis state"
           />
           <SecurityMetricCard
             icon={Lock}
-            title="Failed Login Attempts"
-            value="2"
-            subtitle="Last 7 days"
+            title="Account Integrity Status"
+            value="Secure"
+            subtitle="Verified against signatures"
           />
           <SecurityMetricCard
             icon={Bell}
-            title="Last Login"
+            title="Last Activity Registered"
             value="Today"
-            subtitle="10:42 AM from Chrome"
+            subtitle={`${lastActiveTimeStr} from current browser`}
           />
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Username">
-            <Input
-              value={securityData.username}
-              onChange={(e) => updateField("username", e.target.value)}
-            />
-          </Field>
-
-          <Field label="Registered Email">
-            <Input
-              type="email"
-              value={securityData.registeredEmail}
-              onChange={(e) => updateField("registeredEmail", e.target.value)}
-            />
-          </Field>
-
-          <Field label="Backup Email">
-            <Input
-              type="email"
-              value={securityData.backupEmail}
-              onChange={(e) => updateField("backupEmail", e.target.value)}
-            />
-          </Field>
-
-          <Field label="Recovery Phone Number">
-            <Input
-              value={securityData.recoveryPhone}
-              onChange={(e) => updateField("recoveryPhone", e.target.value)}
-            />
-          </Field>
-
-          <Field label="Change Password">
-            <Input
-              type="password"
-              placeholder="Enter new password"
-              value={securityData.changePassword}
-              onChange={(e) => updateField("changePassword", e.target.value)}
-            />
-          </Field>
-
-          <Field label="Role-Based Access">
-            <Select
-              value={securityData.roleBasedAccess}
-              onValueChange={(value) => updateField("roleBasedAccess", value)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                {accessOptions.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-
-          <Field label="Permission Level">
-            <Select
-              value={securityData.permissionLevel}
-              onValueChange={(value) => updateField("permissionLevel", value)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select permission" />
-              </SelectTrigger>
-              <SelectContent>
-                {permissionOptions.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-
-          <Field label="Workspace Access">
-            <Select
-              value={securityData.workspaceAccess}
-              onValueChange={(value) => updateField("workspaceAccess", value)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select workspace" />
-              </SelectTrigger>
-              <SelectContent>
-                {workspaceOptions.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-
-          <div className="flex justify-between items-center">
-            <div className="space-y-2">
-              <Label>Two-Factor Authentication</Label>
-            </div>
-            <Switch
-              checked={securityData.twoFactorAuth}
-              onCheckedChange={(value) => updateField("twoFactorAuth", value)}
-            />
-          </div>
-
-          <div className="flex justify-between items-center">
-            <div className="space-y-2">
-              <Label>Security Alerts</Label>
-            </div>
-            <Switch
-              checked={securityData.securityAlerts}
-              onCheckedChange={(value) => updateField("securityAlerts", value)}
-            />
-          </div>
-        </div>
-
+        {/* Contextual Device Manager Grid */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Login History</h3>
-          <div className="rounded-2xl border p-4 space-y-3">
-            {securityData.loginHistory.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between border-b pb-3 last:border-none last:pb-0"
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold text-foreground">
+              Trusted System Sessions
+            </h3>
+            {activeCount > 1 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleGlobalRevoke}
+                disabled={isRevokingAll}
               >
-                <div>
-                  <p className="font-medium">{item.device}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {item.location}
-                  </p>
-                </div>
-                <p className="text-sm">{item.status}</p>
-              </div>
-            ))}
+                {isRevokingAll ? <Spinner className="h-4 w-4 mr-2" /> : null}
+                Terminate All Devices
+              </Button>
+            )}
           </div>
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Recent Security Activity</h3>
-          <div className="rounded-2xl border p-4 space-y-3">
-            {securityData.recentSecurityActivity.map((item, index) => (
-              <p key={index} className="text-sm text-muted-foreground">
-                • {item}
-              </p>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Trusted Devices</h3>
 
           <div className="grid gap-4">
-            <DeviceCard
-              name="MacBook Pro"
-              device="Chrome • Varanasi, India"
-              status="Trusted"
-            />
-            <DeviceCard
-              name="iPhone 15"
-              device="Safari • Mobile Session"
-              status="Active"
-            />
+            {sessionsData?.sessions?.map((session) => (
+              <DeviceCard
+                key={session.sessionId}
+                name={`${session.os || "Unknown OS"} — ${session.browser || "Unknown Browser"}`}
+                device={`${session.deviceType || "Desktop"} • IP: ${session.ipAddress} • Location: ${
+                  typeof session.location === "object"
+                    ? `${session.location.city || ""}, ${session.location.country || ""}`
+                    : session.location || "Unknown Location"
+                }`}
+                status={
+                  session.isCurrentDevice
+                    ? "Log Out (Current)"
+                    : "Active Device"
+                }
+                isCurrent={session.isCurrentDevice}
+                onAction={
+                  session.isCurrentDevice ? handleLogoutCurrent : undefined
+                }
+                disabled={isLoggingOut || !session.isCurrentDevice}
+              />
+            ))}
+
+            {activeCount === 0 && (
+              <p className="text-sm text-muted-foreground italic p-2">
+                No active database keys parsed.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -278,16 +160,15 @@ export default function AccountSecurityTab() {
 
 export function SecurityMetricCard({ icon: Icon, title, value, subtitle }) {
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-2xl bg-white shadow-sm border">
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
-          <div className="rounded-xl border p-3">
-            <Icon className="h-5 w-5" />
+          <div className="rounded-xl border p-3 bg-slate-50">
+            <Icon className="h-5 w-5 text-slate-700" />
           </div>
-
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <h3 className="text-xl font-semibold">{value}</h3>
+            <p className="text-sm text-muted-foreground font-medium">{title}</p>
+            <h3 className="text-2xl font-bold tracking-tight">{value}</h3>
             <p className="text-xs text-muted-foreground">{subtitle}</p>
           </div>
         </div>
@@ -296,22 +177,41 @@ export function SecurityMetricCard({ icon: Icon, title, value, subtitle }) {
   );
 }
 
-export function DeviceCard({ name, device, status }) {
+export function DeviceCard({
+  name,
+  device,
+  status,
+  isCurrent,
+  onAction,
+  disabled,
+}) {
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-2xl bg-white shadow-sm border">
       <CardContent className="p-5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl border p-3">
-            <Monitor className="h-5 w-5" />
+          <div className="rounded-xl border p-3 bg-slate-50">
+            <Monitor className="h-5 w-5 text-slate-600" />
           </div>
-
           <div>
-            <p className="font-medium">{name}</p>
-            <p className="text-sm text-muted-foreground">{device}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-slate-800">{name}</p>
+              {isCurrent && (
+                <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                  Active Now
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground mt-0.5">{device}</p>
           </div>
         </div>
 
-        <Button variant="outline" size="sm">
+        <Button
+          variant={isCurrent ? "outline" : "secondary"}
+          size="sm"
+          disabled={disabled}
+          onClick={onAction}
+          className="rounded-xl font-medium shadow-none"
+        >
           {status}
         </Button>
       </CardContent>

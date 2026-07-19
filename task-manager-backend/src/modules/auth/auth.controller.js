@@ -1,13 +1,54 @@
+import geoip from "geoip-lite";
 import env from "../../config/env.config.js";
+import asyncHandler from "./../../utils/async-handler.util.js";
 import HTTP_STATUS from "../../constants/http-status.constant.js";
 import { successResponse } from "../../utils/api-response.util.js";
-import asyncHandler from "./../../utils/async-handler.util.js";
 import {
+  getAllActiveSessionsService,
+  getCurrentSessionService,
   loginService,
+  logoutAllDevicesService,
   logoutService,
   refreshTokenService,
   signUpUser,
 } from "./auth.service.js";
+import { getSocketIoInstance } from "../../config/socket.config.js";
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: env.NODE_ENV === "production",
+  sameSite: "strict",
+  path: "/",
+};
+
+const helperSessionMetadata = (req) => {
+  const ip =
+    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    req.ip ||
+    req.connection.remoteAddress;
+  const deviceType = req.useragent.isMobile
+    ? "Mobile"
+    : req.useragent.isTablet
+      ? "Tablet"
+      : "Desktop";
+  const browser = req.useragent.browser;
+  const os = req.useragent.os;
+
+  const geo = geoip.lookup(ip);
+  const location = geo
+    ? { country: geo.country, region: geo.region, city: geo.city }
+    : "Unknown";
+
+  const metadata = {
+    ipAddress: ip,
+    deviceType,
+    browser,
+    os,
+    location,
+  };
+
+  return metadata;
+};
 
 const signUpController = asyncHandler(async (req, res, next) => {
   const user = await signUpUser(req.body);
@@ -23,17 +64,16 @@ const signUpController = asyncHandler(async (req, res, next) => {
 });
 
 const loginController = asyncHandler(async (req, res, next) => {
-  const { user, accessToken, refreshToken } = await loginService(req.body);
+  const metadata = helperSessionMetadata(req);
+  const { user, accessToken, refreshToken } = await loginService(
+    req.body,
+    metadata,
+  );
 
-  // Send the Refresh Token in a secure, HTTP-Only cookie
-  const cookieOptions = {
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "strict",
+  res.cookie("refreshToken", refreshToken, {
+    ...cookieOptions,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-
-  res.cookie("refreshToken", refreshToken, cookieOptions);
+  });
 
   if (user) {
     successResponse(
@@ -47,30 +87,42 @@ const loginController = asyncHandler(async (req, res, next) => {
 
 const logoutController = asyncHandler(async (req, res, next) => {
   await logoutService(req.cookies.refreshToken);
-  const cookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  };
+  res.clearCookie("refreshToken", cookieOptions);
+
+  return successResponse(
+    res,
+    "Logged out from this device successfully",
+    {},
+    HTTP_STATUS.OK,
+  );
+});
+
+const logoutAllDevicesController = asyncHandler(async (req, res, next) => {
+  await logoutAllDevicesService(req.cookies.refreshToken);
+  const io = getSocketIoInstance();
 
   res.clearCookie("refreshToken", cookieOptions);
 
-  successResponse(res, "User Logged out successfully", {}, HTTP_STATUS.OK);
+  io.to(req.user._id.toString()).emit("force_logout", {
+    message: "Your session was terminated from another device.",
+  });
+
+  return successResponse(
+    res,
+    "Logged out from all devices successfully",
+    {},
+    HTTP_STATUS.OK,
+  );
 });
 
-const refreshTokenController = asyncHandler(async (req, res) => {
+const refreshTokenController = asyncHandler(async (req, res, next) => {
+  const metadata = helperSessionMetadata(req);
   const { refreshToken: incomingRefreshToken } = req.cookies;
-
-  // Define cookie options once so they perfectly match for setting and clearing
-  const cookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  };
-
   try {
-    // Grab both new tokens from the service
-    const { accessToken, refreshToken, user } = await refreshTokenService(incomingRefreshToken);
+    const { accessToken, refreshToken, user } = await refreshTokenService(
+      incomingRefreshToken,
+      metadata,
+    );
 
     // Overwrite the old cookie with the brand new Refresh Token
     res.cookie("refreshToken", refreshToken, {
@@ -86,13 +138,49 @@ const refreshTokenController = asyncHandler(async (req, res) => {
     );
   } catch (error) {
     res.clearCookie("refreshToken", cookieOptions);
-    throw error;
+    return next(error);
   }
+});
+
+const getCurrentSessionController = asyncHandler(async (req, res, next) => {
+  // Extract userId from the DB user document, and sessionId from the request
+  const userId = req.user._id.toString();
+  const sessionId = req.sessionId;
+
+  const session = await getCurrentSessionService(userId, sessionId);
+
+  return successResponse(
+    res,
+    "Current session fetched successfully",
+    { session },
+    HTTP_STATUS.OK,
+  );
+});
+
+const getAllActiveSessionsController = asyncHandler(async (req, res, next) => {
+  console.log(req.user, req.sessionId);
+  const userId = req.user._id.toString();
+  const sessionId = req.sessionId;
+
+  const { count, sessions } = await getAllActiveSessionsService(
+    userId,
+    sessionId,
+  );
+
+  return successResponse(
+    res,
+    "All active sessions fetched successfully",
+    { count, sessions },
+    HTTP_STATUS.OK,
+  );
 });
 
 export {
   signUpController,
   loginController,
   logoutController,
+  logoutAllDevicesController,
   refreshTokenController,
+  getCurrentSessionController,
+  getAllActiveSessionsController,
 };

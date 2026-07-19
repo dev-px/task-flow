@@ -7,7 +7,7 @@ const redisOptions = {
   family: 0,
   tls: env.REDIS_URL?.startsWith("rediss://")
     ? {
-        rejectUnauthorized: false, // Helps avoid local certificate issues
+        rejectUnauthorized: false,
       }
     : undefined,
 };
@@ -21,6 +21,7 @@ redisClient.on("connect", () => {
 });
 
 redisClient.on("error", (error) => {
+  console.log(error);
   logger.error("Redis connection error:", error);
 });
 

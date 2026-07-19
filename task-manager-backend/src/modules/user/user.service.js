@@ -1,3 +1,4 @@
+import HTTP_STATUS from "../../constants/http-status.constant.js";
 import ApiError from "../../errors/ApiError.js";
 import { findUserById, updateUserById } from "./user.repository.js";
 

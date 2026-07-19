@@ -27,12 +27,38 @@ export const authApi = api.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+
+    logoutAllDevices: builder.mutation({
+      query: () => ({
+        url: "/auth/logout-all-devices",
+        method: "POST",
+      }),
+      invalidatesTags: ["User"],
+    }),
+
+    getActiveSession: builder.query({
+      query: () => ({
+        url: "/auth/active-session",
+        method: "GET"
+      }),
+    }),
+
+    getAllActiveSession: builder.query({
+      query: () => ({
+        url: "/auth/active-all-session",
+        method: "GET"
+      }),
+      providesTags: ["User"]
+    }),
+
   }),
 });
 
 export const {
   useSignupMutation,
   useLoginMutation,
-  // useGetMeQuery,
   useLogoutMutation,
+  useLogoutAllDevicesMutation,
+  useGetActiveSessionQuery,
+  useGetAllActiveSessionQuery
 } = authApi;

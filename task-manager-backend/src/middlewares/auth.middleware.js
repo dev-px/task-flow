@@ -3,6 +3,7 @@ import HTTP_STATUS from "../constants/http-status.constant.js";
 import ApiError from "./../errors/ApiError.js";
 import env from "./../config/env.config.js";
 import { getUserById } from "../modules/user/user.repository.js";
+import redisClient from "../config/redis.config.js";
 
 const requireAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -20,7 +21,17 @@ const requireAuth = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, env.ACCESS_TOKEN);
 
-    // 1. Verify global user existence
+    const redis_session_key = `session:${decoded.sessionId}`;
+    const sessionExists = await redisClient.get(redis_session_key);
+
+    if (!sessionExists) {
+      res.clearCookie("refreshToken");
+      return next(
+        new ApiError(HTTP_STATUS.UNAUTHORIZED, "Session revoked or expired."),
+      );
+    }
+
+    // 2. Verify global user existence
     const user = await getUserById(decoded.userId);
     if (!user) {
       return next(
@@ -28,7 +39,6 @@ const requireAuth = async (req, res, next) => {
       );
     }
 
-    // 2. Verify global platform account state
     if (user.status === "suspended") {
       return next(
         new ApiError(
@@ -38,11 +48,11 @@ const requireAuth = async (req, res, next) => {
       );
     }
 
-    // 3. Attach standard identity object
     req.user = user;
+    req.sessionId = decoded.sessionId;
     next();
   } catch (error) {
-    console.error("Authentication error:", error);
+    res.clearCookie("refreshToken");
     return next(
       new ApiError(
         HTTP_STATUS.UNAUTHORIZED,

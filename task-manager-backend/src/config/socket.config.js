@@ -14,12 +14,15 @@ const initializeSocket = (httpServer) => {
 
   // lListen for connections
   io.on("connection", (socket) => {
-    // When a user logs in on the frontend, they should emit a "join" event with their userId
     socket.on("join_admin_room", (adminId) => {
-      socket.join(adminId);
+      socket.join(adminId.toString());
+      console.log(
+        `Admin ${adminId} connected to real-time updates.`,
+        socket.id,
+      );
       logger.info(`Admin ${adminId} connected to real-time updates.`);
     });
-
+    console.log(socket.id);
     socket.on("disconnect", () => {
       logger.info("User disconnected from socket.");
     });

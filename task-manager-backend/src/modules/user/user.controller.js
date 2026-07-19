@@ -8,8 +8,7 @@ import HTTP_STATUS from "./../../constants/http-status.constant.js";
 import asyncHandler from "./../../utils/async-handler.util.js";
 
 const getUserProfileController = asyncHandler(async (req, res) => {
-  const { userId } = req.user;
-  const user = await getProfileService(userId);
+  const user = await getProfileService(req.user._id);
 
   successResponse(
     res,
@@ -20,8 +19,7 @@ const getUserProfileController = asyncHandler(async (req, res) => {
 });
 
 const editUserProfileController = asyncHandler(async (req, res) => {
-  const { userId } = req.user;
-  const user = await editProfileService(userId, req.body);
+  const user = await editProfileService(req.user._id, req.body);
 
   successResponse(
     res,
@@ -32,8 +30,7 @@ const editUserProfileController = asyncHandler(async (req, res) => {
 });
 
 const editProfilePhotoController = asyncHandler(async (req, res) => {
-  const { userId } = req.user;
-  const user = await editProfilePhotoService(userId, req.body);
+  const user = await editProfilePhotoService(req.user._id, req.body);
 
   successResponse(
     res,

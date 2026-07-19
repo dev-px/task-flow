@@ -1,6 +1,6 @@
 import HTTP_STATUS from "../../constants/http-status.constant.js";
 import ApiError from "../../errors/ApiError.js";
-import { User } from "./user.schema.js";
+import User from "./user.schema.js";
 
 const getUserById = async (id) => {
   const user = await User.findById(id);
@@ -36,7 +36,7 @@ const createUser = async (userData, session = null) => {
 };
 
 const updateUserById = async (userId, updateData, session = null) => {
-  // console.log("Updating user:", { userId, updateData, session });
+  console.log("Updating user:", { userId, updateData, session });
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     { $set: updateData },

@@ -23,9 +23,15 @@ const orgSlice = createSlice({
     setRole: (state, action) => {
       state.role = action.payload;
     },
+    resetOrgSlice: (state) => {
+      state.activeOrgId= null;
+      state.activeOrgName= null;
+      state.permissions= [];
+      state.role= null;
+    }
   },
 });
 
-export const { setActiveOrgId, setActiveOrgName, setPermission, setRole } =
+export const { setActiveOrgId, setActiveOrgName, setPermission, setRole, resetOrgSlice } =
   orgSlice.actions;
 export default orgSlice.reducer;

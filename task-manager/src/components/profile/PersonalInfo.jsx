@@ -1,94 +1,56 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { User, Camera, Save } from "lucide-react";
 
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Textarea } from "../ui/textarea";
 import { Badge } from "../ui/badge";
 import Field from "../layout/Field";
 import SectionCard from "../layout/SectionCard";
+import Spinner from "../layout/Spinner";
+import { useUpdateUserProfileMutation } from "@/redux/services/userApi";
+import toast from "react-hot-toast";
+
+// Import your mutation and slice action
+// import { useUpdateProfileMutation } from "@/redux/services/authApi";
+// import { updateUserProfile } from "@/redux/slices/authSlice";
 
 export default function PersonalInfoTab() {
-  const fileInputRef = useRef(null);
-  const profileFields = [
-    {
-      label: "Full Name",
-      key: "fullName",
-      type: "text",
-    },
-    {
-      label: "Email Address",
-      key: "email",
-      type: "email",
-    },
-    {
-      label: "Phone Number",
-      key: "phone",
-      type: "text",
-    },
-    {
-      label: "Employee ID",
-      key: "employeeId",
-      type: "text",
-    },
-    {
-      label: "Date of Joining",
-      key: "joiningDate",
-      type: "date",
-    },
-    {
-      label: "Date of Birth",
-      key: "dateOfBirth",
-      type: "date",
-    },
-    {
-      label: "Gender",
-      key: "gender",
-      type: "text",
-      placeholder: "Male / Female / Prefer not to say",
-    },
-    {
-      label: "Time Zone",
-      key: "timezone",
-      type: "text",
-    },
-    {
-      label: "Preferred Language",
-      key: "preferredLanguage",
-      type: "text",
-    },
-    {
-      label: "Address",
-      key: "address",
-      type: "text",
-    },
-  ];
+  const dispatch = useDispatch();
 
-  const [profileData, setProfileData] = useState({
-    fullName: "Rahul Sharma",
-    email: "rahul@company.com",
-    phone: "+91 9876543210",
-    employeeId: "EMP-2026-104",
-    joiningDate: "2024-02-12",
-    dateOfBirth: "",
-    gender: "",
-    address: "Prayagraj, Uttar Pradesh",
-    timezone: "Asia/Kolkata",
-    preferredLanguage: "English",
-    shortBio:
-      "Project manager focused on delivery excellence, team collaboration, and process optimization.",
+  // 1. Get user directly from Redux Store (Populated during Login/Refresh)
+  const user = useSelector((state) => state.auth.user);
+
+  // 2. Setup RTK Query Mutation for API call
+  const [updateProfileMutation, { isLoading: isUpdating }] =
+    useUpdateUserProfileMutation();
+
+  const fileInputRef = useRef(null);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    secondaryEmail: "",
   });
 
-  const [profileImage, setProfileImage] = useState(null);
-  const [hasChanges, setHasChanges] = useState(false);
+  // 3. Sync Redux state to local component state when it loads or changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        secondaryEmail: user.secondaryEmail || "",
+      });
+      setAvatarPreview(user.avatarUrl || "");
+      setHasChanges(false);
+    }
+  }, [user]);
 
-  const updateProfile = (key, value) => {
-    setProfileData((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+  const handleChange = (key, value) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
     setHasChanges(true);
   };
 
@@ -96,35 +58,62 @@ export default function PersonalInfoTab() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Standard client side file preview
     const imageUrl = URL.createObjectURL(file);
-    setProfileImage(imageUrl);
+    setAvatarPreview(imageUrl);
     setHasChanges(true);
+
+    // Note: If uploading to S3/Cloudinary, you would trigger that upload logic here
+    // or inside handleSaveProfile before sending the URL to your backend.
   };
 
-  const handleSaveProfile = () => {
-    // console.log("Saved Profile:", profileData);
-    // console.log("Profile Image:", profileImage);
+  const handleSaveProfile = async () => {
+    try {
+      // 4. Send update to Backend (modules/user)
+      const payload = {
+        name: formData.name,
+        secondaryEmail: formData.secondaryEmail,
+        avatarUrl: avatarPreview,
+      };
 
-    setHasChanges(false);
+      const response = await updateProfileMutation(payload).unwrap();
+
+      // 5. Update Redux Store instantly (Assuming backend returns the updated user object)
+      // If your backend wraps it in 'data' (e.g., response.data.user), adjust accordingly:
+      const updatedUser = response.user || response.data;
+
+      dispatch(updateUserProfile(updatedUser));
+      setHasChanges(false);
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+      toast.error(err.data.message)
+    }
   };
+
+  if (!user)
+    return (
+      <div className="flex justify-center p-10">
+        <Spinner />
+      </div>
+    );
 
   return (
     <SectionCard
       title="Personal Information"
-      description="Manage your personal profile details, identity information, and workspace profile visibility."
+      description="Manage your verified profile details, identity variables, and account state indices."
       icon={User}
     >
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* LEFT SIDE — Profile Overview */}
+        {/* LEFT CARD — Identity Indicators */}
         <div className="lg:col-span-1">
           <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-5">
             <div className="flex flex-col items-center text-center">
               <div className="relative">
                 <div className="h-32 w-32 sm:h-40 sm:w-40 overflow-hidden rounded-2xl border bg-muted">
-                  {profileImage ? (
+                  {avatarPreview ? (
                     <img
-                      src={profileImage}
-                      alt="Profile"
+                      src={avatarPreview}
+                      alt="Avatar"
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -151,78 +140,79 @@ export default function PersonalInfoTab() {
                 />
               </div>
 
-              <h2 className="mt-4 text-lg font-semibold">
-                {profileData.fullName}
-              </h2>
-
+              <h2 className="mt-4 text-lg font-semibold">{formData.name}</h2>
               <p className="text-sm text-muted-foreground break-all">
-                {profileData.email}
+                {formData.email}
               </p>
 
-              <div className="flex flex-wrap justify-center gap-2 mt-2">
-                <Badge>{profileData.employeeId}</Badge>
-                <Badge variant="outline">Active Member</Badge>
+              <div className="flex flex-wrap justify-center gap-2 mt-3">
+                <Badge
+                  variant={user.isEmailVerified ? "default" : "destructive"}
+                >
+                  {user.isEmailVerified ? "Verified Email" : "Unverified Email"}
+                </Badge>
+                <Badge variant="outline" className="capitalize">
+                  Status: {user.status}
+                </Badge>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="rounded-xl border p-4">
-                <p className="text-sm text-muted-foreground">Department</p>
-                <p className="font-medium">{profileData.department}</p>
-              </div>
-
-              <div className="rounded-xl border p-4">
-                <p className="text-sm text-muted-foreground">Designation</p>
-                <p className="font-medium">{profileData.designation}</p>
-              </div>
-
-              <div className="rounded-xl border p-4">
-                <p className="text-sm text-muted-foreground">Status</p>
-                <p className="font-medium">Active Member</p>
-              </div>
+            <div className="space-y-3 pt-2 border-t text-xs text-muted-foreground">
+              <p>
+                Account Created:{" "}
+                {user.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString()
+                  : "N/A"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* RIGHT SIDE — Same as General Tab using SectionCard */}
+        {/* RIGHT CARD — Core Schema Inputs */}
         <div className="lg:col-span-2">
-          <SectionCard title="Personal Details" icon={Save}>
+          <SectionCard title="Database Parameters" icon={Save}>
             <div className="space-y-6">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Update your personal information, employee details, and
-                  professional profile settings.
-                </p>
-              </div>
-
-              {/* Main Fields */}
               <div className="grid gap-5 sm:grid-cols-2">
-                {profileFields.map((field) => (
-                  <Field key={field.key} label={field.label}>
-                    <Input
-                      type={field.type}
-                      placeholder={field.placeholder || ""}
-                      value={profileData[field.key]}
-                      onChange={(e) => updateProfile(field.key, e.target.value)}
-                    />
-                  </Field>
-                ))}
+                <Field label="Full Name">
+                  <Input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                  />
+                </Field>
+
+                <Field label="Primary Email Address (Immutable)">
+                  <Input
+                    type="email"
+                    value={formData.email}
+                    disabled
+                    className="bg-muted text-muted-foreground cursor-not-allowed"
+                  />
+                </Field>
+
+                <Field label="Secondary Recovery Email">
+                  <Input
+                    type="email"
+                    placeholder="Enter secondary fallback email address"
+                    value={formData.secondaryEmail}
+                    onChange={(e) =>
+                      handleChange("secondaryEmail", e.target.value)
+                    }
+                  />
+                </Field>
               </div>
 
-              {/* Professional Summary */}
-              <Field label="Professional Summary">
-                <Textarea
-                  className="min-h-20"
-                  value={profileData.shortBio}
-                  onChange={(e) => updateProfile("shortBio", e.target.value)}
-                  placeholder="Write a short professional summary..."
-                />
-              </Field>
-
-              {/* Footer Save */}
               <div className="flex justify-end pt-2">
-                <Button className="rounded-xl px-6 gap-2">
-                  <Save className="h-4 w-4" />
+                <Button
+                  onClick={handleSaveProfile}
+                  disabled={!hasChanges || isUpdating}
+                  className="rounded-xl px-6 gap-2"
+                >
+                  {isUpdating ? (
+                    <Spinner className="h-4 w-4" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
                   Save Changes
                 </Button>
               </div>

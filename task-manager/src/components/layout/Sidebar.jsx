@@ -20,11 +20,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import usePermissions from "@/hooks/usePermissions";
+import { useDispatch } from "react-redux";
+import { setLogout } from "@/redux/slices/authSlice";
+import { resetOrgSlice } from "@/redux/slices/orgSlice";
+import toast from "react-hot-toast";
+import { useLogoutMutation } from "@/redux/services/authApi";
 
 export default function Sidebar() {
+  const dispatch = useDispatch();
   const pathname = usePathname();
   const params = useParams();
   const { hasPermission, isLoading } = usePermissions();
+  const [logout, { isLoading: isLogoutLoading }] = useLogoutMutation();
   const orgName = params?.organizationName;
   const orgId = params?.organizationId;
   const baseUrl = orgName && orgId ? `/organizations/${orgName}/${orgId}` : "";
@@ -72,8 +79,21 @@ export default function Sidebar() {
   const bottomLinks = [
     { name: "Settings", href: "/settings", icon: Settings },
     { name: "Profile", href: "/profile", icon: User },
-    { name: "Logout", href: "/logout", icon: LogOut },
+    // { name: "Logout", href: "/logout", icon: LogOut },
   ];
+
+  const handleLogout = async () => {
+    console.log("logout ");
+    try {
+      dispatch(setLogout());
+      dispatch(resetOrgSlice());
+      const response = await logout().unwrap();
+      toast.success(response.message);
+    } catch (error) {
+      console.log(error);
+      toast.error("Logout failed");
+    }
+  };
 
   const isActive = (href) => {
     if (href === "/organizations") return pathname === "/organizations";
@@ -146,6 +166,17 @@ export default function Sidebar() {
             </Tooltip>
           );
         })}
+        <Tooltip>
+          <TooltipTrigger asChild className="w-full flex justify-center">
+            <button
+              className="cursor-pointer flex items-center justify-center p-2 rounded-lg transition w-10 mx-auto text-gray-500 hover:bg-gray-100 hover:text-black"
+              onClick={handleLogout}
+            >
+              <LogOut size={20} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right">Logout</TooltipContent>
+        </Tooltip>
       </nav>
     </aside>
   );

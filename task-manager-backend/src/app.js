@@ -9,7 +9,7 @@ import env from "./config/env.config.js";
 import { successResponse } from "./utils/api-response.util.js";
 import HTTP_STATUS from "./constants/http-status.constant.js";
 import cookieParser from "cookie-parser";
-
+import useragent from "express-useragent";
 const app = express();
 
 if (env.NODE_ENV === "production") {
@@ -23,11 +23,14 @@ app.use(
   }),
 );
 
+app.set('trust proxy', true);
 app.use(compression());
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
+app.use(useragent.express());
+
 
 // to check status of APIs
 app.get("/health", (req, res) => {

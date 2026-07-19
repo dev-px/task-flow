@@ -2,86 +2,105 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { setCredentials, setLogout } from "@/redux/slices/authSlice";
 import Spinner from "../layout/Spinner";
 
 const AuthGuard = ({ children }) => {
   const dispatch = useDispatch();
   const router = useRouter();
+  const pathname = usePathname(); // Helpful for redirecting back after login
   const token = useSelector((state) => state.auth.token);
-  const [isMounted, setIsMounted] = useState(false);
-  const [isLoading, setIsLoading] = useState(!token);
+
+  // Use a State Machine instead of multiple confusing booleans
+  const [authStatus, setAuthStatus] = useState("CHECKING"); // 'CHECKING' | 'AUTHENTICATED' | 'UNAUTHENTICATED'
   const hasAttemptedRefresh = useRef(false);
 
-  // 1. Handle Hydration
+  // 1. Verify Authentication Status
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    const verifySession = async () => {
+      // If we already have a token in Redux, they are authenticated
+      if (token) {
+        setAuthStatus("AUTHENTICATED");
+        return;
+      }
 
-  // 2. Handle Silent Refresh (Hydrating Redux from Cookie)
-  useEffect(() => {
-    const restoreSession = async () => {
-      // Edge Case: Prevent double-fetching in React 18 development mode
-      if (hasAttemptedRefresh.current) return;
-      hasAttemptedRefresh.current = true;
+      // If we don't have a token, attempt to restore the session from the HTTP-Only cookie
+      if (!hasAttemptedRefresh.current) {
+        hasAttemptedRefresh.current = true;
 
-      try {
-        const response = await fetch(
-          "http://localhost:5000/api/v1/auth/refresh-token",
-          {
+        // Use AbortController to prevent infinite loading if the backend goes down
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
+
+        try {
+          // Use an Environment Variable for the API URL in production
+          const API_URL = "http://localhost:5000/api/v1";
+
+          const response = await fetch(`${API_URL}/auth/refresh-token`, {
             method: "POST",
             credentials: "include",
-          },
-        );
+            signal: controller.signal,
+          });
 
-        if (response.ok) {
-          const result = await response.json();
-          const accessToken = result.data?.accessToken || result.accessToken;
-          const user = result.data?.user || result.user;
+          clearTimeout(timeoutId);
 
-          dispatch(setCredentials({ token: accessToken, user }));
-        } else {
+          if (response) {
+            console.log("response form authgiuard", response);
+            const result = await response.json();
+            const accessToken = result.data?.accessToken || result.accessToken;
+            const user = result.data?.user || result.user;
+
+            if (accessToken) {
+              dispatch(setCredentials({ token: accessToken, user }));
+              setAuthStatus("AUTHENTICATED");
+              return;
+            }
+          }
+
+          // If we reach here, the response wasn't OK or didn't contain a token
+          throw new Error("Invalid session");
+        } catch (error) {
+          console.warn("[AuthGuard] Session restore failed:", error.message);
           dispatch(setLogout());
+          setAuthStatus("UNAUTHENTICATED");
         }
-      } catch (error) {
-        console.error("Session restore failed:", error);
-        dispatch(setLogout());
-      } finally {
-        setIsLoading(false);
+      } else {
+        // If we already attempted refresh and still have no token, they are unauthenticated
+        setAuthStatus("UNAUTHENTICATED");
       }
     };
 
-    if (!token) {
-      restoreSession();
-    } else {
-      setIsLoading(false);
-    }
+    verifySession();
   }, [token, dispatch]);
 
-  // 3. Handle Redirection if Auth Fails
+  // 2. Handle Redirection Safely
   useEffect(() => {
-    if (isMounted && !isLoading && !token) {
+    if (authStatus === "UNAUTHENTICATED") {
+      // Optional Pro-Tip: Pass the current URL so they return here after logging in
+      // e.g., router.replace(`/auth?redirect=${encodeURIComponent(pathname)}`);
       router.replace("/auth");
     }
-  }, [isMounted, isLoading, token, router]);
+  }, [authStatus, router]);
 
-  if (!isMounted || isLoading) {
+  // 3. Render Logic
+  if (authStatus === "CHECKING") {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-        <Spinner text="loading..." />
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-gray-50/50">
+        <Spinner text="Verifying session..." />
       </div>
     );
   }
 
-  if (!token) {
+  if (authStatus === "UNAUTHENTICATED") {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-        <Spinner text="Redirecting to login..." />
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-gray-50/50">
+        <Spinner text="Redirecting to secure login..." />
       </div>
     );
   }
 
+  // If AUTHENTICATED, render the private children
   return <>{children}</>;
 };
 

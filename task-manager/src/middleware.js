@@ -6,7 +6,7 @@ export function middleware(request) {
   const { pathname } = request.nextUrl;
 
   // Real browser URLs needing user authentication
-  const privatePaths = ["/organizations", "/mytasks", "/projects"];
+  const privatePaths = ["/organizations", "/mytasks", "/projects", "/members", "/roles"];
   const isPrivateRoute = privatePaths.some((path) => pathname.startsWith(path));
 
   // Real browser URLs accessible only if logged out

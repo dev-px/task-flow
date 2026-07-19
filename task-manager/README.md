@@ -41,3 +41,10 @@ feat: add Security Settings component with various security configurations
 - Updated .env configuration to include separate Redis URLs for prod and local development.
 - Added email worker configuration to handle stalled jobs.
 - Enhanced member sorting functionality and project filters.
+- Integrated Backend
+- Updated memberApi and orgApi to improve caching and invalidation strategies.
+- Implemented AddEditRoleModal for creating and editing roles with permission management.
+- Added PermissionMatrix component (PermissionMatrix.jsx) to manage role permissions.
+- Updated ProjectFilters to include role filters and dropdowns.
+- Enhanced ProjectHeader to allow role creation with appropriate permissions.
+- Introduced initialRoleFilters for managing role filter states.
