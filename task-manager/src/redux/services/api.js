@@ -33,24 +33,12 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
           api,
           extraOptions,
         );
+        console.log("refreshResult", refreshResult);
 
-        if (refreshResult.data) {
+        if (refreshResult.data.data) {
           // Check if we already have a user in Redux
-          let currentUser = api.getState().auth.user;
-          const newToken = refreshResult.data.accessToken;
-
-          if (!currentUser) {
-            const meResult = await baseQuery(
-              { url: "/auth/me", method: "GET" },
-              api,
-              extraOptions,
-            );
-            if (meResult.data) {
-              currentUser = meResult.data;
-            } else {
-              toast.error("Failed to fetch user profile");
-            }
-          }
+          let currentUser = refreshResult.data.data.user;
+          const newToken = refreshResult.data.data.accessToken;
 
           // 3. Save the new token and user to Redux
           api.dispatch(

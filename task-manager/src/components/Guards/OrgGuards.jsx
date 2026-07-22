@@ -21,7 +21,6 @@ const OrgGuard = ({ children, orgId }) => {
   useEffect(() => {
     if (isSuccess && data?.data) {
       const orgData = data.data;
-      console.log(orgData);
       dispatch(setActiveOrgId(orgId));
       dispatch(setActiveOrgName(orgData?.organization?.name));
       dispatch(setPermission(orgData?.roleId?.permissions));

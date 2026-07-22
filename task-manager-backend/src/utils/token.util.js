@@ -4,17 +4,13 @@ import env from "../config/env.config.js";
 import logger from "../config/logger.config.js";
 
 const generateTokens = async (userId, email, sessionId) => {
-  const accessToken = jwt.sign(
-    { userId, email, sessionId},
-    env.ACCESS_TOKEN,
-    { expiresIn: "59m" },
-  );
+  const accessToken = jwt.sign({ userId, email, sessionId }, env.ACCESS_TOKEN, {
+    expiresIn: "1m",
+  });
 
-  const refreshToken = jwt.sign(
-    { userId, sessionId },
-    env.REFRESH_TOKEN,
-    { expiresIn: "7d", }
-  );
+  const refreshToken = jwt.sign({ userId, sessionId }, env.REFRESH_TOKEN, {
+    expiresIn: "7d",
+  });
 
   const sevenDaysInSeconds = 7 * 24 * 60 * 60;
 

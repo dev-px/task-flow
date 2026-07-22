@@ -45,12 +45,10 @@ const AuthGuard = ({ children }) => {
 
           clearTimeout(timeoutId);
 
-          if (response) {
-            console.log("response form authgiuard", response);
+          if (response.ok) {
             const result = await response.json();
-            const accessToken = result.data?.accessToken || result.accessToken;
-            const user = result.data?.user || result.user;
-
+            const accessToken = result.data?.accessToken;
+            const user = result.data?.user;
             if (accessToken) {
               dispatch(setCredentials({ token: accessToken, user }));
               setAuthStatus("AUTHENTICATED");

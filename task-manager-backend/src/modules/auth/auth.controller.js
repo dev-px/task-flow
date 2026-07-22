@@ -116,8 +116,8 @@ const logoutAllDevicesController = asyncHandler(async (req, res, next) => {
 });
 
 const refreshTokenController = asyncHandler(async (req, res, next) => {
+  const incomingRefreshToken = req.cookies.refreshToken;
   const metadata = helperSessionMetadata(req);
-  const { refreshToken: incomingRefreshToken } = req.cookies;
   try {
     const { accessToken, refreshToken, user } = await refreshTokenService(
       incomingRefreshToken,

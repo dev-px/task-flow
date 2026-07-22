@@ -52,7 +52,6 @@ const requireAuth = async (req, res, next) => {
     req.sessionId = decoded.sessionId;
     next();
   } catch (error) {
-    res.clearCookie("refreshToken");
     return next(
       new ApiError(
         HTTP_STATUS.UNAUTHORIZED,
