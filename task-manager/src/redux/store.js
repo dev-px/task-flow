@@ -5,6 +5,7 @@ import authReducer from "@/redux/slices/authSlice";
 import boardReducer from "@/redux/slices/boardSlice";
 import memberReducer from "@/redux/slices/memberSlice";
 import socketReducer from "@/redux/slices/socketSlice";
+import viewReducer from "@/redux/slices/viewSlice";
 import { configureStore } from "@reduxjs/toolkit";
 
 const makeStore = () =>
@@ -14,6 +15,7 @@ const makeStore = () =>
       auth: authReducer,
       org: orgReducer,
       member: memberReducer,
+      view: viewReducer,
       socket: socketReducer,
       
       [api.reducerPath]: api.reducer,

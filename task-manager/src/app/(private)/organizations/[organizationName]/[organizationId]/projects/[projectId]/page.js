@@ -27,9 +27,12 @@ import {
   initialProjectDetailsFilters,
   initialProjectState,
 } from "@/utils/constant";
+import usePermissions from "@/hooks/usePermissions";
+import { useGetProjectByIdQuery } from "@/redux/services/projectApi";
 
 export default function KanBanPage() {
-  const { projectId } = useParams();
+  const { organizationId, projectId } = useParams();
+  const { hasPermission } = usePermissions();
   const [showModal, setShowModal] = useState(false);
   const [showColumnModal, setShowColumnModal] = useState(false);
   const [showTaskModal, setShowAddTaskModal] = useState(false);
@@ -59,12 +62,22 @@ export default function KanBanPage() {
 
   // dummy API
   const data = dummyData.find((project) => project.id === parseInt(projectId));
+    const {
+    data: projectData,
+    isLoading: isProjectLoading,
+    isError,
+  } = useGetProjectByIdQuery(
+    { orgId: organizationId, projectId },
+    { skip: !organizationId || !projectId },
+  );
+  const {projects} = projectData?.data || {};
 
   useEffect(() => {
     if (data) {
+      console.log(projectData)
       dispatch(setBoard(data));
     }
-  }, [data]);
+  }, [data, projectData]);
 
   // on Edit Peoject Modal
   const handleEditProject = () => {
@@ -75,7 +88,6 @@ export default function KanBanPage() {
       priority: data?.priority || "priority",
       startDate: data?.startDate || "",
       dueDate: data?.dueDate || "",
-      visibility: data?.visibility || "visibility",
     });
     setShowModal(true);
   };
@@ -169,6 +181,7 @@ export default function KanBanPage() {
         setShowManageMembersModal={setShowManageMembersModal}
         projectId={projectId}
         handleProjectManipulation={handleEditProject}
+        hasPermission={hasPermission}
       />
 
       {/* task filter section */}

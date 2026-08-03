@@ -29,7 +29,7 @@ const organizationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      immutable: true
+      immutable: true,
     },
 
     // security: {
@@ -49,22 +49,43 @@ const organizationSchema = new mongoose.Schema(
     billing: {
       currentPlan: {
         type: String,
-        enum: ["Free", "pro", "enterprise"],
-        default: "Free",
+        enum: ["free", "enterprise"],
+        default: "free",
+        lowercase: true,
       },
       stripeCustomerId: { type: String, default: "" },
       stripeSubscriptionId: { type: String, default: "" },
+      
+      stripePriceId: { type: String, default: "" },
+
       billingCycle: {
         type: String,
-        enum: ["Monthly", "Annually"],
-        default: "Monthly",
+        enum: ["monthly", "annually"],
+        default: "monthly",
+        lowercase: true,
       },
       status: {
         type: String,
-        enum: ["active", "past_due", "canceled"],
+        // Add "trialing" if you ever plan to offer a 7-day or 14-day free trial of Enterprise
+        enum: ["active", "past_due", "canceled", "trialing"],
         default: "active",
+        lowercase: true,
       },
-      autoRenewal: { type: Boolean, default: true },
+      autoRenewal: { type: Boolean, default: false },
+
+      // NEW: Critical for handling mid-cycle cancellations
+      cancelAtPeriodEnd: { type: Boolean, default: false },
+
+      // NEW: Time-bounding fields synced directly from Stripe webhooks
+      currentPeriodStart: { type: Date, default: null },
+      currentPeriodEnd: { type: Date, default: null },
+
+      // for custom Sales deals
+      customLimitsOverrides: {
+        maxMembers: { type: Number, default: null },
+        maxProjects: { type: Number, default: null },
+        maxTasks: { type: Number, default: null },
+      },
     },
 
     // deleting

@@ -42,7 +42,6 @@ export const initialProjectState = {
   description: "",
   status: "",
   priority: "",
-  visibility: "",
   startDate: "",
   dueDate: "",
 };
@@ -109,14 +108,15 @@ export const initialTaskDeatilsForm = {
 export const initialProjectFilters = {
   search: "",
   status: "",
-  sortBy: "",
-  view: "Grid",
+  sortBy: "newest",
+  limit: 10,
+
 };
 export const initialProjectDetailsFilters = {
   search: "",
   status: "",
   priority: "",
-  sortBy: "",
+  sortBy: "newest",
   assignee: "",
   group: "",
   view: "Kanban",
@@ -131,5 +131,5 @@ export const initialMyTasksFilter = {
   view: "Grid",
   sprint: "",
   dueDate: "",
-  sortBy: "",
+  sortBy: "newest",
 };

@@ -91,7 +91,7 @@ const MEMBER_DELETED_OPTIONS = [
   { value: "true", label: "Non-Active Memebers" },
 ];
 
-const MEMBER_LIMIT = [
+const LIMIT = [
   { value: 10, label: 10 },
   { value: 20, label: 20 },
   { value: 50, label: 50 },
@@ -107,15 +107,16 @@ const MEMEBER_STATUS = [
 ];
 
 const ROLE_DELETED_OPTIONS = [
-  {value: "false", label: "Active Roles"},
-  {value: "true", label: "Deleted Roles"}
-]
+  { value: "false", label: "Active Roles" },
+  { value: "true", label: "Deleted Roles" },
+];
 
 export default function ProjectFilters({
   page,
   filters,
   setFilters,
   onClearFilter,
+  viewOptions,
 }) {
   const updateFilters = (key, value) => {
     setFilters((prev) => ({
@@ -181,6 +182,12 @@ export default function ProjectFilters({
                 type="sortBy"
                 change={updateFilters}
                 value={filters.sortBy}
+              />
+              <StyledDropDown
+                options={LIMIT}
+                type="limit"
+                change={updateFilters}
+                value={filters.limit}
               />
             </>
           )}
@@ -278,7 +285,7 @@ export default function ProjectFilters({
                 value={filters.sortBy}
               />
               <StyledDropDown
-                options={MEMBER_LIMIT}
+                options={LIMIT}
                 type="limit"
                 change={updateFilters}
                 value={filters.limit}
@@ -316,8 +323,6 @@ export default function ProjectFilters({
                   ? FILTER_VIEW_OPTIONS
                   : null
             }
-            updateFilters={updateFilters}
-            filters={filters}
           />
 
           <Button

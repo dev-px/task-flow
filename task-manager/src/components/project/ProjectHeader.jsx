@@ -1,6 +1,6 @@
 import { Pencil, Plus, Rocket, Settings, Users, ListTodo } from "lucide-react";
 import { Button } from "../ui/button";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import usePermissions from "@/hooks/usePermissions";
 
 export default function ProjectHeader({
@@ -14,9 +14,20 @@ export default function ProjectHeader({
   setOpenSprintDialog,
   setShowInviteModal,
   hasPermission,
-  handleCreateEditDialog
+  handleCreateEditDialog,
 }) {
+  const params = useParams();
+  const orgName = params?.organizationName;
+  const orgId = params?.organizationId;
+  const pId = params?.projectId;
+  const baseUrl =
+    orgName && orgId
+      ? `/organizations/${orgName}/${orgId}/projects/${pId}`
+      : "";
   const Icon = type === "create" ? Plus : Pencil;
+  const isCreateProjectPermit =
+    type === "create" && hasPermission("project:create");
+  const isEditProjectPermit = type === "edit" && hasPermission("project:edit");
   const router = useRouter();
 
   return (
@@ -28,7 +39,7 @@ export default function ProjectHeader({
 
       <div className="flex flex-wrap gap-2 justify-between sm:justify-end w-full md:w-auto">
         {/* project create/edit */}
-        {(type === "create" || type === "edit") && (
+        {(isCreateProjectPermit || isEditProjectPermit) && (
           <Button
             size="lg"
             className="flex-1 rounded-sm hover:bg-gray-800 cursor-pointer"
@@ -60,7 +71,7 @@ export default function ProjectHeader({
               size="lg"
               variant="outline"
               className="flex-1 rounded-sm cursor-pointer"
-              onClick={() => router.push(`/projects/${projectId}/backlogs`)}
+              onClick={() => router.push(`${baseUrl}/backlogs`)}
             >
               <ListTodo size={18} />{" "}
               {/* Fixed: You had Users icon here previously */}
@@ -71,7 +82,7 @@ export default function ProjectHeader({
               size="lg"
               variant="outline"
               className="flex-1 rounded-sm cursor-pointer"
-              onClick={() => router.push(`/projects/${projectId}/settings`)}
+              onClick={() => router.push(`${baseUrl}/settings`)}
             >
               <Settings size={18} />
               <span className="hidden md:block">Settings</span>

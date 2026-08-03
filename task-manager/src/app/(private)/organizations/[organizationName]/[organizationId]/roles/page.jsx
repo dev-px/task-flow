@@ -1,21 +1,21 @@
 "use client";
 
-import DeleteConfirmModal from "@/components/layout/DeleteConfirmModal";
+import { useState } from "react";
+import { useParams } from "next/navigation";
+import toast from "react-hot-toast";
 import Spinner from "@/components/layout/Spinner";
-import ProjectFilters from "@/components/project/ProjectFilters";
+import usePermissions from "@/hooks/usePermissions";
 import ProjectHeader from "@/components/project/ProjectHeader";
-import AddEditRoleModal from "@/components/role/AddEditRoleModal";
+import ProjectFilters from "@/components/project/ProjectFilters";
 import PermissionMatrix from "@/components/role/PermissionMatrix";
+import AddEditRoleModal from "@/components/role/AddEditRoleModal";
+import DeleteConfirmModal from "@/components/layout/DeleteConfirmModal";
+import { Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
-import usePermissions from "@/hooks/usePermissions";
-import { useGetAllRolesQuery, useArchiveRoleMutation } from "@/redux/services/rolesApi";
 import { initialRoleFilters } from "@/utils/constant";
-import { Pencil, Trash2 } from "lucide-react";
-import { useParams } from "next/navigation";
-import { useState } from "react";
-import toast from "react-hot-toast";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { useGetAllRolesQuery, useArchiveRoleMutation } from "@/redux/services/rolesApi";
 
 const RolesPage = () => {
   const { hasPermission } = usePermissions();

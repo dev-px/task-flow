@@ -9,13 +9,17 @@ const memberSchema = new mongoose.Schema(
         return this.status === "active";
       },
       index: true,
-      sparse: true
+      sparse: true,
     },
     organizationId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Organization",
       required: true,
       index: true,
+    },
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Project",
     },
     roleId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -69,7 +73,7 @@ const memberSchema = new mongoose.Schema(
     },
 
     // additional permissions
-    additionalPermissions: []
+    additionalPermissions: [],
   },
   { timestamps: true },
 );
@@ -78,11 +82,12 @@ const memberSchema = new mongoose.Schema(
 memberSchema.index({ organizationId: 1, inviteEmail: 1 });
 memberSchema.index({ roleId: 1, userId: 1 });
 memberSchema.index({ userId: 1, status: 1 });
-memberSchema.index({ userId: 1, organizationId: 1 },
+memberSchema.index(
+  { userId: 1, organizationId: 1 },
   {
     unique: true,
-    partialFilterExpression: { userId: { $type: "objectId" } }
-  }
+    partialFilterExpression: { userId: { $type: "objectId" } },
+  },
 );
 
 const Member = mongoose.model("Member", memberSchema);

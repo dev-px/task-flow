@@ -1,21 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import ProjectDetailCards from "@/components/project/ProjectDetailCards";
-import ProjectFilters from "@/components/project/ProjectFilters";
-import ProjectHeader from "@/components/project/ProjectHeader";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useParams } from "next/navigation";
+import usePermissions from "@/hooks/usePermissions";
 import StatusCards from "@/components/project/StatusCards";
-import { FolderKanban, PlayCircle, CheckCircle2, Archive } from "lucide-react";
-import { projects } from "@/utils/helper";
-import AddEditProject from "@/components/project/ProjectPageDialogs/AddEditProject";
+import ProjectHeader from "@/components/project/ProjectHeader";
+import ProjectFilters from "@/components/project/ProjectFilters";
 import ProjectDetailList from "@/components/project/ProjectDetailList";
+import ProjectDetailCards from "@/components/project/ProjectDetailCards";
+import AddEditProject from "@/components/project/ProjectPageDialogs/AddEditProject";
 import { initialProjectFilters, initialProjectState } from "@/utils/constant";
+import { FolderKanban, PlayCircle, CheckCircle2, Archive } from "lucide-react";
+import { useGetAllProjectsQuery } from "@/redux/services/projectApi";
 
 export default function ProjectPage() {
+  const { hasPermission } = usePermissions();
+  const params = useParams();
+  const { organizationId } = params;
+  const view = useSelector((state) => state.view.projectView);
   const [showModal, setShowModal] = useState(false);
   const [filters, setFilters] = useState(initialProjectFilters);
-  // for add project modal
   const [form, setForm] = useState(initialProjectState);
+
+  // Get all projects
+  const {
+    data: projectData,
+    isLoading: isProjectLoading,
+    isError,
+  } = useGetAllProjectsQuery(
+    { orgId: organizationId, ...filters },
+    { skip: !organizationId },
+  );
+  const {projects, limit, page, skip} = projectData?.data || {};
 
   const projectNumber = [
     { statusTitle: "Total Projects", value: 24, icon: FolderKanban },
@@ -33,6 +50,7 @@ export default function ProjectPage() {
         type="create"
         setShowModal={setShowModal}
         handleProjectManipulation={() => setShowModal(true)}
+        hasPermission={hasPermission}
       />
 
       {/* project page filter section */}
@@ -59,15 +77,15 @@ export default function ProjectPage() {
 
       {/* All Projects */}
       <div className="my-8">
-        {filters.view === "Grid" ? (
+        {view === "Grid" ? (
           // grid view
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <ProjectDetailCards projects={projects} />
+            <ProjectDetailCards projects={projects} isLoading={isProjectLoading} />
           </div>
         ) : (
           // list or table view
           <div className="border overflow-x-auto rounded-md">
-            <ProjectDetailList projects={projects} />
+            <ProjectDetailList projects={projects} isLoading={isProjectLoading} />
           </div>
         )}
       </div>

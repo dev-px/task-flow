@@ -211,8 +211,6 @@ const getMembers = async (organizationId, queryParams = {}) => {
   };
 };
 
-export default getMembers;
-
 const getMemberById = async (organizationId, memberId, queryParams = {}) => {
   // if admin want to see archieved member
   const isDeleted = queryParams.isDeleted || false;

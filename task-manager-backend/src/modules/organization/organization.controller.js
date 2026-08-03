@@ -12,7 +12,6 @@ import logger from "../../config/logger.config.js";
 
 const viewAllOrganizationsController = asyncHandler(async (req, res) => {
   const { search, sortBy, isDeleted } = req.validatedQuery || {};
-  console.log(req.user.id);
   const organizations = await viewAllOrganizationsService(
     req.user.id,
     search,
@@ -56,11 +55,6 @@ const createOrganizationController = asyncHandler(async (req, res) => {
 });
 
 const updateOrganizationController = asyncHandler(async (req, res) => {
-  logger.info(
-    "checking in body for organization in controller",
-    req.params.orgId,
-    "check",
-  );
   const { orgId } = req.params;
   const organization = await updateOrganizationService(
     req.params.orgId,

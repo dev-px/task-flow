@@ -6,6 +6,7 @@ import userRoute from "./../modules/user/user.route.js";
 import organizationRoute from "./../modules/organization/organization.route.js";
 import roleRouter from "./../modules/role/role.route.js";
 import memberRouter from "./../modules/member/member.route.js";
+import projectRouter from "./../modules/project/project.route.js";
 import { successResponse } from "../utils/api-response.util.js";
 
 const router = express.Router();
@@ -16,7 +17,7 @@ router.use("/users", userRoute);
 router.use("/organizations", organizationRoute);
 router.use("/roles/:orgId", roleRouter);
 router.use("/members", memberRouter);
-// router.use("/projects", projectRoutes);
+router.use("/projects/:orgId", projectRouter);
 
 // test route
 router.get("/test", (req, res) => {

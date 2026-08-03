@@ -96,7 +96,6 @@ const createDefaultRolesForOrgService = async (organizationId, session) => {
       },
     };
   });
-  console.log("operations", operations);
 
   await Role.bulkWrite(operations, { session });
 

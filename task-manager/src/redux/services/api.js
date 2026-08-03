@@ -77,7 +77,7 @@ const api = createApi({
     "Organizations",
     "Members",
     "Roles",
-    "Project",
+    "Projects",
     "Task",
   ],
   endpoints: () => ({}),

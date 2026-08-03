@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import Spinner from "../layout/Spinner";
 import { ChevronRight } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
 import usePermissions from "@/hooks/usePermissions";
+import { useParams, useRouter } from "next/navigation";
 
-export default function ProjectDetailList({ projects }) {
+export default function ProjectDetailList({ projects, isLoading }) {
   const router = useRouter();
   const params = useParams();
-  const { hasPermission, isLoading } = usePermissions();
+  const { hasPermission } = usePermissions();
   const orgName = params?.organizationName;
   const orgId = params?.organizationId;
   const baseUrl = orgName && orgId ? `/organizations/${orgName}/${orgId}` : "";
@@ -31,63 +32,82 @@ export default function ProjectDetailList({ projects }) {
       </thead>
 
       <tbody className="divide-y">
-        {projects.map((project) => {
-          const {
-            id,
-            title,
-            description,
-            progress,
-            tasksCompleted,
-            totalTasks,
-            members,
-          } = project;
+        {!projects && isLoading && <Spinner text="Loading projects..." />}
 
-          const taskText =
-            totalTasks > 0 ? `${tasksCompleted} of ${totalTasks}` : "No tasks";
+        {projects?.length > 0 &&
+          projects?.map((project) => {
+            const {
+              id,
+              title,
+              description,
+              progress,
+              tasksCompleted,
+              totalTasks,
+              members,
+            } = project;
 
-          const membersText =
-            members.slice(0, 3).join(", ") + (members.length > 3 ? " +" : "");
+            const taskText =
+              totalTasks > 0
+                ? `${tasksCompleted} of ${totalTasks}`
+                : "No tasks";
 
-          return (
-            <tr
-              className="hover:bg-gray-50 transition cursor-pointer"
-              key={project.id}
-              onClick={() => router.push(`${baseUrl}/projects/${id}`)}
-            >
-              <td className="px-5 py-4 font-medium">
-                <Link href={`${baseUrl}/projects/${id}`}>{title}</Link>
-              </td>
+            const membersText = members
+              ? members?.slice(0, 3).join(", ") +
+                (members?.length > 3 ? " +" : "")
+              : "";
 
-              <td className="px-5 py-4 text-gray-500 max-w-62.5 truncate">
-                {description}
-              </td>
+            return (
+              <tr
+                className="hover:bg-gray-50 transition cursor-pointer"
+                key={project._id}
+                onClick={() =>
+                  router.push(`${baseUrl}/projects/${project._id}`)
+                }
+              >
+                <td className="px-5 py-4 font-medium">
+                  <Link href={`${baseUrl}/projects/${project._id}`}>
+                    {title}
+                  </Link>
+                </td>
 
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-24 h-2 bg-gray-200 rounded">
-                    <div
-                      className="h-full bg-gray-800 rounded"
-                      style={{ width: `${progress}%` }}
-                    />
+                <td className="px-5 py-4 text-gray-500 max-w-62.5 truncate">
+                  {description}
+                </td>
+
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-2 bg-gray-200 rounded">
+                      <div
+                        className="h-full bg-gray-800 rounded"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500">{progress}%</span>
                   </div>
-                  <span className="text-xs text-gray-500">{progress}%</span>
-                </div>
-              </td>
+                </td>
 
-              <td className="px-5 py-4 text-gray-600 hidden sm:table-cell">
-                {taskText}
-              </td>
+                <td className="px-5 py-4 text-gray-600 hidden sm:table-cell">
+                  {taskText}
+                </td>
 
-              <td className="px-5 py-4 text-gray-600 hidden sm:table-cell">
-                {membersText}
-              </td>
+                <td className="px-5 py-4 text-gray-600 hidden sm:table-cell">
+                  {membersText}
+                </td>
 
-              <td className="px-5 py-4 text-gray-400 text-right">
-                <ChevronRight size={18} />
-              </td>
-            </tr>
-          );
-        })}
+                <td className="px-5 py-4 text-gray-400 text-right">
+                  <ChevronRight size={18} />
+                </td>
+              </tr>
+            );
+          })}
+
+        {projects?.length <= 0 && !isLoading && (
+          <tr className="text-center">
+            <td colSpan="6" className="py-4">
+              No Project Found
+            </td>
+          </tr>
+        )}
       </tbody>
     </table>
   );

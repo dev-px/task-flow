@@ -5,20 +5,24 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useDispatch, useSelector } from "react-redux";
+import {setProjectView} from "@/redux/slices/viewSlice";
 
-export default function LayoutSetting({ viewOptions, updateFilters, filters }) {
+export default function LayoutSetting({ viewOptions }) {
+  const dispatch = useDispatch();
+  const view = useSelector((state) => state.view.projectView);
   return (
     <div className="flex items-center gap-1 rounded-xl border bg-background shadow-sm">
       {viewOptions?.map((option) => {
         const Icon = option.icon;
-        const isActive = filters.view === option.value;
+        const isActive = view === option.value;
 
         return (
           <Tooltip key={option.value}>
             <TooltipTrigger asChild>
               <button
                 type="button"
-                onClick={() => updateFilters("view", option.value)}
+                onClick={() => dispatch(setProjectView(option.value))}
                 className={`flex h-8 w-9 items-center justify-center rounded-lg transition-all ${
                   isActive ? "bg-muted shadow-sm" : "hover:bg-muted/70"
                 }`}
@@ -27,7 +31,7 @@ export default function LayoutSetting({ viewOptions, updateFilters, filters }) {
               </button>
             </TooltipTrigger>
 
-            <TooltipContent side="bottom" className="text-xs" side="top">
+            <TooltipContent side="bottom" className="text-xs">
               <p>{option.value} View</p>
             </TooltipContent>
           </Tooltip>

@@ -20,7 +20,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useParams } from "next/navigation";
-import ProjectHeader from "../../../../components/project/ProjectHeader";
 import StatusCards from "@/components/project/StatusCards";
 import TaskDetailsDialog from "@/components/task/TaskDialogs/TaskDetailsDailog";
 import { useDispatch, useSelector } from "react-redux";
@@ -29,6 +28,7 @@ import { setBoard } from "@/redux/slices/boardSlice";
 import NewTaskDialog from "@/components/task/TaskDialogs/NewTaskDialog";
 import SprintDialog from "@/components/sprints/sprintDialog";
 import { Card, CardContent } from "@/components/ui/Card";
+import ProjectHeader from "@/components/project/ProjectHeader";
 
 export default function BacklogPageUI() {
   const { projectId } = useParams();
@@ -82,7 +82,7 @@ export default function BacklogPageUI() {
 
   return (
     <div className="p-3">
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="mx-auto space-y-6">
         {/* Header */}
         <ProjectHeader
           pTitle="Backlog"
