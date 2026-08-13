@@ -48,3 +48,7 @@ feat: add Security Settings component with various security configurations
 - Updated ProjectFilters to include role filters and dropdowns.
 - Enhanced ProjectHeader to allow role creation with appropriate permissions.
 - Introduced initialRoleFilters for managing role filter states.
+- Introduced StatusBadge components for better status representation.
+- Updated Redux API service to handle fetching and managing project members more efficiently.
+- Integrate backend to the project and project details page also add loader and filter section.
+- Added loading indicators and improved user experience in ProjectPage and ProjectDetail components.
