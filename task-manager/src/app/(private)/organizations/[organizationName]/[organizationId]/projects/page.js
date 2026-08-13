@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import Spinner from "@/components/layout/Spinner";
 import usePermissions from "@/hooks/usePermissions";
 import StatusCards from "@/components/project/StatusCards";
 import ProjectHeader from "@/components/project/ProjectHeader";
@@ -30,15 +31,33 @@ export default function ProjectPage() {
     isError,
   } = useGetAllProjectsQuery(
     { orgId: organizationId, ...filters },
-    { skip: !organizationId },
+    { skip: !hasPermission("project:read")  || !organizationId },
   );
-  const {projects, limit, page, skip} = projectData?.data || {};
+  const { projects, limit, page, skip } = projectData?.data || {};
+
+  console.log("projectData", projectData);
 
   const projectNumber = [
-    { statusTitle: "Total Projects", value: 24, icon: FolderKanban },
-    { statusTitle: "Active Projects", value: 12, icon: PlayCircle },
-    { statusTitle: "Completed Projects", value: 8, icon: CheckCircle2 },
-    { statusTitle: "Archived Projects", value: 4, icon: Archive },
+    {
+      statusTitle: "Total Projects",
+      value: projects?.totalAssigned || 0,
+      icon: FolderKanban,
+    },
+    {
+      statusTitle: "Active Projects",
+      value: projects?.totalFiltered || 0,
+      icon: PlayCircle,
+    },
+    {
+      statusTitle: "Completed Projects",
+      value: projects?.statusCounts?.completed || 0,
+      icon: CheckCircle2,
+    },
+    {
+      statusTitle: "Archived Projects",
+      value: projects?.statusCounts?.archived || 0,
+      icon: Archive,
+    },
   ];
 
   return (
@@ -79,14 +98,33 @@ export default function ProjectPage() {
       <div className="my-8">
         {view === "Grid" ? (
           // grid view
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <ProjectDetailCards projects={projects} isLoading={isProjectLoading} />
-          </div>
+          <>
+            {!projects && isProjectLoading && (
+              <Spinner text="Loading projects..." />
+            )}
+
+            {projects && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <ProjectDetailCards
+                  projects={projects}
+                  isLoading={isProjectLoading}
+                />
+              </div>
+            )}
+          </>
         ) : (
           // list or table view
-          <div className="border overflow-x-auto rounded-md">
-            <ProjectDetailList projects={projects} isLoading={isProjectLoading} />
-          </div>
+          <>
+            {!projects && isProjectLoading && (
+              <Spinner text="Loading projects..." />
+            )}
+            <div className="border overflow-x-auto rounded-md">
+              <ProjectDetailList
+                projects={projects}
+                isLoading={isProjectLoading}
+              />
+            </div>
+          </>
         )}
       </div>
       <AddEditProject

@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import ProjectFilters from "@/components/project/ProjectFilters";
+import { useState } from "react";
+import { useParams } from "next/navigation";
+import toast from "react-hot-toast";
+import Spinner from "@/components/layout/Spinner";
+import usePermissions from "@/hooks/usePermissions";
+import StatusBadge from "@/components/layout/StatusBadge";
 import ProjectHeader from "@/components/project/ProjectHeader";
-import { MoreHorizontal, Trash, Ban, Mail, Edit2Icon, MailX } from "lucide-react";
+import ProjectFilters from "@/components/project/ProjectFilters";
+import EditMemberModal from "@/components/member/EditMemberModal";
 import InviteMemberModal from "@/components/member/InviteMemberModal";
+import { initialMemberFilterState } from "@/utils/constant";
+import { Trash, Ban, Mail, Edit2Icon, MailX } from "lucide-react";
 import {
   useCancelInviteMutation,
   useDeleteMemberMutation,
@@ -12,12 +19,6 @@ import {
   useReinviteMemberMutation,
   useSuspendMemberMutation,
 } from "@/redux/services/memberApi";
-import { useParams } from "next/navigation";
-import usePermissions from "@/hooks/usePermissions";
-import toast from "react-hot-toast";
-import EditMemberModal from "@/components/member/EditMemberModal";
-import { initialMemberFilterState } from "@/utils/constant";
-import Spinner from "@/components/layout/Spinner";
 
 const TABLE_HEADER = [
   "Member",
@@ -41,10 +42,13 @@ export default function MemberPage() {
     data,
     isLoading: isMemberLoading,
     isError: memeberLoadingError,
-  } = useGetAllMembersQuery({
-    orgId: organizationId,
-    ...filters,
-  }, { skip: (!hasPermission("member:read") || !organizationId) });
+  } = useGetAllMembersQuery(
+    {
+      orgId: organizationId,
+      ...filters,
+    },
+    { skip: !hasPermission("member:read") || !organizationId },
+  );
   const [deleteMember, { isLoading: isDelMemberLoading }] =
     useDeleteMemberMutation();
   const [suspendMember, { isLoading: isSuspendedMemberLoading }] =
@@ -52,8 +56,7 @@ export default function MemberPage() {
   const [reinviteMember, { isLoading: isReinviteMemberLoading }] =
     useReinviteMemberMutation();
   const [cancelInvite, { isLoading: isLoadingInviteCancel }] =
-    useCancelInviteMutation()
-
+    useCancelInviteMutation();
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -95,28 +98,28 @@ export default function MemberPage() {
     try {
       const response = await reinviteMember({
         orgId: organizationId,
-        invitedmemberId: memberId
+        invitedmemberId: memberId,
       }).unwrap();
-      console.log(response)
+      console.log(response);
       toast.success(response.message);
     } catch (error) {
       toast.error(error.data.message);
     }
-  }
+  };
 
   // ---- CANCEL INVITE HANDLERS ----
   const handleCancelInvite = async (memberId) => {
     try {
       const response = await cancelInvite({
         orgId: organizationId,
-        invitedmemberId: memberId
+        invitedmemberId: memberId,
       }).unwrap();
-      console.log(response)
+      console.log(response);
       toast.success(response.message);
     } catch (error) {
       toast.error(error.data.message);
     }
-  }
+  };
 
   const handleEditMemberDialog = (member) => {
     setShowEditModal(true);
@@ -143,7 +146,6 @@ export default function MemberPage() {
       />
 
       <div className="w-full overflow-x-auto mt-4 rounded-lg border border-gray-200">
-
         <table className="w-full text-sm border-collapse">
           <thead className="text-left border-b bg-gray-100">
             <tr>
@@ -191,14 +193,7 @@ export default function MemberPage() {
                 </td>
 
                 <td className="px-4 py-4">
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-medium capitalize ${member.status === "active"
-                      ? "bg-green-50 text-green-700"
-                      : "bg-yellow-50 text-yellow-700"
-                      }`}
-                  >
-                    {member.status}
-                  </span>
+                  <StatusBadge status={member.status} />
                 </td>
 
                 <td className="px-4 py-4 text-gray-500 hidden md:table-cell text-xs">
@@ -271,7 +266,9 @@ export default function MemberPage() {
         </table>
 
         {memberData?.length === 0 && memeberLoadingError && (
-          <div className="p-8 text-center text-gray-500">Something went wrong. Please try again!</div>
+          <div className="p-8 text-center text-gray-500">
+            Something went wrong. Please try again!
+          </div>
         )}
 
         {memberData?.length === 0 && (

@@ -11,9 +11,11 @@ import {
 import { Button } from "@/components/ui/button";
 import LayoutSetting from "../ui/LayoutSetting";
 
-const STATUS_OPTIONS = [
+const PROJECT_STATUS_OPTIONS = [
   { value: "", label: "Status" },
+  { value: "planning", label: "Planning" },
   { value: "active", label: "Active" },
+  { value: "on-hold", label: "On Hold" },
   { value: "completed", label: "Completed" },
   { value: "archived", label: "Archived" },
 ];
@@ -172,7 +174,7 @@ export default function ProjectFilters({
           {page === "projects" && (
             <>
               <StyledDropDown
-                options={STATUS_OPTIONS}
+                options={PROJECT_STATUS_OPTIONS}
                 type="status"
                 change={updateFilters}
                 value={filters.status}

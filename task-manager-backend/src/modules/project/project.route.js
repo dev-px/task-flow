@@ -15,6 +15,7 @@ import {
   addProjectMemberController,
   removeProjectMemberController,
   removeAllProjectMembersController,
+  getMembersForProjectController,
 } from "./project.controller.js";
 import { PERMISSIONS } from "../../constants/permissions.constant.js";
 import { orgParamsSchema } from "../organization/organization.validation.js";
@@ -25,6 +26,7 @@ import {
   updateProjectBodySchema,
   projectMemberParamSchema,
   addProjectMemberBodySchema,
+  getAllMemberforProjectSchema,
 } from "./project.validation.js";
 
 const router = express.Router({ mergeParams: true });
@@ -97,6 +99,18 @@ router.delete(
   deleteProjectController,
 );
 
+// Get all members for a project
+router.get(
+  "/:projectId/members",
+  requireAuth,
+  validate(projectParamSchema, "params"),
+  requireOrganizationAccess,
+  validateRequiredPermissions(PERMISSIONS.PROJECT_EDIT),
+  requireProjectAccess,
+  validate(getAllMemberforProjectSchema, "query"),
+  getMembersForProjectController,
+);
+
 // Add new member in project
 router.post(
   "/:projectId/members",
@@ -106,7 +120,6 @@ router.post(
   validateRequiredPermissions(PERMISSIONS.PROJECT_EDIT),
   requireProjectAccess,
   validate(addProjectMemberBodySchema, "body"),
-  // Optionally add checkPlan("project_members") here if you decide to bill by project capacity
   addProjectMemberController,
 );
 

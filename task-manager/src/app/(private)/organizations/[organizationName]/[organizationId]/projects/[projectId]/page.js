@@ -70,24 +70,26 @@ export default function KanBanPage() {
     { orgId: organizationId, projectId },
     { skip: !organizationId || !projectId },
   );
-  const {projects} = projectData?.data || {};
+
+  const projects = projectData?.data[0]?.projectId || {};
 
   useEffect(() => {
     if (data) {
       console.log(projectData)
       dispatch(setBoard(data));
     }
+    console.log("projects-projects", projects, projectData?.data[0]?.projectId);
   }, [data, projectData]);
 
   // on Edit Peoject Modal
   const handleEditProject = () => {
     setForm({
-      name: data?.title || "",
-      description: data?.description || "",
-      status: data?.status || "status",
-      priority: data?.priority || "priority",
-      startDate: data?.startDate || "",
-      dueDate: data?.dueDate || "",
+      name: projects?.title || "",
+      description: projects?.description || "",
+      status: projects?.status || "status",
+      priority: projects?.priority || "priority",
+      startDate: projects?.startDate || "",
+      dueDate: projects?.dueDate || "",
     });
     setShowModal(true);
   };
@@ -175,8 +177,8 @@ export default function KanBanPage() {
     <div className="p-3">
       {/* Project Details title + Edit Project */}
       <ProjectHeader
-        pTitle={data?.title}
-        pDescription={data?.description}
+        pTitle={projects?.title}
+        pDescription={projects?.description}
         type="edit"
         setShowManageMembersModal={setShowManageMembersModal}
         projectId={projectId}

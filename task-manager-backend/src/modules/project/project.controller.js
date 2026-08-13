@@ -10,7 +10,8 @@ import {
   deleteProjectService,
   addProjectMemberService,
   removeProjectMemberService,
-  removeAllProjectMembersService
+  removeAllProjectMembersService,
+  getMembersForProjectService,
 } from "./project.service.js";
 
 // Controller to get all projects for a member
@@ -99,6 +100,23 @@ const deleteProjectController = asyncHandler(async (req, res) => {
   );
 });
 
+const getMembersForProjectController = asyncHandler(async (req, res) => {
+  const { orgId, projectId } = req.params;
+  console.log("orgId, projectId", orgId, projectId);
+  const members = await getMembersForProjectService(
+    projectId,
+    orgId,
+    req.validatedQuery || {},
+  );
+
+  return successResponse(
+    res,
+    "Member fetched successfully",
+    members,
+    HTTP_STATUS.OK,
+  );
+});
+
 const addProjectMemberController = asyncHandler(async (req, res) => {
   const { projectId } = req.params;
   const { memberId, roleId } = req.body;
@@ -148,6 +166,7 @@ export {
   updateProjectController,
   archiveProjectController,
   deleteProjectController,
+  getMembersForProjectController,
   addProjectMemberController,
   removeProjectMemberController,
   removeAllProjectMembersController,

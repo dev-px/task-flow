@@ -6,6 +6,7 @@ import {
   createProject,
   createProjectMember,
   getAllProjectByOrgIdUserId,
+  getMembersForProject,
   getProjectByIdandMemberId,
   removeAllMembersFromProject,
   removeMemberFromProject,
@@ -184,6 +185,32 @@ const deleteProjectService = async (projectId, userId) => {
   }
 };
 
+const getMembersForProjectService = async (
+  projectId,
+  organizationId,
+  query,
+) => {
+  // Implementation for fetching members for a project
+  try {
+    const { search, page, limit } = query;
+    console.log(projectId, organizationId, search, page, limit);
+    const member = await getMembersForProject(
+      projectId,
+      organizationId,
+      search || "",
+      page,
+      limit,
+    );
+
+    return member;
+  } catch {
+    throw new ApiError(
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      "Failed to fetch members for the project.",
+    );
+  }
+};
+
 // Service function to add a member to a project
 const addProjectMemberService = async (
   projectId,
@@ -252,6 +279,7 @@ export {
   updateProjectService,
   archiveProjectService,
   deleteProjectService,
+  getMembersForProjectService,
   addProjectMemberService,
   removeProjectMemberService,
   removeAllProjectMembersService,

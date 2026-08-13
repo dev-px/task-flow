@@ -1,9 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useParams } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import StatusCards from "@/components/project/StatusCards";
+import SprintDialog from "@/components/sprints/sprintDialog";
+import ProjectHeader from "@/components/project/ProjectHeader";
+import NewTaskDialog from "@/components/task/TaskDialogs/NewTaskDialog";
+import TaskDetailsDialog from "@/components/task/TaskDialogs/TaskDetailsDailog";
+import { dummyData } from "@/utils/helper";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { setBoard } from "@/redux/slices/boardSlice";
+import { Card, CardContent } from "@/components/ui/Card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
@@ -19,16 +29,6 @@ import {
   CalendarDays,
   ChevronRight,
 } from "lucide-react";
-import { useParams } from "next/navigation";
-import StatusCards from "@/components/project/StatusCards";
-import TaskDetailsDialog from "@/components/task/TaskDialogs/TaskDetailsDailog";
-import { useDispatch, useSelector } from "react-redux";
-import { dummyData } from "@/utils/helper";
-import { setBoard } from "@/redux/slices/boardSlice";
-import NewTaskDialog from "@/components/task/TaskDialogs/NewTaskDialog";
-import SprintDialog from "@/components/sprints/sprintDialog";
-import { Card, CardContent } from "@/components/ui/Card";
-import ProjectHeader from "@/components/project/ProjectHeader";
 
 export default function BacklogPageUI() {
   const { projectId } = useParams();

@@ -574,3 +574,58 @@ export const priorityConfig = {
     icon: CircleDashed,
   },
 };
+
+export const dateConfig = (dateString) => {
+  const date = new Date(2026, 3, 15);
+  const currentDate = new Date();
+  const timeDifference = currentDate - date;
+  const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+  const conversionText =
+    daysDifference < 30
+      ? `${daysDifference} days ago`
+      : daysDifference > 365
+        ? `${Math.ceil(daysDifference / 365)} years ago`
+        : daysDifference > 30
+          ? `${Math.ceil(daysDifference / 30)} months ago`
+          : null;
+  return conversionText;
+};
+
+export const getStatusBadgeColors = (status) => {
+  // Fallback for null/undefined, and normalize to lowercase
+  const normalizedStatus = (status || "").toLowerCase();
+
+  switch (normalizedStatus) {
+    // SUCCESS
+    case "active":
+    case "completed":
+      return { bg: "bg-green-100", text: "text-green-800" };
+
+    // INFO
+    case "planning":
+    case "invited":
+    case "trialing":
+      return { bg: "bg-blue-100", text: "text-blue-800" };
+
+    // WARNING
+    case "on-hold":
+    case "suspended":
+    case "past_due":
+      return { bg: "bg-yellow-100", text: "text-yellow-800" };
+
+    // DANGER
+    case "cancelled":
+    case "canceled":
+    case "expired":
+    case "deleted":
+      return { bg: "bg-red-100", text: "text-red-800" };
+
+    // NEUTRAL
+    case "archived":
+      return { bg: "bg-gray-100", text: "text-gray-800" };
+
+    // Default fallback for unknown statuses
+    default:
+      return { bg: "bg-gray-100", text: "text-gray-800" };
+  }
+};

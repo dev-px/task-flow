@@ -9,78 +9,73 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { X, Loader2 } from "lucide-react";
+import { X, Plus, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   useAddProjectMemberMutation,
   useRemoveProjectMemberMutation,
-  useGetProjectByIdQuery,
+  useGetAllMemberForProjectQuery,
 } from "@/redux/services/projectApi";
+import usePermissions from "@/hooks/usePermissions";
 
 export default function ManageMembersModal({ open, setOpen }) {
   const { organizationId, projectId } = useParams();
-  const [search, setSearch] = useState("");
+  const { hasPermission } = usePermissions();
 
-  // Assuming the project query populates project members in 'data.members'
-  const { data: projectResponse } = useGetProjectByIdQuery(
-    { orgId: organizationId, projectId },
-    { skip: !organizationId || !projectId },
-  );
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loadingId, setLoadingId] = useState(null); // Tracks which specific button is loading
 
-  const [addMemberApi, { isLoading: isAdding }] = useAddProjectMemberMutation();
-  const [removeMemberApi, { isLoading: isRemoving }] =
-    useRemoveProjectMemberMutation();
-
-  const currentMembers = projectResponse?.data?.members || [];
-
-  // TODO: Replace with real organization users fetched from an API
-  const orgUsers = [
-    { id: "65b2a1c9e4f1a2001c8d4a5b", name: "Neha", email: "neha@example.com" },
+  // Fetch all members (both assigned and unassigned) directly from our aggregation API
+  const { data: memberData, isFetching } = useGetAllMemberForProjectQuery(
     {
-      id: "65b2a1c9e4f1a2001c8d4a5c",
-      name: "Arjun",
-      email: "arjun@example.com",
+      orgId: organizationId,
+      projectId,
+      searchTerm, // Passes search to backend aggregation
     },
-  ];
-
-  // Filter out users who are already in the project
-  const availableUsers = orgUsers.filter(
-    (u) => !currentMembers.some((cm) => cm.memberId === u.id),
+    {
+      skip:
+        !organizationId ||
+        !projectId ||
+        !hasPermission("project:edit"),
+    },
   );
 
-  const filteredUsers = availableUsers.filter((u) =>
-    u.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const [addMemberApi] = useAddProjectMemberMutation();
+  const [removeMemberApi] = useRemoveProjectMemberMutation();
 
-  const handleAddMember = async (userId) => {
-    // Note: You must provide a valid roleId from your database roles
-    const fallbackRoleId = "65c3b2d1f4a1a3001d9e5b6c";
-    try {
-      await addMemberApi({
-        orgId: organizationId,
-        projectId,
-        memberId: userId,
-        roleId: fallbackRoleId,
-      }).unwrap();
-      toast.success("Member added to project");
-      setSearch("");
-    } catch (error) {
-      toast.error(error?.data?.message || "Failed to add member");
-    }
-  };
+  // Adjust this path based on how your backend controller formats the response
+  // (e.g., res.json({ data: members }) vs res.json(members))
+  const memberList = memberData?.data || memberData || [];
 
-  const handleRemoveMember = async (memberId) => {
+  const handleToggleMember = async (member) => {
+    setLoadingId(member._id);
+
     try {
-      await removeMemberApi({
-        orgId: organizationId,
-        projectId,
-        memberId,
-      }).unwrap();
-      toast.success("Member removed");
+      if (member.isAssignedToProject) {
+        // Remove Member
+        await removeMemberApi({
+          orgId: organizationId,
+          projectId,
+          memberId: member._id,
+        }).unwrap();
+        toast.success("Member removed from project");
+      } else {
+        // Add Member
+        const fallbackRoleId = "65c3b2d1f4a1a3001d9e5b6c"; // Replace with dynamic role if needed
+        await addMemberApi({
+          orgId: organizationId,
+          projectId,
+          memberId: member._id,
+          roleId: fallbackRoleId,
+        }).unwrap();
+        toast.success("Member added to project");
+      }
     } catch (error) {
-      toast.error(error?.data?.message || "Failed to remove member");
+      toast.error(error?.data?.message || "Failed to update member status");
+    } finally {
+      setLoadingId(null);
     }
   };
 
@@ -90,79 +85,77 @@ export default function ManageMembersModal({ open, setOpen }) {
         <DialogHeader>
           <DialogTitle>Manage Members</DialogTitle>
         </DialogHeader>
+
         <div className="space-y-4">
           <Input
-            placeholder="Search users..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search members by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
 
-          {search && (
-            <div className="border rounded-md p-2 space-y-2 max-h-40 overflow-y-auto">
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between px-2 py-1 hover:bg-muted rounded"
-                  >
-                    <span className="text-sm">{user.name}</span>
-                    <Button
-                      size="sm"
-                      onClick={() => handleAddMember(user.id)}
-                      disabled={isAdding}
-                    >
-                      {isAdding ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        "Add"
-                      )}
-                    </Button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground px-2">
-                  No available users found
-                </p>
-              )}
-            </div>
-          )}
+          <div className="border rounded-md p-2 space-y-2 max-h-[60vh] overflow-y-auto">
+            {isFetching && !memberList.length ? (
+              <div className="flex justify-center p-4">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : memberList.length > 0 ? (
+              memberList.map((member) => (
+                <div
+                  key={member._id}
+                  className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md transition-colors"
+                >
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <Avatar className="h-9 w-9 border">
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {member.name?.[0]?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
 
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Project Members</p>
-            {currentMembers.length === 0 && (
-              <p className="text-xs text-muted-foreground">
-                No members assigned.
+                    <div className="flex flex-col truncate">
+                      <span className="text-sm font-medium truncate">
+                        {member.name || "Unknown User"}
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {member.email}
+                      </span>
+                    </div>
+
+                    {member.isAssignedToProject && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-2 text-[10px] h-5"
+                      >
+                        Assigned
+                      </Badge>
+                    )}
+                  </div>
+
+                  <Button
+                    variant={member.isAssignedToProject ? "ghost" : "default"}
+                    size="icon"
+                    className={`shrink-0 ml-2 ${
+                      member.isAssignedToProject
+                        ? "text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        : "bg-primary text-primary-foreground"
+                    }`}
+                    disabled={loadingId === member._id}
+                    onClick={() => handleToggleMember(member)}
+                  >
+                    {loadingId === member._id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : member.isAssignedToProject ? (
+                      <X className="h-4 w-4" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-center text-muted-foreground py-4">
+                No members found in this organization.
               </p>
             )}
-            {currentMembers.map((member) => (
-              <div
-                key={member.memberId}
-                className="flex items-center justify-between p-2 border rounded-md"
-              >
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>{member.name?.[0] || "U"}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {member.name || "Unknown User"}
-                    </p>
-                    <Badge variant="secondary" className="text-xs font-normal">
-                      Project Member
-                    </Badge>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive hover:bg-destructive/10"
-                  disabled={isRemoving}
-                  onClick={() => handleRemoveMember(member.memberId)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
           </div>
         </div>
       </DialogContent>

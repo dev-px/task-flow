@@ -18,13 +18,12 @@ const getAllProjectByOrgIdUserId = async (
   const page = parseInt(queryParams.page, 10) || 1;
   const limit = parseInt(queryParams.limit, 10) || 10;
   const skip = (page - 1) * limit;
-
   const { search, status, sortBy } = queryParams;
 
   // Query the junction collection to get just the IDs this member has access to
   const assignments = await ProjectMember.find({
     memberId: memberId,
-    isDeleted: false,
+    // isDeleted: false,
   })
     .select("projectId")
     .lean();
@@ -33,19 +32,32 @@ const getAllProjectByOrgIdUserId = async (
 
   // Optimization: If they aren't assigned to any projects, return empty immediately!
   if (myProjectIds.length === 0) {
-    return { projects: [], total: 0, page, limit };
+    return {
+      projects: [],
+      total: 0,
+      totalAssigned: 0,
+      deletedCount: 0,
+      statusCounts: {},
+      page,
+      limit,
+    };
   }
 
-  const matchStage = {
+  // Global scope for this user: Includes deleted projects so we can count them!
+  const baseMatchStage = {
     _id: { $in: myProjectIds },
     organizationId: new mongoose.Types.ObjectId(organizationId),
-    isDeleted: false,
   };
 
-  if (status) matchStage.status = status;
+  // Filter stage for active pagination data (strictly non-deleted items)
+  const filterMatchStage = {
+    ...baseMatchStage,
+    isDeleted: { $ne: true },
+  };
 
+  if (status) filterMatchStage.status = status;
   if (search) {
-    matchStage.$or = [
+    filterMatchStage.$or = [
       { title: { $regex: search, $options: "i" } },
       { description: { $regex: search, $options: "i" } },
     ];
@@ -69,20 +81,47 @@ const getAllProjectByOrgIdUserId = async (
   }
 
   const pipeline = [
-    { $match: matchStage },
+    { $match: baseMatchStage }, // Bring all assigned user projects into the pipeline
     {
       $facet: {
-        metadata: [{ $count: "total" }],
-        data: [{ $sort: sortStage }, { $skip: skip }, { $limit: limit }],
+        // Facet 1: Paginated data (Non-deleted + Search Filtered)
+        data: [
+          { $match: filterMatchStage },
+          { $sort: sortStage },
+          { $skip: skip },
+          { $limit: limit },
+        ],
+        // Facet 2: Total records matching current search/status filters (Non-deleted)
+        filteredTotal: [{ $match: filterMatchStage }, { $count: "count" }],
+        // Facet 3: Count of every status group (Non-deleted)
+        statusCounts: [
+          { $match: { isDeleted: { $ne: true } } },
+          { $group: { _id: "$status", count: { $sum: 1 } } },
+        ],
+        // Facet 4: Absolute total of assigned projects (Includes deleted)
+        globalTotal: [{ $count: "count" }],
+        // Facet 5: Count of deleted projects
+        deletedCounts: [{ $match: { isDeleted: true } }, { $count: "count" }],
       },
     },
   ];
 
   const [result] = await Project.aggregate(pipeline);
 
+  // Transform status counts array to object { active: 5, pending: 2 }
+  const formattedStatusCounts = {};
+  if (result?.statusCounts) {
+    result.statusCounts.forEach((item) => {
+      if (item._id) formattedStatusCounts[item._id] = item.count;
+    });
+  }
+
   return {
     projects: result?.data || [],
-    total: result?.metadata[0]?.total || 0,
+    totalFiltered: result?.filteredTotal[0]?.count || 0, // Total matches for current grid view
+    totalAssigned: result?.globalTotal[0]?.count || 0, // Grand total of all unique projects assigned
+    deletedCount: result?.deletedCounts[0]?.count || 0, // Count of deleted projects
+    statusCounts: formattedStatusCounts,
     page: page,
     limit: limit,
   };
@@ -136,6 +175,109 @@ const softDeleteProjectById = async (projectId, userId, session) => {
   ).lean();
 };
 
+// Get all members
+const getMembersForProject = async (
+  projectId,
+  organizationId,
+  searchTerm = "",
+  page = 1,
+  limit = 10,
+) => {
+  const skip = (page - 1) * limit;
+
+  const pipeline = [
+    // 1. Filter active members for this organization
+    {
+      $match: {
+        organizationId: new mongoose.Types.ObjectId(organizationId),
+        isDeleted: false,
+        status: "active",
+      },
+    },
+
+    // 2. Join User schema to get name and email
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "userData",
+      },
+    },
+    {
+      $unwind: "$userData",
+    },
+  ];
+
+  // 3. Optional Search Filter
+  if (searchTerm) {
+    pipeline.push({
+      $match: {
+        $or: [
+          { "userData.name": { $regex: searchTerm, $options: "i" } },
+          { "userData.email": { $regex: searchTerm, $options: "i" } },
+        ],
+      },
+    });
+  }
+
+  // 4. Check if they are assigned to THIS project
+  pipeline.push(
+    {
+      $lookup: {
+        from: "projectmembers",
+        let: { current_member_id: "$_id" }, // _id from the Member schema
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  // Compare ProjectMember's memberId to the Member's _id
+                  { $eq: ["$memberId", "$$current_member_id"] },
+                  {
+                    $eq: ["$projectId", new mongoose.Types.ObjectId(projectId)],
+                  },
+                  { $eq: ["$isDeleted", false] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "projectAssignment",
+      },
+    },
+
+    // 5. Add a boolean flag based on the lookup result
+    {
+      $addFields: {
+        isAssignedToProject: {
+          $gt: [{ $size: "$projectAssignment" }, 0],
+        },
+      },
+    },
+
+    // 6. MAP AND FLATTEN the response payload for the frontend
+    {
+      $project: {
+        _id: 1, // Member _id
+        userId: 1,
+        name: "$userData.name",
+        email: "$userData.email",
+        isAssignedToProject: 1,
+      },
+    },
+
+    // 7. Pagination
+    { $skip: skip },
+    { $limit: limit },
+  );
+
+  // 8. Execute and return
+  const members = await Member.aggregate(pipeline);
+  console.log("members", members);
+  return members;
+};
+
 // Remove a single member
 const removeMemberFromProject = async (projectId, memberId, userId) => {
   return await ProjectMember.findOneAndUpdate(
@@ -174,6 +316,7 @@ export {
   getProjectByIdandMemberId,
   updateProjectById,
   softDeleteProjectById,
+  getMembersForProject,
   removeMemberFromProject,
   removeAllMembersFromProject,
 };

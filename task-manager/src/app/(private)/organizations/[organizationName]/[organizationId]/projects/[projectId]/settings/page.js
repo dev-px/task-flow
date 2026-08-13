@@ -4,19 +4,34 @@ import { useEffect, useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useParams } from "next/navigation";
-import { Plus, FileText, Trash2, ExternalLink, Paperclip } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import {
+  Plus,
+  FileText,
+  Trash2,
+  ExternalLink,
+  Paperclip,
+  Loader2,
+} from "lucide-react";
+import toast from "react-hot-toast";
+
+// Assuming these paths match your project structure
 import { initialProjectSettingForm } from "@/utils/constant";
-import { dummyData } from "@/utils/helper";
 import TabsCompo from "@/components/layout/TabsCompo";
 import TaskFooter from "@/components/layout/TaskFooter";
+import {
+  useGetProjectByIdQuery,
+  useUpdateProjectMutation,
+  useDeleteProjectMutation,
+} from "@/redux/services/projectApi";
+import usePermissions from "@/hooks/usePermissions";
 
-const tabs = ["general", "members", "timeline", "links", "documents", "danger"];
+const tabs = ["members", "links", "documents", "danger"];
 
 export default function ProjectSettingsPage() {
-  const { projectId } = useParams();
+  const { organizationId, projectId } = useParams();
+  const { hasPermission } = usePermissions();
   const [settingsForm, setSettingsForm] = useState(initialProjectSettingForm);
   const [member, setMember] = useState("");
   const [urls, setUrls] = useState({ label: "", link: "" });
@@ -27,25 +42,29 @@ export default function ProjectSettingsPage() {
     type: "",
     label: "",
   });
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("members");
   const [initialData, setInitialData] = useState(null);
 
   const currentIndex = tabs.indexOf(activeTab);
 
+  // --- API HOOKS ---
+  const { data: projectResponse, isLoading: isFetching } =
+    useGetProjectByIdQuery(
+      { orgId: organizationId, projectId },
+      { skip: !organizationId || !projectId || !hasPermission("project:edit") },
+    );
+
+  const [updateProject, { isLoading: isUpdating }] = useUpdateProjectMutation();
+
   const nextTab = () => {
-    if (currentIndex < tabs.length - 1) {
-      setActiveTab(tabs[currentIndex + 1]);
-    }
+    if (currentIndex < tabs.length - 1) setActiveTab(tabs[currentIndex + 1]);
   };
 
   const prevTab = () => {
-    if (currentIndex > 0) {
-      setActiveTab(tabs[currentIndex - 1]);
-    }
+    if (currentIndex > 0) setActiveTab(tabs[currentIndex - 1]);
   };
 
-  // validate links
-  // Helper: Check if URL is absolute
+  // --- VALIDATION ---
   const isValidUrl = (url) =>
     url.startsWith("https://") || url.startsWith("http://");
   const isLinkTabValid = urls.label.trim() !== "" && isValidUrl(urls.link);
@@ -61,13 +80,9 @@ export default function ProjectSettingsPage() {
     isFileSizeValid &&
     isFileTypeValid;
 
+  // --- POPULATE INITIAL DATA ---
   useEffect(() => {
-    if (!projectId) return;
-
-    const data = dummyData.find(
-      (project) => project.id === parseInt(projectId),
-    );
-
+    const data = projectResponse?.data;
     if (data) {
       const formattedData = {
         name: data.title || "",
@@ -85,49 +100,32 @@ export default function ProjectSettingsPage() {
       setSettingsForm(formattedData);
       setInitialData(formattedData);
     }
-  }, [projectId]);
+  }, [projectResponse]);
 
   const getChangedFields = (initial, current) => {
     const changes = {};
-
     Object.keys(current).forEach((key) => {
-      const initialValue = initial?.[key];
-      const currentValue = current?.[key];
-
       // deep compare for arrays/objects
-      if (JSON.stringify(initialValue) !== JSON.stringify(currentValue)) {
-        changes[key] = currentValue;
+      if (JSON.stringify(initial?.[key]) !== JSON.stringify(current?.[key])) {
+        changes[key] = current[key];
       }
     });
-
     return changes;
   };
 
+  // Update local form state (no API call yet)
   const updateForm = (key, value) => {
     setSettingsForm((prev) => {
       if (Array.isArray(prev[key])) {
-        return {
-          ...prev,
-          [key]: [...prev[key], value],
-        };
+        return { ...prev, [key]: [...prev[key], value] };
       }
-
-      return {
-        ...prev,
-        [key]: value,
-      };
+      return { ...prev, [key]: value };
     });
 
-    // reset temp states
+    // Reset temp inputs
     setMember("");
     setUrls({ label: "", link: "" });
-    setFileState({
-      file: null,
-      name: "",
-      size: 0,
-      type: "",
-      label: "",
-    });
+    setFileState({ file: null, name: "", size: 0, type: "", label: "" });
   };
 
   const removeItemFromSettings = (key, id) => {
@@ -139,26 +137,38 @@ export default function ProjectSettingsPage() {
     }
   };
 
-  // handle saving form
+  // --- SAVE TO API ---
   const handleSave = async () => {
     if (!initialData) return;
 
     const changedData = getChangedFields(initialData, settingsForm);
 
     if (Object.keys(changedData).length === 0) {
-      // console.log("No changes made");
+      toast.info("No changes to save");
       return;
     }
 
     try {
-      // console.log("Sending only changed fields:", changedData);
+      await updateProject({
+        orgId: organizationId,
+        projectId,
+        body: changedData,
+      }).unwrap();
 
-      // update initialData after save
-      setInitialData(settingsForm);
+      toast.success("Project settings updated!");
+      setInitialData(settingsForm); // Sync local state with database
     } catch (error) {
-      console.error("Save failed", error);
+      toast.error(error?.data?.message || "Failed to update project settings");
     }
   };
+
+  if (isFetching) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-3">
@@ -167,56 +177,9 @@ export default function ProjectSettingsPage() {
         onValueChange={setActiveTab}
         className="w-full flex flex-col gap-0"
       >
-        {/* tabs header */}
         <TabsCompo tabs={tabs} activeTab={activeTab} />
 
-        {/* project general info */}
-        <TabsContent value="general" className="my-6">
-          <Card
-            title="General Settings"
-            description="Basic details about your project."
-          >
-            <div className="space-y-2">
-              <Label>Project Name</Label>
-              <Input
-                placeholder="e.g. Apollo Dashboard"
-                value={settingsForm?.name}
-                onChange={(e) => updateForm("name", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                placeholder="What is this project about?"
-                className="min-h-16"
-                value={settingsForm?.description}
-                onChange={(e) => updateForm("description", e.target.value)}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Input
-                  placeholder="Active"
-                  value={settingsForm.status}
-                  onChange={(e) => updateForm("status", e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Visibility</Label>
-                <Input
-                  placeholder="Public"
-                  value={settingsForm.visibility}
-                  onChange={(e) => updateForm("visibility", e.target.value)}
-                />
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* project members */}
+        {/* PROJECT MEMBERS */}
         <TabsContent value="members" className="my-6">
           <Card
             title="Members"
@@ -230,7 +193,12 @@ export default function ProjectSettingsPage() {
                   value={member}
                   onChange={(e) => setMember(e.target.value)}
                 />
-                <Button onClick={() => updateForm("members", member)}>
+                <Button
+                  onClick={() =>
+                    updateForm("members", { name: member, role: "Member" })
+                  }
+                  disabled={!member.trim()}
+                >
                   <Plus className="w-4 h-4 mr-2" /> Add
                 </Button>
               </div>
@@ -238,12 +206,11 @@ export default function ProjectSettingsPage() {
 
             <div className="space-y-2">
               {settingsForm?.members?.length > 0 ? (
-                settingsForm.members.map((member, index) => (
+                settingsForm.members.map((memberItem, index) => (
                   <MemberRow
                     key={index}
-                    name={member.name}
-                    email={member.email}
-                    role={member.role}
+                    name={memberItem.name || memberItem.email}
+                    role={memberItem.role}
                     onRemove={() => removeItemFromSettings("members", index)}
                   />
                 ))
@@ -254,32 +221,7 @@ export default function ProjectSettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* project timeline */}
-        <TabsContent value="timeline" className="my-6">
-          <Card title="Timeline" description="Set project start and due dates.">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Start Date</Label>
-                <Input
-                  type="date"
-                  value={settingsForm?.startDate}
-                  onChange={(e) => updateForm("startDate", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Due Date</Label>
-                <Input
-                  type="date"
-                  value={settingsForm?.dueDate}
-                  onChange={(e) => updateForm("dueDate", e.target.value)}
-                />
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* project links */}
+        {/* PROJECT LINKS */}
         <TabsContent value="links" className="my-6">
           <Card
             title="Links & Integrations"
@@ -342,20 +284,19 @@ export default function ProjectSettingsPage() {
                   </div>
                 ))
               ) : (
-                <NoDataPlaceHolder title=" links" />
+                <NoDataPlaceHolder title="links" />
               )}
             </div>
           </Card>
         </TabsContent>
 
-        {/* additional documents */}
+        {/* ADDITIONAL DOCUMENTS */}
         <TabsContent value="documents" className="my-6">
           <Card
             title="Assets & Docs"
             description="Upload PDFs, SRS, or Design specs."
           >
             <div className="space-y-4">
-              {/* Upload Section */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <Paperclip className="w-4 h-4" /> Upload File
@@ -368,7 +309,6 @@ export default function ProjectSettingsPage() {
                       setFileState({ ...fileState, label: e.target.value })
                     }
                   />
-
                   <Input
                     type="file"
                     key={fileState.file ? "loaded" : "empty"}
@@ -385,18 +325,8 @@ export default function ProjectSettingsPage() {
                       }
                     }}
                   />
-
                   <Button
-                    onClick={() => {
-                      updateForm("documents", fileState);
-                      setFileState({
-                        file: null,
-                        name: "",
-                        size: 0,
-                        type: "",
-                        label: "",
-                      });
-                    }}
+                    onClick={() => updateForm("documents", fileState)}
                     disabled={!isDocValid}
                   >
                     Add Doc
@@ -404,7 +334,6 @@ export default function ProjectSettingsPage() {
                 </div>
               </div>
 
-              {/* Documents List */}
               <div className="space-y-2">
                 {settingsForm?.documents?.length > 0 ? (
                   settingsForm.documents.map((doc, index) => (
@@ -432,7 +361,6 @@ export default function ProjectSettingsPage() {
                           )}
                         </div>
                       </div>
-
                       <Button
                         variant="ghost"
                         size="icon"
@@ -453,18 +381,18 @@ export default function ProjectSettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* DANGER */}
+        {/* DANGER ZONE */}
         <TabsContent value="danger" className="my-6">
           <Card
             title="Danger Zone"
             description="Proceed with caution. These actions are irreversible."
           >
-            <DangerZone />
+            <DangerZone organizationId={organizationId} projectId={projectId} />
           </Card>
         </TabsContent>
       </Tabs>
 
-      {/* footer */}
+      {/* FOOTER */}
       <TaskFooter
         currentIndex={currentIndex}
         prevTab={prevTab}
@@ -472,10 +400,13 @@ export default function ProjectSettingsPage() {
         len={tabs.length}
         projectId={projectId}
         onSave={handleSave}
+        isSaving={isUpdating} // Passes loading state to footer button
       />
     </div>
   );
 }
+
+// --- SUBCOMPONENTS ---
 
 function Card({ title, description, children }) {
   return (
@@ -496,7 +427,7 @@ function MemberRow({ name, role, onRemove }) {
     <div className="flex justify-between items-center border p-3 rounded-lg">
       <div>
         <p className="font-medium">{name}</p>
-        <p className="text-sm text-muted-foreground">{role}</p>
+        <p className="text-sm text-muted-foreground">{role || "Member"}</p>
       </div>
       <Button variant="outline" size="sm" onClick={onRemove}>
         Remove
@@ -505,7 +436,42 @@ function MemberRow({ name, role, onRemove }) {
   );
 }
 
-function DangerZone() {
+function DangerZone({ organizationId, projectId }) {
+  const router = useRouter();
+  const [updateProject, { isLoading: isArchiving }] =
+    useUpdateProjectMutation();
+  const [deleteProject, { isLoading: isDeleting }] = useDeleteProjectMutation();
+
+  const handleArchive = async () => {
+    try {
+      await updateProject({
+        orgId: organizationId,
+        projectId,
+        body: { status: "archived" },
+      }).unwrap();
+      toast.success("Project archived successfully");
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to archive project");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to permanently delete this project?",
+      )
+    )
+      return;
+
+    try {
+      await deleteProject({ orgId: organizationId, projectId }).unwrap();
+      toast.success("Project deleted permanently");
+      router.push(`/org/${organizationId}/projects`);
+    } catch (error) {
+      toast.error(error?.data?.message || "Failed to delete project");
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row gap-4">
       <div className="flex-1 p-4 bg-white rounded-lg border border-destructive/20">
@@ -516,7 +482,10 @@ function DangerZone() {
         <Button
           variant="outline"
           className="text-destructive hover:bg-destructive hover:text-white"
+          onClick={handleArchive}
+          disabled={isArchiving || isDeleting}
         >
+          {isArchiving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           Archive
         </Button>
       </div>
@@ -525,7 +494,14 @@ function DangerZone() {
         <p className="text-xs text-muted-foreground mb-3">
           Permanently remove all data.
         </p>
-        <Button variant="destructive">Delete Project</Button>
+        <Button
+          variant="destructive"
+          onClick={handleDelete}
+          disabled={isArchiving || isDeleting}
+        >
+          {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          Delete Project
+        </Button>
       </div>
     </div>
   );

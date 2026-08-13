@@ -41,14 +41,9 @@ const newProjectBodySchema = Joi.object({
     "any.required": "Description is required.",
   }),
 
-  startDate: Joi.date()
-    .iso()
-    .default(() => new Date())
-    .messages({
-      "date.format": "Start date must be a valid ISO date.",
-    }),
+  startDate: Joi.date().required(),
 
-  dueDate: Joi.date().iso().min(Joi.ref("startDate")).messages({
+  dueDate: Joi.date().allow(null).min(Joi.ref("startDate")).messages({
     "date.min": "Due date cannot be earlier than the start date.",
   }),
 
@@ -95,13 +90,12 @@ const updateProjectBodySchema = Joi.object({
     "string.max": "Description cannot exceed 1000 characters.",
     "string.empty": "Description cannot be empty.",
   }),
-  startDate: Joi.date().iso().messages({
-    "date.format": "Start date must be a valid ISO date.",
-  }),
-  dueDate: Joi.date().iso().min(Joi.ref("startDate")).messages({
+  startDate: Joi.date().required(),
+  
+  dueDate: Joi.date().allow(null).min(Joi.ref("startDate")).messages({
     "date.min": "Due date cannot be earlier than the start date.",
-    "date.format": "Due date must be a valid ISO date.",
   }),
+
   priority: Joi.string().valid("low", "medium", "high", "urgent").messages({
     "any.only": "Priority must be one of: low, medium, high, urgent.",
   }),
@@ -148,6 +142,23 @@ const addProjectMemberBodySchema = Joi.object({
   }),
 });
 
+const getAllMemberforProjectSchema = Joi.object({
+  search: Joi.string().max(100).trim().allow("", null).messages({
+    "string.max": "Search query cannot exceed 100 characters.",
+  }),
+  page: Joi.number().integer().min(1).default(1).messages({
+    "number.base": "Page must be a valid number.",
+    "number.integer": "Page must be a whole number.",
+    "number.min": "Page number cannot be less than 1.",
+  }),
+  limit: Joi.number().integer().min(1).max(100).default(10).messages({
+    "number.base": "Limit must be a valid number.",
+    "number.integer": "Limit must be a whole number.",
+    "number.min": "Limit cannot be less than 1.",
+    "number.max": "Limit cannot exceed 100 items per page.",
+  }),
+});
+
 const projectMemberParamSchema = Joi.object({
   orgId: Joi.string().hex().length(24).required().messages({
     "string.empty": "Organization ID is required.",
@@ -171,6 +182,7 @@ export {
   projectParamSchema,
   newProjectBodySchema,
   updateProjectBodySchema,
+  getAllMemberforProjectSchema,
   addProjectMemberBodySchema,
   projectMemberParamSchema,
 };

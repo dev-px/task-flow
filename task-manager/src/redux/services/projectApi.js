@@ -84,6 +84,19 @@ export const projectApi = api.injectEndpoints({
       ],
     }),
 
+    // 6. GET ALL MEMBERS FOR PROJECT (Assigned and Unassigned)
+    getAllMemberForProject: builder.query({
+      query: ({ orgId, projectId, ...queryParams }) => ({
+        url: `/projects/${orgId}/${projectId}/members`,
+        method: "GET",
+        params: queryParams,
+      }),
+      // Tag this specific project's member list
+      providesTags: (result, error, { projectId }) => [
+        { type: "ProjectMembers", id: projectId },
+      ],
+    }),
+
     // 7. ADD MEMBER TO PROJECT
     addProjectMember: builder.mutation({
       query: ({ orgId, projectId, memberId, roleId }) => ({
@@ -91,9 +104,9 @@ export const projectApi = api.injectEndpoints({
         method: "POST",
         body: { memberId, roleId },
       }),
-      // Invalidates the project so the members list refetches
+      // Invalidate the specific project's member list to trigger a refetch
       invalidatesTags: (result, error, { projectId }) => [
-        { type: "Projects", id: projectId },
+        { type: "ProjectMembers", id: projectId },
       ],
     }),
 
@@ -104,7 +117,7 @@ export const projectApi = api.injectEndpoints({
         method: "DELETE",
       }),
       invalidatesTags: (result, error, { projectId }) => [
-        { type: "Projects", id: projectId },
+        { type: "ProjectMembers", id: projectId },
       ],
     }),
 
@@ -115,7 +128,7 @@ export const projectApi = api.injectEndpoints({
         method: "DELETE",
       }),
       invalidatesTags: (result, error, { projectId }) => [
-        { type: "Projects", id: projectId },
+        { type: "ProjectMembers", id: projectId },
       ],
     }),
   }),
@@ -129,6 +142,7 @@ export const {
   useArchiveProjectMutation,
   useDeleteProjectMutation,
   useAddProjectMemberMutation,
+  useGetAllMemberForProjectQuery,
   useRemoveAllProjectMembersMutation,
   useRemoveProjectMemberMutation,
 } = projectApi;
