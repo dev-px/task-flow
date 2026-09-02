@@ -23,6 +23,13 @@ import { Label } from "@/components/ui/label";
 import { useDispatch } from "react-redux";
 import { addTask } from "@/redux/slices/boardSlice";
 import { initialNewtaskForm } from "@/utils/constant";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function NewTaskDialog({
   open,
@@ -183,28 +190,54 @@ export default function NewTaskDialog({
             </div>
 
             {/* Assignee + Due Date */}
-            <div className="grid grid-cols-2 gap-4">
+            <div
+              className={`grid gap-4 ${page === "backlog" ? "grid-cols-2" : ""}`}
+            >
               <div className="space-y-2">
-                <Label>Assignee</Label>
-                <Select
-                  value={task.assigneeId}
-                  onValueChange={(val) => handleChange("assigneeId", val)}
-                >
-                  <SelectTrigger className={`w-full`}>
-                    <SelectValue placeholder="Select assignee" />
-                  </SelectTrigger>
+                <Label>Assignees</Label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-between font-normal"
+                    >
+                      {/* Show count or names of selected users */}
+                      {task?.assigneeIds?.length > 0
+                        ? `${task.assigneeIds.length} selected`
+                        : "Select assignees"}
+                    </Button>
+                  </DropdownMenuTrigger>
 
-                  <SelectContent>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <DropdownMenuContent className="" align="start">
+                    {users.map((user) => {
+                      // Check if this user ID is already in the array
+                      const isChecked = task?.assigneeIds?.includes(user.id);
+
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={user.id}
+                          checked={isChecked}
+                          onCheckedChange={(checked) => {
+                            // Add or remove the ID from the array
+                            const currentIds = task.assigneeIds || [];
+                            const nextIds = checked
+                              ? [...currentIds, user.id]
+                              : currentIds.filter((id) => id !== user.id);
+
+                            handleChange("assigneeIds", nextIds);
+                          }}
+                        >
+                          {user.name}
+                        </DropdownMenuCheckboxItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
-              <div className="space-y-2">
+              <div
+                className={`grid gap-4 ${page === "backlog" ? "block" : "hidden"}`}
+              >
                 <Label>Due Date</Label>
                 <Input
                   type="date"
@@ -213,29 +246,6 @@ export default function NewTaskDialog({
                 />
               </div>
             </div>
-
-            {/* Sprint only for board page */}
-            {page !== "backlog" && (
-              <div className="space-y-2">
-                <Label>Sprint</Label>
-                <Select
-                  value={task.sprintId}
-                  onValueChange={(val) => handleChange("sprintId", val)}
-                >
-                  <SelectTrigger className={`w-full`}>
-                    <SelectValue placeholder="Select sprint" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {sprints.map((sprint) => (
-                      <SelectItem key={sprint.id} value={sprint.id}>
-                        {sprint.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
           </div>
 
           <DialogFooter>

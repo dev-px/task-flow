@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -20,13 +20,15 @@ import {
 import { ArrowRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import SubTaskStatus from "../SubTaskStatus";
+import usePermissions from "@/hooks/usePermissions";
 
 export default function TaskDetailsDialog({
   openTaskDialog,
   setOpenTaskDialog,
   task,
-  projectId,
 }) {
+  const { organizationId, organizationName, projectId } = useParams();
+  const { hasPermission } = usePermissions();
   const router = useRouter();
   const [form, setForm] = useState({
     title: "",
@@ -154,7 +156,9 @@ export default function TaskDetailsDialog({
         <Button
           variant="outline"
           onClick={() =>
-            router.push(`/projects/${projectId}/taskdetails/${task?.id}`)
+            router.push(
+              `/organizations/${organizationName}/${organizationId}/projects/${projectId}/taskdetails/${task?.id}`,
+            )
           }
           className="w-full flex items-center justify-center gap-2 hover:text-black"
         >

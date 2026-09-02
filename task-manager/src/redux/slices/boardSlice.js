@@ -15,7 +15,9 @@ const boardSlice = createSlice({
   initialState,
   reducers: {
     setBoard(state, action) {
+      console.log("setBoard action.payload:", action.payload);
       const project = action.payload;
+      console.log("setBoard project:", project);
 
       state.columns = project.columns;
       state.columnOrder = project.columnOrder;

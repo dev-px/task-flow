@@ -18,14 +18,15 @@ import {
 import { CheckCircle2, Circle, Trash2, MessageSquare } from "lucide-react";
 
 import TabsCompo from "@/components/layout/TabsCompo";
-import { AddSubtaskDialog } from "../../../../../components/task/TaskDialogs/AddSubtaskDialog";
 import TaskFooter from "@/components/layout/TaskFooter";
 import { initialTaskDeatilsForm } from "@/utils/constant";
+import { AddSubtaskDialog } from "@/components/task/TaskDialogs/AddSubtaskDialog";
 
 const tabs = ["general", "details", "subtasks", "attachments", "activity"];
 
 export default function TaskDetailsPage() {
-  const { taskdetailsId, projectId } = useParams();
+  const { taskdetailsId, projectId, organizationName, organizationId } =
+    useParams();
   const { tasks } = useSelector((state) => state.board);
 
   const [activeTab, setActiveTab] = useState("general");

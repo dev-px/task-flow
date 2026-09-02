@@ -18,6 +18,7 @@ import { addColumn } from "@/redux/slices/boardSlice";
 export default function NewColumnDialog({ open, setOpen, columnId, type }) {
   const dispatch = useDispatch();
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [wipLimit, setWipLimit] = useState(null);
   const { columns } = useSelector((state) => state.board);
 
@@ -87,6 +88,17 @@ export default function NewColumnDialog({ open, setOpen, columnId, type }) {
                 placeholder="e.g. In Progress"
                 value={name}
                 onChange={(e) => setName(e.target.value.trim())}
+                required
+              />
+            </div>
+
+            {/* Column Description */}
+            <div className="space-y-2">
+              <Label>Column Name</Label>
+              <Input
+                placeholder="e.g. In Progress"
+                value={description}
+                onChange={(e) => setDescription(e.target.value.trim())}
                 required
               />
             </div>

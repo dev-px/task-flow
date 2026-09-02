@@ -6,14 +6,6 @@ import { dummyData } from "@/utils/helper";
 import TaskSection from "@/components/task/TaskSection";
 import { useDispatch, useSelector } from "react-redux";
 import { moveTask, setBoard } from "@/redux/slices/boardSlice";
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragOverlay,
-} from "@dnd-kit/core";
 import TaskCard from "@/components/task/TaskCard";
 import ProjectHeader from "@/components/project/ProjectHeader";
 import ProjectFilters from "@/components/project/ProjectFilters";
@@ -24,9 +16,17 @@ import NewTaskDialog from "@/components/task/TaskDialogs/NewTaskDialog";
 import ManageMembersModal from "@/components/project/ProjectPageDialogs/ManageMember";
 import TaskDetailsDialog from "@/components/task/TaskDialogs/TaskDetailsDailog";
 import {
-  initialProjectDetailsFilters,
   initialProjectState,
+  initialProjectDetailsFilters,
 } from "@/utils/constant";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from "@dnd-kit/core";
 import usePermissions from "@/hooks/usePermissions";
 import { useGetProjectByIdQuery } from "@/redux/services/projectApi";
 
@@ -61,35 +61,35 @@ export default function KanBanPage() {
   };
 
   // dummy API
-  const data = dummyData.find((project) => project.id === parseInt(projectId));
-    const {
-    data: projectData,
-    isLoading: isProjectLoading,
-    isError,
-  } = useGetProjectByIdQuery(
-    { orgId: organizationId, projectId },
-    { skip: !organizationId || !projectId },
-  );
+  const dummyDatas = dummyData[0];
+  // const {
+  //   data: projectData,
+  //   isLoading: isProjectLoading,
+  //   isError,
+  // } = useGetProjectByIdQuery(
+  //   { orgId: organizationId, projectId },
+  //   { skip: !organizationId || !projectId },
+  // );
 
-  const projects = projectData?.data[0]?.projectId || {};
+  // const projects = projectData?.data[0]?.projectId || {};
 
   useEffect(() => {
-    if (data) {
-      console.log(projectData)
-      dispatch(setBoard(data));
+    if (dummyDatas) {
+      console.log(dummyDatas);
+      dispatch(setBoard(dummyDatas));
     }
-    console.log("projects-projects", projects, projectData?.data[0]?.projectId);
-  }, [data, projectData]);
+    // console.log("projects-projects", projects, projectData?.data[0]?.projectId);
+  }, [dummyDatas]);
 
   // on Edit Peoject Modal
   const handleEditProject = () => {
     setForm({
-      name: projects?.title || "",
-      description: projects?.description || "",
-      status: projects?.status || "status",
-      priority: projects?.priority || "priority",
-      startDate: projects?.startDate || "",
-      dueDate: projects?.dueDate || "",
+      // name: projects?.title || "",
+      // description: projects?.description || "",
+      // status: projects?.status || "status",
+      // priority: projects?.priority || "priority",
+      // startDate: projects?.startDate || "",
+      // dueDate: projects?.dueDate || "",
     });
     setShowModal(true);
   };
@@ -165,20 +165,22 @@ export default function KanBanPage() {
   const findTaskById = (id) => tasks[id];
 
   useEffect(() => {
-    // console.log("columns:", columns);
-    // console.log("columnOrder:", columnOrder);
-    // console.log("columnTaskIds:", columnTaskIds);
-    // console.log("tasks:", tasks);
-    // console.log("backlogTaskIds:", backlogTaskIds);
-    // console.log("sprints:", sprints);
+    console.log("columns:", columns);
+    console.log("columnOrder:", columnOrder);
+    console.log("columnTaskIds:", columnTaskIds);
+    console.log("tasks:", tasks);
+    console.log("backlogTaskIds:", backlogTaskIds);
+    console.log("sprints:", sprints);
   }, [columns, columnOrder, columnTaskIds, tasks, backlogTaskIds, sprints]);
 
   return (
     <div className="p-3">
       {/* Project Details title + Edit Project */}
       <ProjectHeader
-        pTitle={projects?.title}
-        pDescription={projects?.description}
+        // pTitle={projects?.title}
+        // pDescription={projects?.description}
+        pTitle="Project"
+        pDescription="P Description"
         type="edit"
         setShowManageMembersModal={setShowManageMembersModal}
         projectId={projectId}

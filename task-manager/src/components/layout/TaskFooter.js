@@ -1,15 +1,20 @@
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 export default function TaskFooter({
   currentIndex,
   prevTab,
   nextTab,
   len,
-  projectId,
   onSave,
+  page,
 }) {
   const router = useRouter();
+  const { organizationName, organizationId, projectId } = useParams();
+  const baseUrl =
+    organizationName && organizationId
+      ? `/organizations/${organizationName}/${organizationId}`
+      : "";
   return (
     <div className="flex flex-col md:flex-row justify-between gap-4 mt-8 shrink-0">
       <Button variant="outline" onClick={prevTab} disabled={currentIndex === 0}>
@@ -19,11 +24,14 @@ export default function TaskFooter({
       <div className="flex gap-2">
         <Button
           variant="secondary"
-          onClick={() => router.push(`/projects/${projectId}`)}
+          onClick={() => router.push(`${baseUrl}/projects/${projectId}`)}
+          className="hover:cursor-pointer"
         >
           Cancel
         </Button>
-        <Button onClick={() => onSave()}>Save</Button>
+        {page !== "ProjectPage" && (
+          <Button onClick={() => onSave()}>Save</Button>
+        )}
       </div>
 
       <div className="flex gap-2 flex-wrap">

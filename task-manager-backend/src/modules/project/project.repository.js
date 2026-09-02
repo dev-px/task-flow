@@ -151,6 +151,19 @@ const getProjectByIdandMemberId = async (projectId, memberId) => {
   return projectResult;
 };
 
+// count check memberExist
+const checkMemberExist = async (projectId, membersId, session = null) => {
+  const existingCount = await ProjectMember.countDocuments(
+    {
+      _id: { $in: membersId },
+      projectId: projectId,
+    },
+    { session },
+  );
+
+  return existingCount === membersId.length;
+};
+
 // Update Project
 const updateProjectById = async (projectId, updatePayload) => {
   return await Project.findByIdAndUpdate(
@@ -175,7 +188,7 @@ const softDeleteProjectById = async (projectId, userId, session) => {
   ).lean();
 };
 
-// Get all members
+// Get all members that is in project
 const getMembersForProject = async (
   projectId,
   organizationId,
@@ -314,6 +327,7 @@ export {
   createProject,
   createProjectMember,
   getProjectByIdandMemberId,
+  checkMemberExist,
   updateProjectById,
   softDeleteProjectById,
   getMembersForProject,

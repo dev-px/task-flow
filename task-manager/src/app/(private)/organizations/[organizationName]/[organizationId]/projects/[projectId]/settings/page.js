@@ -1,11 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { useParams, useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import usePermissions from "@/hooks/usePermissions";
+import TabsCompo from "@/components/layout/TabsCompo";
+import TaskFooter from "@/components/layout/TaskFooter";
+import ColumnSettings from "@/components/project/Columns";
+import ManageMembersModal from "@/components/project/ProjectPageDialogs/ManageMember";
+import NewColumnDialog from "@/components/project/ProjectPageDialogs/NewColumnDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { initialProjectSettingForm } from "@/utils/constant";
 import {
   Plus,
   FileText,
@@ -13,21 +21,15 @@ import {
   ExternalLink,
   Paperclip,
   Loader2,
+  Users,
 } from "lucide-react";
-import toast from "react-hot-toast";
-
-// Assuming these paths match your project structure
-import { initialProjectSettingForm } from "@/utils/constant";
-import TabsCompo from "@/components/layout/TabsCompo";
-import TaskFooter from "@/components/layout/TaskFooter";
 import {
   useGetProjectByIdQuery,
   useUpdateProjectMutation,
   useDeleteProjectMutation,
 } from "@/redux/services/projectApi";
-import usePermissions from "@/hooks/usePermissions";
 
-const tabs = ["members", "links", "documents", "danger"];
+const tabs = ["members", "columns", "links", "documents", "danger"];
 
 export default function ProjectSettingsPage() {
   const { organizationId, projectId } = useParams();
@@ -46,6 +48,9 @@ export default function ProjectSettingsPage() {
   const [initialData, setInitialData] = useState(null);
 
   const currentIndex = tabs.indexOf(activeTab);
+
+  const [openMemberModal, setOpenMemberModal] = useState(false);
+  const [openColumnModal, setOpenColumnModal] = useState(false);
 
   // --- API HOOKS ---
   const { data: projectResponse, isLoading: isFetching } =
@@ -184,40 +189,85 @@ export default function ProjectSettingsPage() {
           <Card
             title="Members"
             description="Invite collaborators to your project."
+            actionElement={
+              <Button size="sm" onClick={() => setOpenMemberModal(true)}>
+                <Users size={18} className="mr-2" />
+                Manage Members
+              </Button>
+            }
           >
-            <div className="space-y-2">
-              <Label>Add Member</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Enter email/name"
-                  value={member}
-                  onChange={(e) => setMember(e.target.value)}
-                />
-                <Button
-                  onClick={() =>
-                    updateForm("members", { name: member, role: "Member" })
-                  }
-                  disabled={!member.trim()}
-                >
-                  <Plus className="w-4 h-4 mr-2" /> Add
-                </Button>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              {settingsForm?.members?.length > 0 ? (
-                settingsForm.members.map((memberItem, index) => (
-                  <MemberRow
-                    key={index}
-                    name={memberItem.name || memberItem.email}
-                    role={memberItem.role}
-                    onRemove={() => removeItemFromSettings("members", index)}
-                  />
-                ))
-              ) : (
-                <NoDataPlaceHolder title="members" />
-              )}
+            {/* Members Table */}
+            <div className="rounded-md border overflow-hidden">
+              <table className="w-full text-sm border-collapse">
+                <thead className="text-left border-b bg-gray-100">
+                  <tr>
+                    {["Name", "Email", "Designation", "Action"].map((ele) => (
+                      <th key={ele} className={`px-4 py-3 font-semibold ${ele === "Action" ? "text-right" : ""}`}>
+                      {ele}
+                    </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {settingsForm?.members?.length > 0 ? (
+                    settingsForm.members.map((memberItem, index) => (
+                      <tr
+                        key={index}
+                        className="border-b last:border-0 hover:bg-muted/20 transition-colors"
+                      >
+                        <td className="px-4 py-3 font-medium">
+                          {memberItem.name || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {memberItem.email || "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
+                            {memberItem.role || "Member"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() =>
+                              removeItemFromSettings("members", index)
+                            }
+                            title="Remove member"
+                          >
+                            <X size={16} />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="text-center py-8">
+                        <NoDataPlaceHolder title="members" />
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
+          </Card>
+        </TabsContent>
+
+        {/* COLUMNS REORDER */}
+        <TabsContent value="columns" className="my-6">
+          <Card
+            title="Columns"
+            description="Reorder the columns."
+            actionElement={
+              <Button size="sm" onClick={() => setOpenColumnModal(true)}>
+                <Plus size={18} />
+                Add Column
+              </Button>
+            }
+          >
+            <ColumnSettings />
           </Card>
         </TabsContent>
 
@@ -398,9 +448,17 @@ export default function ProjectSettingsPage() {
         prevTab={prevTab}
         nextTab={nextTab}
         len={tabs.length}
-        projectId={projectId}
-        onSave={handleSave}
-        isSaving={isUpdating} // Passes loading state to footer button
+        page="ProjectPage"
+      />
+
+      {/* add or remove members from project */}
+      <ManageMembersModal open={openMemberModal} setOpen={setOpenMemberModal} />
+
+      {/* add column to project */}
+      <NewColumnDialog
+        open={openColumnModal}
+        setOpen={setOpenColumnModal}
+        type="Add"
       />
     </div>
   );
@@ -408,14 +466,18 @@ export default function ProjectSettingsPage() {
 
 // --- SUBCOMPONENTS ---
 
-function Card({ title, description, children }) {
+function Card({ title, description, actionElement, children }) {
   return (
     <div className="border rounded-xl p-5 bg-white shadow-sm space-y-4 mt-2">
-      <div>
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        )}
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-lg font-semibold">{title}</h2>
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
+        </div>
+        {/* Render whatever button or element the parent passed in */}
+        {actionElement && <div>{actionElement}</div>}
       </div>
       {children}
     </div>

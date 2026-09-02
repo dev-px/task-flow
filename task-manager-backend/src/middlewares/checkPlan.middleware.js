@@ -1,8 +1,10 @@
 import ApiError from "../errors/ApiError.js";
+import Task from "../modules/task/task.schema.js";
 import Member from "../modules/member/member.schema.js";
 import Project from "./../modules/project/project.schema.js";
 import HTTP_STATUS from "../constants/http-status.constant.js";
 import { getEffectiveLimits } from "../utils/billing.util.js";
+import TaskAssignee from "../modules/task/taskAssignee.schema.js";
 
 const checkPlan = (requestType) => {
   return async (req, res, next) => {
@@ -43,11 +45,12 @@ const checkPlan = (requestType) => {
         });
         limit = limits.maxMembers;
       } else if (requestType === "task") {
-        // currentCount = Member.countDocuments({
-        //   organizationId: orgId,
-        //   isDeleted: false,
-        // });
-        // limit = limits.maxTasks
+        currentCount = Task.countDocuments({
+          organizationId: orgId,
+          projectId: req?.params?.projectId,
+          isDeleted: false,
+        });
+        limit = limits.maxTasks;
       } else {
         return next(
           new ApiError(

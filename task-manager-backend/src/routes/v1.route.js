@@ -7,6 +7,8 @@ import organizationRoute from "./../modules/organization/organization.route.js";
 import roleRouter from "./../modules/role/role.route.js";
 import memberRouter from "./../modules/member/member.route.js";
 import projectRouter from "./../modules/project/project.route.js";
+import taskRouter from "./../modules/task/task.route.js";
+import columnRouter from "../modules/column/column.route.js";
 import { successResponse } from "../utils/api-response.util.js";
 
 const router = express.Router();
@@ -18,6 +20,8 @@ router.use("/organizations", organizationRoute);
 router.use("/roles/:orgId", roleRouter);
 router.use("/members", memberRouter);
 router.use("/projects/:orgId", projectRouter);
+router.use("/tasks/:orgId/:projectId", taskRouter);
+router.use("/columns/:orgId/:projectId", columnRouter);
 
 // test route
 router.get("/test", (req, res) => {

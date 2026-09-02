@@ -74,9 +74,9 @@ const projectParamSchema = Joi.object({
     "string.length": "Organization ID must be exactly 24 characters long.",
   }),
   projectId: Joi.string().hex().length(24).required().messages({
-    "string.empty": "Organization ID is required.",
-    "string.hex": "Organization ID must be a valid hexadecimal string.",
-    "string.length": "Organization ID must be exactly 24 characters long.",
+    "string.empty": "Project ID is required.",
+    "string.hex": "Project ID must be a valid hexadecimal string.",
+    "string.length": "Project ID must be exactly 24 characters long.",
   }),
 });
 
